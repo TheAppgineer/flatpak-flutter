@@ -1,0 +1,5 @@
+/com.*/
+/io.*/
+/net.*/
+/org.*/
+!/com.example.todo/

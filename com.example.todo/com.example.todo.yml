@@ -1,0 +1,47 @@
+id: com.example.todo
+runtime: org.freedesktop.Platform
+runtime-version: '24.08'
+sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.llvm19
+command: todo
+finish-args:
+  - --share=ipc
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --device=dri
+cleanup-commands:
+  - rm -r /var/lib/*
+modules:
+  - name: todo
+    buildsystem: simple
+    build-options:
+      arch:
+        x86_64:
+          env:
+            BUNDLE_PATH: /run/build/todo/build/linux/x64/release/bundle
+        aarch64:
+          env:
+            BUNDLE_PATH: /run/build/todo/build/linux/arm64/release/bundle
+      append-path: /usr/lib/sdk/llvm19/bin:/var/lib/flutter/bin
+      prepend-ld-library-path: /usr/lib/sdk/llvm19/lib
+      env:
+        PUB_CACHE: /run/build/todo/.pub-cache
+    build-commands:
+      - mkdir -p build/native_assets/linux
+      - setup-flutter.sh
+      - flutter build linux --release
+      - install -D $BUNDLE_PATH/todo /app/bin/todo
+      - cp -r $BUNDLE_PATH/lib /app/bin/lib
+      - cp -r $BUNDLE_PATH/data /app/bin/data
+    sources:
+      - type: git
+        url: https://github.com/5minslearn/Flutter-Todo-App.git
+        commit: 2a98e745969dd657efe2eccd964253cd20d13e25
+      - type: file
+        path: package_config.json
+        dest: flutter/packages/flutter_tools/.dart_tool
+      - pubspec-sources-flutter.json
+      - pubspec-sources-todo.json
+    modules:
+      - flutter.json
