@@ -1,7 +1,7 @@
 #!/bin/bash
 APP=todo
 APP_ID=com.example.$APP
-FLUTTER_VERSION=3.27.1
+FLUTTER_VERSION=3.27.2
 
 if [ "$1" != "" ]; then
     APP_ID=$1

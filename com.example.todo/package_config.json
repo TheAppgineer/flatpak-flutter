@@ -596,8 +596,8 @@
       "languageVersion": "3.2"
     }
   ],
-  "generated": "2025-01-17T14:53:50.938436Z",
+  "generated": "2025-01-17T16:30:08.934844Z",
   "generator": "pub",
-  "generatorVersion": "3.6.0",
+  "generatorVersion": "3.6.1",
   "pubCache": "file:///run/build/todo/.pub-cache"
 }
