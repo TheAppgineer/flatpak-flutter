@@ -8,6 +8,10 @@ if [ "$1" != "" ]; then
     APP=$(IFS="." && read -ra array <<< $APP_ID && echo ${array[-1]})
 fi
 
+if [ "$2" != "" ]; then
+    FLUTTER_VERSION=$2
+fi
+
 BUILD_PATH=.flatpak-builder/build/$APP
 FLUTTER_PATH=$BUILD_PATH/flutter
 
@@ -43,8 +47,15 @@ if [ ! -f pubspec-sources-$APP.json ]; then
     exit 1
 fi
 
-cp -r ../releases/$FLUTTER_VERSION/flutter.json flutter-$FLUTTER_VERSION.json
-cp -r ../releases/$FLUTTER_VERSION/flutter-shared.sh.patch .
+if [ -f ../releases/$FLUTTER_VERSION/flutter-sdk.json ]; then
+    cp -r ../releases/$FLUTTER_VERSION/flutter-sdk.json flutter-sdk-$FLUTTER_VERSION.json
+else
+    echo
+    echo "Generating Flutter SDK for version $FLUTTER_VERSION..."
+    python3 ../flutter-sdk-generator/flutter-sdk-generator.py $FLUTTER_PATH -o flutter-sdk-$FLUTTER_VERSION.json
+fi
+
+cp -r ../releases/flutter-shared.sh.patch .
 
 echo
 echo "Starting offline build..."
