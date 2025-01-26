@@ -2,12 +2,12 @@
     "name": "flutter",
     "buildsystem": "simple",
     "build-commands": [
-        "echo $(cat flutter/bin/internal/engine.version) > flutter/bin/cache/engine-dart-sdk.stamp",
-        "echo $(cat flutter/bin/internal/material_fonts.version) > flutter/bin/cache/material_fonts.stamp",
-        "echo $(cat flutter/bin/internal/gradle_wrapper.version) > flutter/bin/cache/gradle_wrapper.stamp",
-        "echo $(cat flutter/bin/internal/engine.version) > flutter/bin/cache/flutter_sdk.stamp",
-        "echo $(cat flutter/bin/internal/engine.version) > flutter/bin/cache/font-subset.stamp",
-        "echo $(cat flutter/bin/internal/engine.version) > flutter/bin/cache/linux-sdk.stamp",
+        "cp flutter/bin/internal/engine.version flutter/bin/cache/engine-dart-sdk.stamp",
+        "cp flutter/bin/internal/material_fonts.version flutter/bin/cache/material_fonts.stamp",
+        "cp flutter/bin/internal/gradle_wrapper.version flutter/bin/cache/gradle_wrapper.stamp",
+        "cp flutter/bin/internal/engine.version flutter/bin/cache/flutter_sdk.stamp",
+        "cp flutter/bin/internal/engine.version flutter/bin/cache/font-subset.stamp",
+        "cp flutter/bin/internal/engine.version flutter/bin/cache/linux-sdk.stamp",
         "./setup-links.sh",
         "mkdir -p /var/lib && cp -r flutter /var/lib"
     ],
@@ -15,7 +15,7 @@
         {
             "type": "git",
             "url": "https://github.com/flutter/flutter.git",
-            "tag": "3.27.2",
+            "tag": "3.27.3",
             "dest": "flutter"
         },
         {

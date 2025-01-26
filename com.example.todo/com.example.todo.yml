@@ -44,4 +44,4 @@ modules:
       - pubspec-sources-flutter.json
       - pubspec-sources-todo.json
     modules:
-      - flutter-sdk-3.27.2.json
+      - flutter-sdk-3.27.3.json
