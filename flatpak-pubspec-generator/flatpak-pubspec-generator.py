@@ -28,10 +28,11 @@ def fetch_bare_git_repo(git_url: str, commit: str, clone_dir: str):
 
 
 def get_git_package_sources(
-    name: str,
     package: Any,
 ) -> List[_FlatpakSourceType]:
-    repo_url = package['description']['url']
+    repo_url = str(package['description']['url'])
+    split = repo_url.split('/')
+    name = split[len(split) - 1].split('.git')[0]
     commit = package['description']['resolved-ref']
     assert commit, 'The commit needs to be indicated in the description'
     dest = f'.{PUB_CACHE}/git/{name}-{commit}'
@@ -66,7 +67,7 @@ async def get_package_sources(
     source = package['source']
 
     if source == 'git':
-        return get_git_package_sources(name, package)
+        return get_git_package_sources(package)
 
     if source != 'hosted':
         return None
