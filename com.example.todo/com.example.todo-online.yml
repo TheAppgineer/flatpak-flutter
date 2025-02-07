@@ -16,13 +16,12 @@ modules:
     build-options:
       build-args:
         - --share=network
-      append-path: /usr/lib/sdk/llvm19/bin:/run/build/todo/flutter/bin
+      append-path: /usr/lib/sdk/llvm19/bin
       prepend-ld-library-path: /usr/lib/sdk/llvm19/lib
       env:
         PUB_CACHE: /run/build/todo/.pub-cache
     build-commands:
-      - mkdir -p build/native_assets/linux
-      - flutter build linux --release
+      - flutter/bin/flutter build linux --release
     sources:
       - type: git
         url: https://github.com/5minslearn/Flutter-Todo-App.git

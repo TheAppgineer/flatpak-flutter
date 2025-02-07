@@ -19,10 +19,10 @@ modules:
       arch:
         x86_64:
           env:
-            BUNDLE_PATH: /run/build/todo/build/linux/x64/release/bundle
+            BUNDLE_PATH: build/linux/x64/release/bundle
         aarch64:
           env:
-            BUNDLE_PATH: /run/build/todo/build/linux/arm64/release/bundle
+            BUNDLE_PATH: build/linux/arm64/release/bundle
       append-path: /usr/lib/sdk/llvm19/bin:/var/lib/flutter/bin
       prepend-ld-library-path: /usr/lib/sdk/llvm19/lib
       env:
