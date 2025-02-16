@@ -205,6 +205,12 @@ def generate_sdk(
             'path': 'flutter-shared.sh.patch'
         },
         {
+            'type': 'shell',
+            'commands': [
+                'rm -f flutter/engine/src/.gn'
+            ]
+        },
+        {
             'type': 'script',
             'dest': 'flutter/bin',
             'dest-filename': 'setup-flutter.sh',
