@@ -56,5 +56,6 @@ A subset of SDK versions is included in the form of flatpak-builder modules, if 
 ## Apps Published Using flatpak-flutter
 
 * [Community Remote](https://flathub.org/apps/com.theappgineer.community_remote)
+* [Gopeed](https://flathub.org/apps/com.gopeed.Gopeed)
 
-> Note: Get in contact if you know about an app using flatpak-flutter and not on this list!
+> Note: Please get in contact if you know about an app using flatpak-flutter and not on this list!
