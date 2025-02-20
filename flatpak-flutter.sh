@@ -17,6 +17,12 @@ FLUTTER_PATH=$BUILD_PATH/flutter
 
 cd $APP_ID
 
+if [ -f ../releases/$FLUTTER_VERSION/*.patch ]; then
+    echo "Getting patches for Flutter $FLUTTER_VERSION..."
+    echo
+    cp ../releases/$FLUTTER_VERSION/*.patch .
+fi
+
 echo "Starting online build..."
 echo
 flatpak run org.flatpak.Builder --repo=repo --force-clean --user --install-deps-from=flathub --build-only --keep-build-dirs build $APP_ID-online.yml

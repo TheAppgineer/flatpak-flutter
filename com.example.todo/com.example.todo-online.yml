@@ -30,7 +30,6 @@ modules:
         url: https://github.com/flutter/flutter.git
         tag: 3.29.0
         dest: flutter
-      # Workaround: To keep engine.version and allow shallow clones: https://github.com/flutter/flutter/issues/163308
-      - type: shell
-        commands:
-          - rm -f flutter/engine/src/.gn
+      # Patch: Anticipating the fix for: https://github.com/flutter/flutter/issues/163308
+      - type: patch
+        path: update_engine_version.sh.patch

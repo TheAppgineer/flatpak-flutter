@@ -1,0 +1,17 @@
+diff --git a/flutter/bin/internal/update_engine_version.sh b/flutter/bin/internal/update_engine_version.sh
+index db05771..fa842e4 100755
+--- a/flutter/bin/internal/update_engine_version.sh
++++ b/flutter/bin/internal/update_engine_version.sh
+@@ -16,6 +16,12 @@ set -e
+
+ FLUTTER_ROOT="$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")"
+
++# On stable, beta, and release tags, the engine.version is tracked by git - do not override it.
++TRACKED_ENGINE="$(git -C "$FLUTTER_ROOT" ls-files bin/internal/engine.version)"
++if [[ -n "$TRACKED_ENGINE" ]]; then
++  exit
++fi
++
+ # Test for fusion repository
+ if [ -f "$FLUTTER_ROOT/DEPS" ] && [ -f "$FLUTTER_ROOT/engine/src/.gn" ]; then
+   BRANCH=$(git -C "$FLUTTER_ROOT" rev-parse --abbrev-ref HEAD)

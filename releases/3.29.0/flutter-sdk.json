@@ -158,10 +158,8 @@
             "path": "flutter-shared.sh.patch"
         },
         {
-            "type": "shell",
-            "commands": [
-                "rm -f flutter/engine/src/.gn"
-            ]
+            "type": "patch",
+            "path": "update_engine_version.sh.patch"
         },
         {
             "type": "script",
