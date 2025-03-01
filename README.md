@@ -1,10 +1,14 @@
 # flatpak-flutter
 Flatpak manifest tooling for the offline build of Flutter apps
 
-## Introduction
-flatpak-flutter can help in fulfilling the Flathub publishing requirement to have an offline build, with the additional benifits of building from source.
+## Project Goal
+The goal of the flatpak-flutter project is to bridge the gap between the Flatpak and the Flutter project.
 
-Being able to build from source makes it easy to also release for the aarch64 architecture (arm64).
+The gap being the incompatibility in its connectivity requirements. Flutter requires being online at build time, while Flatpak requires being offline at build time. This incompatibility limits the choice for developers. A Flutter developer who want to publish for Linux is more likely to use Snaps, as that is the supported and documented solution:
+
+https://docs.flutter.dev/deployment/linux
+
+Let's get to a more equal playing field!
 
 ## A Three Stage Rocket
 These are the three steps that flatpak-flutter takes during the building process:
@@ -31,8 +35,7 @@ Easily done by executing the flatpak-flutter script:
 The basic steps for building any flutter app are:
 
 * Clone the app manifest repo in the root directory of flatpak-flutter
-* Create the manifest for online build: `<app_id>/<app_id>-online.yml`
-* Create the manifest for offline build: `<app_id>/<app_id>.yml`
+* Create/adapt the manifest for online build: `<app_id>/flatpak-flutter.yml`
 * Build it!
     ```
     ./flatpak-flutter.sh <app_id>
@@ -40,22 +43,24 @@ The basic steps for building any flutter app are:
 
 The `app_id` and the app manifest repo should be named equal, as also required for publishing.
 
-> Note: For the creation of the manifest files the included TODO app can be used as an example.
+> Note: For the creation of the online manifest file (`flatpak-flutter.yml`) the included TODO app can be used as an example.
 
 ## Selecting the Flutter SDK
-If the app isn't using the latest and greatest Flutter version then you can specify the SDK version to use.
+It is not necessary to use the latest and greatest Flutter version, just specify the tag of the used SDK version in `flatpak-flutter.yml`.
 
 ```
-./flatpak-flutter.sh <app_id> <sdk_version>
+  - type: git
+    url: https://github.com/flutter/flutter.git
+    tag: 3.29.0
+    dest: flutter
 ```
 
 A subset of SDK versions is included in the form of flatpak-builder modules, if the specified version is not in this subset the matching module will be created during the offline build preparation.
-
-> Note: When specifying the `sdk_version`, it is mandatory to specify the `app_id` first. Also make sure that the same SDK version is specified in the online and offline manifest file.
 
 ## Apps Published Using flatpak-flutter
 
 * [Community Remote](https://flathub.org/apps/com.theappgineer.community_remote)
 * [Gopeed](https://flathub.org/apps/com.gopeed.Gopeed)
+* Your app here?
 
 > Note: Please get in contact if you know about an app using flatpak-flutter and not on this list!
