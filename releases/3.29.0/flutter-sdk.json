@@ -159,7 +159,7 @@
         },
         {
             "type": "patch",
-            "path": "update_engine_version.sh.patch"
+            "path": "update_engine_version.sh.flutter.patch"
         },
         {
             "type": "script",
