@@ -1,3 +1,5 @@
+# Generated from flatpak-flutter.yml, do not edit
+# Visit the flatpak-flutter project at https://github.com/TheAppgineer/flatpak-flutter
 id: com.example.todo
 runtime: org.freedesktop.Platform
 runtime-version: '24.08'

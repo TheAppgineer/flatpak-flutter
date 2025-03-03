@@ -10,18 +10,30 @@ finish-args:
   - --socket=fallback-x11
   - --socket=wayland
   - --device=dri
+cleanup-commands:
+  - rm -r /var/lib/*
 modules:
   - name: todo
     buildsystem: simple
     build-options:
       build-args:
         - --share=network
-      append-path: /usr/lib/sdk/llvm19/bin
+      arch:
+        x86_64:
+          env:
+            BUNDLE_PATH: build/linux/x64/release/bundle
+        aarch64:
+          env:
+            BUNDLE_PATH: build/linux/arm64/release/bundle
+      append-path: /usr/lib/sdk/llvm19/bin:/run/build/todo/flutter/bin
       prepend-ld-library-path: /usr/lib/sdk/llvm19/lib
       env:
         PUB_CACHE: /run/build/todo/.pub-cache
     build-commands:
-      - flutter/bin/flutter build linux --release
+      - flutter build linux --release
+      - install -D $BUNDLE_PATH/todo /app/bin/todo
+      - cp -r $BUNDLE_PATH/lib /app/bin/lib
+      - cp -r $BUNDLE_PATH/data /app/bin/data
     sources:
       - type: git
         url: https://github.com/5minslearn/Flutter-Todo-App.git
@@ -32,4 +44,4 @@ modules:
         dest: flutter
       # Patch: Anticipating the fix for: https://github.com/flutter/flutter/issues/163308
       - type: patch
-        path: update_engine_version.sh.patch
+        path: update_engine_version.sh.flutter.patch
