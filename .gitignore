@@ -1,7 +1,1 @@
 /.vscode
-/com.*/
-/io.*/
-/net.*/
-/org.*/
-/page.*/
-!/com.example.todo/

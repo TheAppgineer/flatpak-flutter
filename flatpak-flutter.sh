@@ -2,6 +2,7 @@
 VERSION=0.2.0
 APP=todo
 APP_ID=com.example.$APP
+HOME_PATH=$(pwd)
 
 action() {
     echo
@@ -14,11 +15,14 @@ fail() {
 }
 
 if [ "$1" != "" ]; then
-    APP_ID=$1
+    MANIFEST_PATH=$1
+    APP_ID=$(IFS="/" && read -ra array <<< $MANIFEST_PATH && echo ${array[-1]})
     APP=$(IFS="." && read -ra array <<< $APP_ID && echo ${array[-1]})
+else
+    MANIFEST_PATH=$APP_ID
 fi
 
-if [ ! -d $APP_ID ]; then
+if [ ! -d $MANIFEST_PATH ]; then
     action "Checking existence of https://github.com/flathub/$APP_ID.git"
     git -c core.askPass=/bin/true ls-remote -h https://github.com/flathub/$APP_ID.git &> /dev/null
 
@@ -28,12 +32,12 @@ if [ ! -d $APP_ID ]; then
     fi
 
     action "Cloning https://github.com/flathub/$APP_ID.git"
-    git clone --recursive https://github.com/flathub/$APP_ID.git
+    git clone --recursive https://github.com/flathub/$APP_ID.git $MANIFEST_PATH
 fi
 
-cd $APP_ID
+cd $MANIFEST_PATH
 
-FLUTTER_VERSION=$(python3 ../offline-manifest-generator/offline-manifest-generator.py flatpak-flutter.yml)
+FLUTTER_VERSION=$(python3 $HOME_PATH/offline-manifest-generator/offline-manifest-generator.py flatpak-flutter.yml)
 
 if [ $? != 0 ]; then
     fail "Failed to convert to offline mode"
@@ -43,14 +47,14 @@ echo -e "flatpak-flutter version:\t$VERSION"
 echo -e "Building App ID:\t\t$APP_ID"
 echo -e "Targeting Flutter SDK version:\t$FLUTTER_VERSION"
 echo
-echo "To change build target: ./flatpak-flutter.sh <app_id>"
+echo "To change build target: ./flatpak-flutter.sh </path/to/app_id>"
 
 BUILD_PATH=.flatpak-builder/build/$APP
 FLUTTER_PATH=$BUILD_PATH/flutter
 
-if [ -f ../releases/$FLUTTER_VERSION/*.flutter.patch ]; then
+if [ -f $HOME_PATH/releases/$FLUTTER_VERSION/*.flutter.patch ]; then
     action "Getting patches for Flutter $FLUTTER_VERSION"
-    cp ../releases/$FLUTTER_VERSION/*.flutter.patch .
+    cp $HOME_PATH/releases/$FLUTTER_VERSION/*.flutter.patch .
 fi
 
 if [ ! -f flatpak-flutter.yml ]; then
@@ -68,8 +72,8 @@ fi
 if [ -d $FLUTTER_PATH ]; then
     action "Collecting sources for offline build"
     set -e
-    python3 ../flatpak-pubspec-generator/flatpak-pubspec-generator.py $BUILD_PATH/pubspec.lock -o pubspec-sources-$APP.json
-    python3 ../flatpak-pubspec-generator/flatpak-pubspec-generator.py $FLUTTER_PATH/packages/flutter_tools/pubspec.lock -o pubspec-sources-flutter.json
+    python3 $HOME_PATH/flatpak-pubspec-generator/flatpak-pubspec-generator.py $BUILD_PATH/pubspec.lock -o pubspec-sources-$APP.json
+    python3 $HOME_PATH/flatpak-pubspec-generator/flatpak-pubspec-generator.py $FLUTTER_PATH/packages/flutter_tools/pubspec.lock -o pubspec-sources-flutter.json
     cp $FLUTTER_PATH/packages/flutter_tools/.dart_tool/package_config.json .
     set +e
 
@@ -84,14 +88,14 @@ if [ ! -f pubspec-sources-$APP.json ]; then
     exit 1
 fi
 
-if [ -f ../releases/$FLUTTER_VERSION/flutter-sdk.json ]; then
-    cp -r ../releases/$FLUTTER_VERSION/flutter-sdk.json flutter-sdk-$FLUTTER_VERSION.json
+if [ -f $HOME_PATH/releases/$FLUTTER_VERSION/flutter-sdk.json ]; then
+    cp -r $HOME_PATH/releases/$FLUTTER_VERSION/flutter-sdk.json flutter-sdk-$FLUTTER_VERSION.json
 else
     action "Generating Flutter SDK for version $FLUTTER_VERSION"
-    python3 ../flutter-sdk-generator/flutter-sdk-generator.py $FLUTTER_PATH -o flutter-sdk-$FLUTTER_VERSION.json
+    python3 $HOME_PATH/flutter-sdk-generator/flutter-sdk-generator.py $FLUTTER_PATH -o flutter-sdk-$FLUTTER_VERSION.json
 fi
 
-cp -r ../releases/flutter-shared.sh.patch .
+cp -r $HOME_PATH/releases/flutter-shared.sh.patch .
 
 action "Starting offline build"
 flatpak run org.flatpak.Builder --repo=repo --force-clean --user --install --install-deps-from=flathub build $APP_ID.yml
