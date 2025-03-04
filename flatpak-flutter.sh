@@ -37,7 +37,15 @@ fi
 
 cd $MANIFEST_PATH
 
-FLUTTER_VERSION=$(python3 $HOME_PATH/offline-manifest-generator/offline-manifest-generator.py flatpak-flutter.yml)
+if [ -f flatpak-flutter.yml ]; then
+    MANIFEST_TYPE=yml
+elif [ -f flatpak-flutter.json ]; then
+    MANIFEST_TYPE=json
+else
+    fail "No flatpak-flutter.{yml,json} found"
+fi
+
+FLUTTER_VERSION=$(python3 $HOME_PATH/offline-manifest-generator/offline-manifest-generator.py flatpak-flutter.$MANIFEST_TYPE)
 
 if [ $? != 0 ]; then
     fail "Failed to convert to offline mode"
@@ -57,12 +65,8 @@ if [ -f $HOME_PATH/releases/$FLUTTER_VERSION/*.flutter.patch ]; then
     cp $HOME_PATH/releases/$FLUTTER_VERSION/*.flutter.patch .
 fi
 
-if [ ! -f flatpak-flutter.yml ]; then
-    fail "Expected to find online manifest: flatpak-flutter.yml"
-fi
-
 action "Starting online build"
-flatpak run org.flatpak.Builder --repo=repo --force-clean --user --install-deps-from=flathub --build-only --keep-build-dirs build flatpak-flutter.yml
+flatpak run org.flatpak.Builder --repo=repo --force-clean --user --install-deps-from=flathub --build-only --keep-build-dirs build flatpak-flutter.$MANIFEST_TYPE
 
 if [ $? != 0 ]; then
     fail "Online build failed, please verify output for details"
@@ -98,7 +102,7 @@ fi
 cp -r $HOME_PATH/releases/flutter-shared.sh.patch .
 
 action "Starting offline build"
-flatpak run org.flatpak.Builder --repo=repo --force-clean --user --install --install-deps-from=flathub build $APP_ID.yml
+flatpak run org.flatpak.Builder --repo=repo --force-clean --user --install --install-deps-from=flathub build $APP_ID.$MANIFEST_TYPE
 
 if [ $? != 0 ]; then
     fail "Offline build failed, please verify output for details"
