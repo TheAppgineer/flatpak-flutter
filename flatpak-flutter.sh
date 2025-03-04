@@ -12,6 +12,7 @@ action() {
 fail() {
     echo
     echo -e "\e[31mError: $1\e[0m"
+    exit 1
 }
 
 if [ "$1" != "" ]; then
@@ -28,7 +29,6 @@ if [ ! -d $MANIFEST_PATH ]; then
 
     if [ $? != 0 ]; then
         fail "Neither directory nor remote repository found for $APP_ID"
-        exit 1
     fi
 
     action "Cloning https://github.com/flathub/$APP_ID.git"
@@ -70,7 +70,6 @@ flatpak run org.flatpak.Builder --repo=repo --force-clean --user --install-deps-
 
 if [ $? != 0 ]; then
     fail "Online build failed, please verify output for details"
-    exit 1
 fi
 
 if [ -d $FLUTTER_PATH ]; then
@@ -89,7 +88,6 @@ fi
 
 if [ ! -f pubspec-sources-$APP.json ]; then
     fail "No sources found for offline build!"
-    exit 1
 fi
 
 if [ -f $HOME_PATH/releases/$FLUTTER_VERSION/flutter-sdk.json ]; then
@@ -106,5 +104,4 @@ flatpak run org.flatpak.Builder --repo=repo --force-clean --user --install --ins
 
 if [ $? != 0 ]; then
     fail "Offline build failed, please verify output for details"
-    exit 1
 fi
