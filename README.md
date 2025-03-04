@@ -34,14 +34,13 @@ Easily done by executing the flatpak-flutter script:
 ## Flutter App Integration
 The basic steps for building any flutter app are:
 
-* Clone the app manifest repo in the root directory of flatpak-flutter
-* Create/adapt the manifest for online build: `<app_id>/flatpak-flutter.yml`
+* Create/adapt the app manifest for online build, name it: `<app_id>/flatpak-flutter.yml`
 * Build it!
     ```
-    ./flatpak-flutter.sh <app_id>
+    ./flatpak-flutter.sh </path/to/app_id>
     ```
 
-The `app_id` and the app manifest repo should be named equal, as also required for publishing.
+The app manifest repo should be named equal to the app ID, as is also required for publishing.
 
 > Note: For the creation of the online manifest file (`flatpak-flutter.yml`) the included TODO app can be used as an example.
 
