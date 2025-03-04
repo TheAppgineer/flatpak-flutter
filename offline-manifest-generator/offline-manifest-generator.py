@@ -1,8 +1,9 @@
 __license__ = 'MIT'
 import argparse
 import yaml
-import os
+import json
 import glob
+from pathlib import Path
 
 
 FLUTTER_URL = 'https://github.com/flutter/flutter.git'
@@ -138,19 +139,26 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('flatpak_manifest', help='The Flatpak manifest file')
     args = parser.parse_args()
+    suffix = (Path(args.flatpak_manifest).suffix)
 
     with open(args.flatpak_manifest, 'r') as input_stream:
-        manifest = yaml.full_load(input_stream)
+        if suffix == '.yml':
+            manifest = yaml.full_load(input_stream)
+        else:
+            manifest = json.load(input_stream)
 
     app_id = convert_to_offline(manifest)
 
-    with open(f'{app_id}.yml', 'w') as output_stream:
-        prepend = f'''# Generated from {args.flatpak_manifest}, do not edit
+    if suffix == '.yml':
+        with open(f'{app_id}.yml', 'w') as output_stream:
+            prepend = f'''# Generated from {args.flatpak_manifest}, do not edit
 # Visit the flatpak-flutter project at https://github.com/TheAppgineer/flatpak-flutter
 '''
-        output_stream.write(prepend)
-        yaml.dump(data=manifest, stream=output_stream, indent=2, sort_keys=False, Dumper=Dumper)
-
+            output_stream.write(prepend)
+            yaml.dump(data=manifest, stream=output_stream, indent=2, sort_keys=False, Dumper=Dumper)
+    else:
+        with open(f'{app_id}.json', 'w') as output_stream:
+            json.dump(manifest, output_stream, indent=4, sort_keys=False)
 
 if __name__ == '__main__':
     main()
