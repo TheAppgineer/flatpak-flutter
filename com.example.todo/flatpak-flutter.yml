@@ -40,8 +40,5 @@ modules:
         commit: 2a98e745969dd657efe2eccd964253cd20d13e25
       - type: git
         url: https://github.com/flutter/flutter.git
-        tag: 3.29.0
+        tag: 3.29.1
         dest: flutter
-      # Patch: Anticipating the fix for: https://github.com/flutter/flutter/issues/163308
-      - type: patch
-        path: update_engine_version.sh.flutter.patch
