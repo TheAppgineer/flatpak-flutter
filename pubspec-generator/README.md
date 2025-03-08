@@ -1,4 +1,4 @@
-# flatpak-pubspec-generator
+# pubspec-generator
 
 Tool to automatically generate `flatpak-builder` manifest json from a `pubspec.lock`.
 
@@ -13,11 +13,11 @@ Generated manifests are supported by flatpak-builder 1.2.x or newer.
 
 ## Usage
 
-Poetry users: first activate your virtualenv by running `poetry shell`.
+Poetry users: first activate your virtual env by running `poetry shell`.
 
 Convert the locked dependencies by Pub into a format flatpak-builder can understand:
 ```
-python3 ./flatpak-pubspec-generator.py pubspec.lock -o pubspec-sources.json
+python3 ./pubspec-generator.py pubspec.lock -o pubspec-sources.json
 ```
 
 The output file should be added to the manifest like:

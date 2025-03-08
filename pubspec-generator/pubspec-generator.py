@@ -7,10 +7,9 @@ import json
 import os
 import subprocess
 import argparse
-import logging
 import hashlib
 import asyncio
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple, TypedDict
+from typing import Any, Dict, List, Optional
 
 import yaml
 
@@ -62,7 +61,7 @@ async def get_package_sources(
     version = package['version']
 
     if 'source' not in package:
-        logging.debug('%s has no source', package)
+        print(f'{package} has no source')
         return None
     source = package['source']
 
@@ -75,7 +74,7 @@ async def get_package_sources(
     if 'sha256' in package['description']:
         sha256 = package['description']['sha256']
     else:
-        logging.warning(f'No sha256 in description of {name}')
+        print(f'No sha256 in description of {name}')
         return None
 
     # TODO: Buildup .pub-cache/hosted/pub.dev/.cache
@@ -137,21 +136,31 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('pubspec_lock', help='Path to the pubspec.lock file')
     parser.add_argument('-o', '--output', required=False, help='Where to write generated sources')
-    parser.add_argument('-d', '--debug', action='store_true')
+    parser.add_argument('-a', '--append', action='store_true')
     args = parser.parse_args()
+
     if args.output is not None:
         outfile = args.output
     else:
-        outfile = 'generated-sources.json'
-    if args.debug:
-        loglevel = logging.DEBUG
-    else:
-        loglevel = logging.INFO
-    logging.basicConfig(level=loglevel)
+        outfile = 'pubspec-sources.json'
 
     stream = open(args.pubspec_lock, 'r')
     pubspec_lock = yaml.load(stream, Loader=yaml.FullLoader)
     generated_sources = asyncio.run(generate_sources(pubspec_lock))
+
+    if args.append:
+        with open(outfile, 'r') as current:
+            current_sources = list(json.load(current))
+            deduped = 0
+
+            for source in generated_sources:
+                if not source in current_sources:
+                    current_sources.append(source)
+                else:
+                    deduped += 1
+
+            print(f'Deduped {deduped} packages')
+            generated_sources = current_sources
 
     with open(outfile, 'w') as out:
         json.dump(generated_sources, out, indent=4, sort_keys=False)
