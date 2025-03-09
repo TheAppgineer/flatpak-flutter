@@ -101,7 +101,7 @@ def process_sources(module):
             }
         ]
 
-    sources += glob.glob("pubspec-sources-*.json")
+    sources += ["pubspec-sources.json"]
 
 
 def convert_to_offline(manifest) -> str:

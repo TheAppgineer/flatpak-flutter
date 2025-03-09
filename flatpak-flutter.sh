@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION=0.2.1
+VERSION=0.3.0
 APP=todo
 APP_ID=com.example.$APP
 HOME_PATH=$(pwd)
@@ -75,18 +75,18 @@ fi
 if [ -d $FLUTTER_PATH ]; then
     action "Collecting sources for offline build"
     set -e
-    python3 $HOME_PATH/flatpak-pubspec-generator/flatpak-pubspec-generator.py $BUILD_PATH/pubspec.lock -o pubspec-sources-$APP.json
-    python3 $HOME_PATH/flatpak-pubspec-generator/flatpak-pubspec-generator.py $FLUTTER_PATH/packages/flutter_tools/pubspec.lock -o pubspec-sources-flutter.json
+    python3 $HOME_PATH/pubspec-generator/pubspec-generator.py $BUILD_PATH/pubspec.lock
+    python3 $HOME_PATH/pubspec-generator/pubspec-generator.py $FLUTTER_PATH/packages/flutter_tools/pubspec.lock -a
     cp $FLUTTER_PATH/packages/flutter_tools/.dart_tool/package_config.json .
     set +e
 
     if [ -x flatpak-flutter/custom-sources.sh ]; then
         action "Collecting custom sources for offline build"
-        ./flatpak-flutter/custom-sources.sh $BUILD_PATH
+        ./flatpak-flutter/custom-sources.sh $BUILD_PATH $HOME_PATH
     fi
 fi
 
-if [ ! -f pubspec-sources-$APP.json ]; then
+if [ ! -f pubspec-sources*.json ]; then
     fail "No sources found for offline build!"
 fi
 

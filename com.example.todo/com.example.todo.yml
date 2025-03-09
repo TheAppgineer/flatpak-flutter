@@ -43,7 +43,6 @@ modules:
       - type: file
         path: package_config.json
         dest: flutter/packages/flutter_tools/.dart_tool
-      - pubspec-sources-flutter.json
-      - pubspec-sources-todo.json
+      - pubspec-sources.json
     modules:
       - flutter-sdk-3.29.1.json
