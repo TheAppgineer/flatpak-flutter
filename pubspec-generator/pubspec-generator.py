@@ -4,8 +4,6 @@
 
 __license__ = 'MIT'
 import json
-import os
-import subprocess
 import argparse
 import hashlib
 import asyncio
@@ -15,15 +13,10 @@ import yaml
 
 PUB_DEV = 'https://pub.dev/api/archives'
 PUB_CACHE = 'pub-cache'
-GIT_CACHE = f'{PUB_CACHE}/git/cache'
+GIT_CACHE = f'.{PUB_CACHE}/git/cache'
 
 
 _FlatpakSourceType = Dict[str, Any]
-
-
-def fetch_bare_git_repo(git_url: str, commit: str, clone_dir: str):
-    if not os.path.isfile(os.path.join(clone_dir, 'HEAD')):
-        subprocess.run(['git', 'clone', '--bare', git_url, clone_dir], check=True)
 
 
 def get_git_package_sources(
@@ -40,7 +33,10 @@ def get_git_package_sources(
     sha1.update(repo_url.encode('utf-8'))
 
     cache_path = f'{GIT_CACHE}/{name}-{sha1.hexdigest()}'
-    fetch_bare_git_repo(repo_url, commit, cache_path)
+    commands = [
+        f'mkdir -p {cache_path}',
+        f'cp -r {dest}/.git/* {cache_path}'
+    ]
 
     git_sources: List[_FlatpakSourceType] = [
         {
@@ -48,7 +44,11 @@ def get_git_package_sources(
             'url': repo_url,
             'commit': commit,
             'dest': dest,
-        }
+        },
+        {
+            'type': 'shell',
+            'commands': commands,
+        },
     ]
 
     return git_sources
@@ -113,19 +113,6 @@ async def generate_sources(
         else:
             pkg_sources = pkg
         package_sources.extend(pkg_sources)
-
-    if os.path.isdir(GIT_CACHE):
-        print('create git cache archive')
-        subprocess.run(['tar', 'czf', 'pub-git-cache.tar.gz', GIT_CACHE], check=True)
-
-        package_sources.extend([
-            {
-                'type': 'archive',
-                'archive-type': 'tar-gzip',
-                'path': 'pub-git-cache.tar.gz',
-                'dest': f'.{PUB_CACHE}',
-            }
-        ])
 
     sources.extend(package_sources)
 
