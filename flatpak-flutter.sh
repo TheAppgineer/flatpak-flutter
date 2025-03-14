@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION=0.3.0
+VERSION=0.3.1
 APP=todo
 APP_ID=com.example.$APP
 HOME_PATH=$(pwd)

@@ -45,4 +45,4 @@ modules:
         dest: flutter/packages/flutter_tools/.dart_tool
       - pubspec-sources.json
     modules:
-      - flutter-sdk-3.29.1.json
+      - flutter-sdk-3.29.2.json
