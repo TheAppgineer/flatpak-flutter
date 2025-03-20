@@ -16,6 +16,7 @@
             "type": "git",
             "url": "https://github.com/flutter/flutter.git",
             "tag": "3.27.2",
+            "commit": "68415ad1d920f6fe5ec284f5c2febf7c4dd5b0b3",
             "dest": "flutter"
         },
         {
