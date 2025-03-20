@@ -35,7 +35,7 @@ def get_git_package_sources(
     cache_path = f'{GIT_CACHE}/{name}-{sha1.hexdigest()}'
     commands = [
         f'mkdir -p {cache_path}',
-        f'cp -r {dest}/.git/* {cache_path}'
+        f'cp -rf {dest}/.git/* {cache_path}'
     ]
 
     git_sources: List[_FlatpakSourceType] = [
