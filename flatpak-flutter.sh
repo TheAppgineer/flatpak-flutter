@@ -66,7 +66,7 @@ if [ -f $HOME_PATH/releases/$FLUTTER_VERSION/*.flutter.patch ]; then
 fi
 
 action "Starting online build"
-flatpak run org.flatpak.Builder --repo=repo --force-clean --user --install-deps-from=flathub --build-only --keep-build-dirs build flatpak-flutter.$MANIFEST_TYPE
+flatpak run org.flatpak.Builder --force-clean --user --install-deps-from=flathub --build-only --keep-build-dirs build flatpak-flutter.$MANIFEST_TYPE
 
 if [ $? != 0 ]; then
     fail "Online build failed, please verify output for details"
