@@ -18,10 +18,17 @@ def get_sha256(url: str) -> str:
     return stdout.decode('utf-8').split(' ')[0]
 
 
+def get_commit(sdk_path: str) -> str:
+    stdout = subprocess.run([f'git -C {sdk_path} rev-parse HEAD'], stdout=subprocess.PIPE, shell=True, check=True).stdout
+
+    return stdout.decode('utf-8').strip()
+
+
 def generate_sdk(
     sdk_path: str,
 ) -> List[_FlatpakSourceType]:
     sdk_version = open(f'{sdk_path}/version', 'r').readline().strip()
+    sdk_commit = get_commit(sdk_path)
     engine = open(f'{sdk_path}/bin/internal/engine.version', 'r').readline().strip()
     gradle_wrapper = open(f'{sdk_path}/bin/internal/gradle_wrapper.version', 'r').readline().strip()
     material_fonts = open(f'{sdk_path}/bin/internal/material_fonts.version', 'r').readline().strip()
@@ -63,6 +70,7 @@ def generate_sdk(
             'type': 'git',
             'url': 'https://github.com/flutter/flutter.git',
             'tag': sdk_version,
+            'commit': sdk_commit,
             'dest': 'flutter'
         },
         {
