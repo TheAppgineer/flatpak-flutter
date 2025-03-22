@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION=0.3.2
+VERSION=0.3.3
 APP=todo
 APP_ID=com.example.$APP
 HOME_PATH=$(pwd)
@@ -84,6 +84,8 @@ if [ -d $FLUTTER_PATH ]; then
         action "Collecting custom sources for offline build"
         ./flatpak-flutter/custom-sources.sh $BUILD_PATH $HOME_PATH
     fi
+
+    rm -rf $BUILD_PATH-*
 fi
 
 if [ ! -f pubspec-sources*.json ]; then
@@ -100,7 +102,7 @@ fi
 cp -r $HOME_PATH/releases/flutter-shared.sh.patch .
 
 action "Starting offline build"
-flatpak run org.flatpak.Builder --repo=repo --force-clean --user --install --install-deps-from=flathub build $APP_ID.$MANIFEST_TYPE
+flatpak run org.flatpak.Builder --repo=repo --force-clean --sandbox --user --install --install-deps-from=flathub build $APP_ID.$MANIFEST_TYPE
 
 if [ $? != 0 ]; then
     fail "Offline build failed, please verify output for details"
