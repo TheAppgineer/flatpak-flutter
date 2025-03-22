@@ -50,7 +50,7 @@ def process_build_commands(module):
                     build_commands.insert(idx, command)
                 break
 
-            if str(command).startswith('flutter build linux'):
+            if str(command).startswith('flutter '):
                 for command in reversed(insert_commands):
                     build_commands.insert(idx, command)
                 break
