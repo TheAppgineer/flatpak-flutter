@@ -142,23 +142,22 @@ def main():
     suffix = (Path(args.flatpak_manifest).suffix)
 
     with open(args.flatpak_manifest, 'r') as input_stream:
-        if suffix == '.yml':
+        if suffix == '.yml' or  suffix == '.yaml':
             manifest = yaml.full_load(input_stream)
         else:
             manifest = json.load(input_stream)
 
     app_id = convert_to_offline(manifest)
 
-    if suffix == '.yml':
-        with open(f'{app_id}.yml', 'w') as output_stream:
+    with open(f'{app_id}{suffix}', 'w') as output_stream:
+        if suffix == '.json':
+            json.dump(manifest, output_stream, indent=4, sort_keys=False)
+        else:
             prepend = f'''# Generated from {args.flatpak_manifest}, do not edit
 # Visit the flatpak-flutter project at https://github.com/TheAppgineer/flatpak-flutter
 '''
             output_stream.write(prepend)
             yaml.dump(data=manifest, stream=output_stream, indent=2, sort_keys=False, Dumper=Dumper)
-    else:
-        with open(f'{app_id}.json', 'w') as output_stream:
-            json.dump(manifest, output_stream, indent=4, sort_keys=False)
 
 if __name__ == '__main__':
     main()
