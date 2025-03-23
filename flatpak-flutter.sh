@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION=0.3.3
+VERSION=0.3.4
 APP=todo
 APP_ID=com.example.$APP
 HOME_PATH=$(pwd)
@@ -39,10 +39,12 @@ cd $MANIFEST_PATH
 
 if [ -f flatpak-flutter.yml ]; then
     MANIFEST_TYPE=yml
+elif [ -f flatpak-flutter.yaml ]; then
+    MANIFEST_TYPE=yaml
 elif [ -f flatpak-flutter.json ]; then
     MANIFEST_TYPE=json
 else
-    fail "No flatpak-flutter.{yml,json} found"
+    fail "No flatpak-flutter.{yml,yaml,json} found"
 fi
 
 FLUTTER_VERSION=$(python3 $HOME_PATH/offline-manifest-generator/offline-manifest-generator.py flatpak-flutter.$MANIFEST_TYPE)
