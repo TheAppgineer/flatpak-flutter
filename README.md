@@ -34,7 +34,7 @@ Easily done by executing the flatpak-flutter script:
 ## Flutter App Integration
 The basic steps for building any flutter app are:
 
-* Create/adapt the app manifest for online build, name it: `<app_id>/flatpak-flutter.yml`
+* Create the app manifest for online build, name it: `<app_id>/flatpak-flutter.yml`
 * Build it!
     ```
     ./flatpak-flutter.sh </path/to/app_id>
@@ -56,10 +56,30 @@ It is not necessary to use the latest and greatest Flutter version, just specify
 
 A subset of SDK versions is included in the form of flatpak-builder modules, if the specified version is not in this subset the matching module will be created during the offline build preparation.
 
+## Prerequisites
+The top level shell script uses some (included) Python modules. These modules depend on the `pyyaml` package that needs to be installed on the system.
+
+Poetry users:
+run `poetry install` to setup, activate your virtual env by running `poetry shell`.
+
+Otherwise install Python 3.8+ with the `pyyaml` package:
+
+    pip install pyyaml
+
+## Python module details
+The Python modules, taking care of the different processing steps, are further
+described in the README file within the module subdirectory:
+
+* [flutter-sdk-generator](flutter-sdk-generator/README.md)
+* [pubspec-generator](pubspec-generator/README.md)
+* [offline-manifest-generator](offline-manifest-generator/README.md)
+
+> Note: The modules can be executed stand-alone from the command line, use `python3 <module>.py --help` for the specifics.
+
 ## Apps Published Using flatpak-flutter
 
 * [Community Remote](https://flathub.org/apps/com.theappgineer.community_remote)
 * [Gopeed](https://flathub.org/apps/com.gopeed.Gopeed)
 * Your app here?
 
-> Note: Please get in contact if you know about an app using flatpak-flutter and not on this list!
+> Note: Please get in contact if you know about an app using flatpak-flutter that is not on this list!

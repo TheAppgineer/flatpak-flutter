@@ -2,29 +2,27 @@
 
 Tool to automatically generate `flatpak-builder` manifest json from a `pubspec.lock`.
 
-## Requirements
+The `sources` in the generated manifest allow for a `.pub-cache` buildup for an offline build.
 
-Poetry users can run `poetry install` and skip this.
-
-Otherwise install Python 3.8+ with these modules:
-- pyyaml
-
-Generated manifests are supported by flatpak-builder 1.2.x or newer.
+> Note: Generated manifests are supported by flatpak-builder 1.2.x or newer.
 
 ## Usage
 
-Poetry users: first activate your virtual env by running `poetry shell`.
-
 Convert the locked dependencies by Pub into a format flatpak-builder can understand:
-```
-python3 ./pubspec-generator.py pubspec.lock -o pubspec-sources.json
-```
+
+    python3 ./pubspec-generator.py pubspec.lock -o pubspec-sources.json
 
 The output file should be added to the manifest like:
+
 ```json
 {
-    "name": "quickstart",
+    "name": "todo",
     "buildsystem": "simple",
+    "build-options": {
+      "env": {
+        "PUB_CACHE": "/run/build/todo/.pub-cache"
+      },
+    },
     "build-commands": [
     ],
     "sources": [
@@ -37,6 +35,6 @@ The output file should be added to the manifest like:
 }
 ```
 
-Make sure to override PUB_CACHE env variable to point it to `/run/build/$module-name/.pub-cache` where `$module-name` is the flatpak module name, `quickstart` in the above example.
+Make sure to override PUB_CACHE env variable to point it to `/run/build/$module-name/.pub-cache` where `$module-name` is the flatpak module name, `todo` in the above example.
 
 For a complete example see the `com.example.todo` Flutter project.
