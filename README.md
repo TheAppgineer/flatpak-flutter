@@ -70,9 +70,9 @@ Otherwise install Python 3.8+ with the `pyyaml` package:
 The Python modules, taking care of the different processing steps, are further
 described in the README file within the module subdirectory:
 
-* [flutter-sdk-generator](flutter-sdk-generator/README.md)
-* [pubspec-generator](pubspec-generator/README.md)
-* [offline-manifest-generator](offline-manifest-generator/README.md)
+* [flutter_sdk_generator](flutter_sdk_generator/README.md)
+* [pubspec_generator](pubspec_generator/README.md)
+* [offline_manifest_generator](offline_manifest_generator/README.md)
 
 > Note: The modules can be executed stand-alone from the command line, use `python3 <module>.py --help` for the specifics.
 

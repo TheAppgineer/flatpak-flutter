@@ -14,7 +14,7 @@ class Dumper(yaml.Dumper):
         return super().increase_indent(flow=flow, indentless=False)
 
 
-def process_build_options(module):
+def _process_build_options(module):
     if 'build-options' in module:
         build_options = module['build-options']
 
@@ -38,7 +38,7 @@ def process_build_options(module):
                     break
 
 
-def process_build_commands(module):
+def _process_build_commands(module):
     if 'build-commands' in module:
         insert_commands = ['mkdir -p build/native_assets/linux', 'setup-flutter.sh']
         build_commands = list(module['build-commands'])
@@ -58,7 +58,7 @@ def process_build_commands(module):
         module['build-commands'] = build_commands
 
 
-def process_sources(module):
+def _process_sources(module):
     if not 'sources' in module:
         return
 
@@ -77,7 +77,7 @@ def process_sources(module):
                         module['modules'] += [f"flutter-sdk-{source['tag']}.json"]
                     else:
                         module['modules'] = [f"flutter-sdk-{source['tag']}.json"]
-                    print(source['tag'])
+                    tag = source['tag']
 
             if source['type'] == 'patch' and '.flutter.patch' in str(source['path']):
                 idxs.append(idx)
@@ -102,6 +102,7 @@ def process_sources(module):
         ]
 
     sources += ["pubspec-sources.json"]
+    return tag
 
 
 def convert_to_offline(manifest) -> str:
@@ -126,38 +127,41 @@ def convert_to_offline(manifest) -> str:
             print('Currently only the simple build system is supported')
             exit(1)
 
-        process_build_options(module)
-        process_build_commands(module)
-        process_sources(module)
+        _process_build_options(module)
+        _process_build_commands(module)
+        tag = _process_sources(module)
 
         break
 
-    return manifest[id]
+    return manifest[id], tag
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('flatpak_manifest', help='The Flatpak manifest file')
+    parser.add_argument('manifest', help='The Flatpak manifest file')
     args = parser.parse_args()
-    suffix = (Path(args.flatpak_manifest).suffix)
+    suffix = (Path(args.manifest).suffix)
 
-    with open(args.flatpak_manifest, 'r') as input_stream:
+    with open(args.manifest, 'r') as input_stream:
         if suffix == '.yml' or  suffix == '.yaml':
             manifest = yaml.full_load(input_stream)
         else:
             manifest = json.load(input_stream)
 
-    app_id = convert_to_offline(manifest)
+    app_id, tag = convert_to_offline(manifest)
+
+    print(tag)
 
     with open(f'{app_id}{suffix}', 'w') as output_stream:
         if suffix == '.json':
             json.dump(manifest, output_stream, indent=4, sort_keys=False)
         else:
-            prepend = f'''# Generated from {args.flatpak_manifest}, do not edit
+            prepend = f'''# Generated from {args.manifest}, do not edit
 # Visit the flatpak-flutter project at https://github.com/TheAppgineer/flatpak-flutter
 '''
             output_stream.write(prepend)
             yaml.dump(data=manifest, stream=output_stream, indent=2, sort_keys=False, Dumper=Dumper)
+
 
 if __name__ == '__main__':
     main()

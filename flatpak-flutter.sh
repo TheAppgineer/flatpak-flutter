@@ -47,7 +47,7 @@ else
     fail "No flatpak-flutter.{yml,yaml,json} found"
 fi
 
-FLUTTER_VERSION=$(python3 $HOME_PATH/offline-manifest-generator/offline-manifest-generator.py flatpak-flutter.$MANIFEST_TYPE)
+FLUTTER_VERSION=$(python3 $HOME_PATH/offline_manifest_generator/offline_manifest_generator.py flatpak-flutter.$MANIFEST_TYPE)
 
 if [ $? != 0 ]; then
     fail "Failed to convert to offline mode"
@@ -77,8 +77,8 @@ fi
 if [ -d $FLUTTER_PATH ]; then
     action "Collecting sources for offline build"
     set -e
-    python3 $HOME_PATH/pubspec-generator/pubspec-generator.py $BUILD_PATH/pubspec.lock
-    python3 $HOME_PATH/pubspec-generator/pubspec-generator.py $FLUTTER_PATH/packages/flutter_tools/pubspec.lock -a
+    python3 $HOME_PATH/pubspec_generator/pubspec_generator.py $BUILD_PATH/pubspec.lock
+    python3 $HOME_PATH/pubspec_generator/pubspec_generator.py $FLUTTER_PATH/packages/flutter_tools/pubspec.lock -a
     cp $FLUTTER_PATH/packages/flutter_tools/.dart_tool/package_config.json .
     set +e
 
@@ -91,7 +91,7 @@ if [ -d $FLUTTER_PATH ]; then
         cp -r $HOME_PATH/releases/$FLUTTER_VERSION/flutter-sdk.json flutter-sdk-$FLUTTER_VERSION.json
     else
         action "Generating Flutter SDK for version $FLUTTER_VERSION"
-        python3 $HOME_PATH/flutter-sdk-generator/flutter-sdk-generator.py $FLUTTER_PATH -o flutter-sdk-$FLUTTER_VERSION.json
+        python3 $HOME_PATH/flutter_sdk_generator/flutter_sdk_generator.py $FLUTTER_PATH -o flutter-sdk-$FLUTTER_VERSION.json
     fi
 
     cp -r $HOME_PATH/releases/flutter-shared.sh.patch .

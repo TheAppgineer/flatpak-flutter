@@ -1,4 +1,4 @@
-# offline-manifest-generator
+# offline_manifest_generator
 
 Tool to automatically generate a manifest for offline build from an online counterpart.
 
