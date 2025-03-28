@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION=0.3.4
+VERSION=0.3.5
 APP=todo
 APP_ID=com.example.$APP
 HOME_PATH=$(pwd)
@@ -87,21 +87,21 @@ if [ -d $FLUTTER_PATH ]; then
         ./flatpak-flutter/custom-sources.sh $BUILD_PATH $HOME_PATH
     fi
 
+    if [ -f $HOME_PATH/releases/$FLUTTER_VERSION/flutter-sdk.json ]; then
+        cp -r $HOME_PATH/releases/$FLUTTER_VERSION/flutter-sdk.json flutter-sdk-$FLUTTER_VERSION.json
+    else
+        action "Generating Flutter SDK for version $FLUTTER_VERSION"
+        python3 $HOME_PATH/flutter-sdk-generator/flutter-sdk-generator.py $FLUTTER_PATH -o flutter-sdk-$FLUTTER_VERSION.json
+    fi
+
+    cp -r $HOME_PATH/releases/flutter-shared.sh.patch .
+
     rm -rf $BUILD_PATH-*
 fi
 
 if [ ! -f pubspec-sources*.json ]; then
     fail "No sources found for offline build!"
 fi
-
-if [ -f $HOME_PATH/releases/$FLUTTER_VERSION/flutter-sdk.json ]; then
-    cp -r $HOME_PATH/releases/$FLUTTER_VERSION/flutter-sdk.json flutter-sdk-$FLUTTER_VERSION.json
-else
-    action "Generating Flutter SDK for version $FLUTTER_VERSION"
-    python3 $HOME_PATH/flutter-sdk-generator/flutter-sdk-generator.py $FLUTTER_PATH -o flutter-sdk-$FLUTTER_VERSION.json
-fi
-
-cp -r $HOME_PATH/releases/flutter-shared.sh.patch .
 
 action "Starting offline build"
 flatpak run org.flatpak.Builder --repo=repo --force-clean --sandbox --user --install --install-deps-from=flathub build $APP_ID.$MANIFEST_TYPE
