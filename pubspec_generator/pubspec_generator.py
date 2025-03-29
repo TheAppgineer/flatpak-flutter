@@ -6,7 +6,6 @@ __license__ = 'MIT'
 import json
 import argparse
 import hashlib
-import asyncio
 from typing import Any, Dict, List, Optional
 
 import yaml
@@ -19,7 +18,7 @@ GIT_CACHE = f'.{PUB_CACHE}/git/cache'
 _FlatpakSourceType = Dict[str, Any]
 
 
-def get_git_package_sources(
+def _get_git_package_sources(
     package: Any,
 ) -> List[_FlatpakSourceType]:
     repo_url = str(package['description']['url'])
@@ -54,7 +53,7 @@ def get_git_package_sources(
     return git_sources
 
 
-async def get_package_sources(
+def _get_package_sources(
     name: str,
     package: Any,
 ) -> Optional[List[_FlatpakSourceType]]:
@@ -66,7 +65,7 @@ async def get_package_sources(
     source = package['source']
 
     if source == 'git':
-        return get_git_package_sources(package)
+        return _get_git_package_sources(package)
 
     if source != 'hosted':
         return None
@@ -81,7 +80,7 @@ async def get_package_sources(
     # fetch releases using: https://pub.dev/api/packages/_fe_analyzer_shared
     # turns out be non-critical for offline pub use
 
-    pubdev_sources = [
+    return [
         {
             'type': 'archive',
             'archive-type': 'tar-gzip',
@@ -97,17 +96,16 @@ async def get_package_sources(
             'dest-filename': f'{name}-{version}.sha256',
         },
     ]
-    return pubdev_sources
 
 
-async def generate_sources(
+def generate_sources(
     pubspec_lock: Any,
 ) -> List[_FlatpakSourceType]:
     sources: List[_FlatpakSourceType] = []
     package_sources = []
 
-    pkg_coros = [get_package_sources(name, pubspec_lock['packages'][name]) for name in pubspec_lock['packages']]
-    for pkg in await asyncio.gather(*pkg_coros):
+    pkg_coros = [_get_package_sources(name, pubspec_lock['packages'][name]) for name in pubspec_lock['packages']]
+    for pkg in pkg_coros:
         if pkg is None:
             continue
         else:
@@ -133,7 +131,7 @@ def main():
 
     stream = open(args.pubspec_lock, 'r')
     pubspec_lock = yaml.load(stream, Loader=yaml.FullLoader)
-    generated_sources = asyncio.run(generate_sources(pubspec_lock))
+    generated_sources = generate_sources(pubspec_lock)
 
     if args.append:
         with open(outfile, 'r') as current:
