@@ -99,8 +99,10 @@ def _get_package_sources(
 
 
 def generate_sources(
-    pubspec_lock: Any,
+    pubspec_lock: str,
 ) -> List[_FlatpakSourceType]:
+    stream = open(pubspec_lock, 'r')
+    pubspec_lock = yaml.load(stream, Loader=yaml.FullLoader)
     sources: List[_FlatpakSourceType] = []
     package_sources = []
 
@@ -129,9 +131,7 @@ def main():
     else:
         outfile = 'pubspec-sources.json'
 
-    stream = open(args.pubspec_lock, 'r')
-    pubspec_lock = yaml.load(stream, Loader=yaml.FullLoader)
-    generated_sources = generate_sources(pubspec_lock)
+    generated_sources = generate_sources(args.pubspec_lock)
 
     if args.append:
         with open(outfile, 'r') as current:
