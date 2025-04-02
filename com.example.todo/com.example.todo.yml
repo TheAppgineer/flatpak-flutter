@@ -40,9 +40,6 @@ modules:
       - type: git
         url: https://github.com/5minslearn/Flutter-Todo-App.git
         commit: 2a98e745969dd657efe2eccd964253cd20d13e25
-      - type: file
-        path: package_config.json
-        dest: flutter/packages/flutter_tools/.dart_tool
       - pubspec-sources.json
     modules:
       - flutter-sdk-3.29.2.json

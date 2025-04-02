@@ -1468,5 +1468,10 @@
         "contents": "fb38626579fb345ad00e674e2af3a5c9b0cc4b9bfb8fd7f7ff322c7c9e62aef5",
         "dest": ".pub-cache/hosted-hashes/pub.dev",
         "dest-filename": "yaml_edit-2.2.2.sha256"
+    },
+    {
+        "type": "file",
+        "path": "package_config.json",
+        "dest": "flutter/packages/flutter_tools/.dart_tool"
     }
 ]

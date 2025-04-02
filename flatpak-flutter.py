@@ -11,7 +11,7 @@ import json
 from pathlib import Path
 from flutter_sdk_generator.flutter_sdk_generator import generate_sdk
 from offline_manifest_generator.offline_manifest_generator import convert_to_offline
-from pubspec_generator.pubspec_generator import generate_sources
+from pubspec_generator.pubspec_generator import generate_sources, PUB_CACHE
 
 __version__ = '0.4.0'
 build_path = '.flatpak-builder/build'
@@ -87,36 +87,31 @@ def _generate_offline_manifest(manifest_path: str):
         return app_id, tag
 
 
-def _generate_pubspec_sources(app: str, extra_pubspec: str):
+def _generate_pubspec_sources(app: str, extra_pubspecs: str):
     pubspec_paths = [
         f'{build_path}/{app}/pubspec.lock',
         f'{build_path}/{app}/flutter/packages/flutter_tools/pubspec.lock',
     ]
 
-    if extra_pubspec:
-        paths = extra_pubspec.split(',')
+    if extra_pubspecs:
+        paths = extra_pubspecs.split(',')
         for path in paths:
             pubspec_paths.append(f'{build_path}/{app}/{path}')
 
-    pubspec_sources = []
-    deduped = 0
-
-    for path in pubspec_paths:
-        generated_sources = generate_sources(path)
-
-        if len(pubspec_sources) == 0:
-            pubspec_sources = generated_sources
-        else:
-            for source in generated_sources:
-                if not source in pubspec_sources:
-                    pubspec_sources.append(source)
-                else:
-                    deduped += 1
-
-            print(f'Deduped {deduped} packages')
+    pubspec_sources, package_config = generate_sources(pubspec_paths, __version__)
+    pubspec_sources.append({
+        'type': 'file',
+        'path': 'package_config.json',
+        'dest': 'flutter/packages/flutter_tools/.dart_tool',
+    })
 
     with open('pubspec-sources.json', 'w') as out:
         json.dump(pubspec_sources, out, indent=4, sort_keys=False)
+        out.write('\n')
+
+    with open('package_config.json', 'w') as out:
+        json.dump(package_config, out, indent=2, sort_keys=False)
+        out.write('\n')
 
 
 def main():
@@ -124,7 +119,7 @@ def main():
     parser.add_argument('DIRECTORY', help='Path to the build directory')
     parser.add_argument('MANIFEST', help='Path to the manifest')
     parser.add_argument('-V', '--version', action='version', version=f'%(prog)s-{__version__}')
-    parser.add_argument('--extra-pubspec', metavar='PATHS', help='Comma separated list of extra pubspec files')
+    parser.add_argument('--extra-pubspecs', metavar='PATHS', help='Comma separated list of extra pubspec files')
     parser.add_argument('--from-git', metavar='URL', required=False, help='Get input files from git repo')
     parser.add_argument('--from-git-branch', metavar='BRANCH', required=False, help='Branch to use in --from-git')
     args = parser.parse_args()
@@ -135,11 +130,9 @@ def main():
     _perform_online_build(args)
 
     app_id, tag = _generate_offline_manifest(args.MANIFEST)
-    print(app_id, tag)
 
     app = app_id.split('.')[-1:][0]
-    _generate_pubspec_sources(app, args.extra_pubspec)
-    shutil.copyfile(f'{build_path}/{app}/flutter/packages/flutter_tools/.dart_tool/package_config.json', 'package_config.json')
+    _generate_pubspec_sources(app, args.extra_pubspecs)
 
     generated_sdk = generate_sdk(f'{build_path}/{app}/flutter')
 

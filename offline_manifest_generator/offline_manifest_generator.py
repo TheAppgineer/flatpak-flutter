@@ -85,14 +85,6 @@ def _process_sources(module):
     for idx in reversed(idxs):
         del sources[idx]
 
-    sources += [
-        {
-            'type': 'file',
-            'path': 'package_config.json',
-            'dest': 'flutter/packages/flutter_tools/.dart_tool'
-        }
-    ]
-
     for patch in glob.glob('*.offline.patch'):
         sources += [
             {
