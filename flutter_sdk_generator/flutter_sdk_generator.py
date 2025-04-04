@@ -4,7 +4,6 @@ __license__ = 'MIT'
 import json
 import subprocess
 import argparse
-import logging
 from typing import Any, Dict, List
 
 
@@ -238,17 +237,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('sdk_path', help='Path to the Flutter SDK')
     parser.add_argument('-o', '--output', required=False, help='Where to write generated sources')
-    parser.add_argument('-d', '--debug', action='store_true')
     args = parser.parse_args()
+
     if args.output is not None:
         outfile = args.output
     else:
         outfile = 'flutter-sdk.json'
-    if args.debug:
-        loglevel = logging.DEBUG
-    else:
-        loglevel = logging.INFO
-    logging.basicConfig(level=loglevel)
+
     generated_sdk = generate_sdk(args.sdk_path)
 
     with open(outfile, 'w') as out:
