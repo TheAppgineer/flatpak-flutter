@@ -10,11 +10,12 @@ import json
 
 from pathlib import Path
 from flutter_sdk_generator.flutter_sdk_generator import generate_sdk
-from offline_manifest_generator.offline_manifest_generator import convert_to_offline
+from flutter_app_fetcher.flutter_app_fetcher import fetch_flutter_app
 from pubspec_generator.pubspec_generator import generate_sources, PUB_CACHE
 
 __version__ = '0.4.0'
 build_path = '.flatpak-builder/build'
+sandbox_root = '/run/build'
 
 
 class Dumper(yaml.Dumper):
@@ -44,25 +45,7 @@ def _get_manifest_from_git(manifest: str, from_git: str, from_git_branch: str):
         shutil.copyfile(manifest_path, manifest)
 
 
-def _perform_online_build(args):
-    print('Starting online build...')
-    options = [
-        'flatpak',
-        'run',
-        'org.flatpak.Builder',
-        '--force-clean',
-        '--user',
-        '--install-deps-from=flathub',
-        '--build-only',
-        '--keep-build-dirs',
-        args.DIRECTORY,
-        args.MANIFEST,
-    ]
-
-    return subprocess.run(options, stdout=subprocess.PIPE, check=True).returncode
-
-
-def _generate_offline_manifest(manifest_path: str):
+def _fetch_flutter_app(manifest_path: str):
     with open(manifest_path, 'r') as input_stream:
         suffix = (Path(manifest_path).suffix)
 
@@ -71,7 +54,7 @@ def _generate_offline_manifest(manifest_path: str):
         else:
             manifest = json.load(input_stream)
 
-        app_id, tag = convert_to_offline(manifest)
+        app_id, tag, build_id = fetch_flutter_app(manifest, build_path)
 
         # Write converted manifest to file
         with open(f'{app_id}{suffix}', 'w') as output_stream:
@@ -84,42 +67,50 @@ def _generate_offline_manifest(manifest_path: str):
                 output_stream.write(prepend)
                 yaml.dump(data=manifest, stream=output_stream, indent=2, sort_keys=False, Dumper=Dumper)
 
-        return app_id, tag
+        app = app_id.split('.')[-1:][0]
+
+        return app, tag, build_id
 
 
-def _generate_pubspec_sources(app: str, extra_pubspecs: str):
+def _generate_pubspec_sources(app: str, extra_pubspecs: str, build_id: int):
+    flutter_tools = 'flutter/packages/flutter_tools'
     pubspec_paths = [
         f'{build_path}/{app}/pubspec.lock',
-        f'{build_path}/{app}/flutter/packages/flutter_tools/pubspec.lock',
+        f'{build_path}/{app}/{flutter_tools}/pubspec.lock',
     ]
 
     if extra_pubspecs:
         paths = extra_pubspecs.split(',')
         for path in paths:
-            pubspec_paths.append(f'{build_path}/{app}/{path}')
+            pubspec_paths.append(f'{build_path}/{app}/{path}/pubspec.lock')
 
-    pubspec_sources, package_config = generate_sources(pubspec_paths, __version__)
+    pubspec_sources = generate_sources(pubspec_paths)
     pubspec_sources.append({
         'type': 'file',
         'path': 'package_config.json',
-        'dest': 'flutter/packages/flutter_tools/.dart_tool',
+        'dest': f'{flutter_tools}/.dart_tool',
     })
 
     with open('pubspec-sources.json', 'w') as out:
         json.dump(pubspec_sources, out, indent=4, sort_keys=False)
         out.write('\n')
 
+    abs_path = str(Path(f'{build_path}/{app}').absolute())
+    package_config = ''
+
+    with open(f'{build_path}/{app}/{flutter_tools}/.dart_tool/package_config.json', 'r') as input:
+        for line in input.readlines():
+            package_config += line.replace(f'{app}-{build_id}', app).replace(abs_path, f'{sandbox_root}/{app}')
+
     with open('package_config.json', 'w') as out:
-        json.dump(package_config, out, indent=2, sort_keys=False)
-        out.write('\n')
+        out.write(package_config)
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('DIRECTORY', help='Path to the build directory')
     parser.add_argument('MANIFEST', help='Path to the manifest')
     parser.add_argument('-V', '--version', action='version', version=f'%(prog)s-{__version__}')
-    parser.add_argument('--extra-pubspecs', metavar='PATHS', help='Comma separated list of extra pubspec files')
+    parser.add_argument('--extra-pubspecs', metavar='PATHS', help='Comma separated list of extra pubspec paths')
     parser.add_argument('--from-git', metavar='URL', required=False, help='Get input files from git repo')
     parser.add_argument('--from-git-branch', metavar='BRANCH', required=False, help='Branch to use in --from-git')
     args = parser.parse_args()
@@ -127,12 +118,9 @@ def main():
     if args.from_git:
         _get_manifest_from_git(args.MANIFEST, args.from_git, args.from_git_branch)
 
-    _perform_online_build(args)
+    app, tag, build_id = _fetch_flutter_app(args.MANIFEST)
 
-    app_id, tag = _generate_offline_manifest(args.MANIFEST)
-
-    app = app_id.split('.')[-1:][0]
-    _generate_pubspec_sources(app, args.extra_pubspecs)
+    _generate_pubspec_sources(app, args.extra_pubspecs, build_id)
 
     generated_sdk = generate_sdk(f'{build_path}/{app}/flutter')
 
