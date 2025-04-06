@@ -2,10 +2,11 @@
 
 __license__ = 'MIT'
 import subprocess
-import os
 import yaml
 import glob
+import shutil
 
+from pathlib import Path
 from typing import Tuple
 from pubspec_generator.pubspec_generator import PUB_CACHE
 
@@ -81,14 +82,14 @@ def _process_build_commands(module):
         module['build-commands'] = build_commands
 
 
-def _process_sources(module, fetch_path: str):
+def _process_sources(module, fetch_path: str, releases_path: str):
     if not 'sources' in module:
         return
 
     sources = module['sources']
 
     idxs = []
-    for (idx, source) in enumerate(sources):
+    for idx, source in enumerate(sources):
         if 'type' in source:
             if source['type'] == 'git':
                 if not 'url' in source:
@@ -117,6 +118,20 @@ def _process_sources(module, fetch_path: str):
             if source['type'] == 'patch' and '.flutter.patch' in str(source['path']):
                 idxs.append(idx)
 
+    for patch in glob.glob(f'{releases_path}/{tag}/*.flutter.patch'):
+        shutil.copyfile(patch, Path(patch).name)
+
+    for source in sources:
+        if 'type' in source:
+            if source['type'] == 'patch':
+                if not 'path' in source:
+                    continue
+
+                path = str(source['path'])
+                print(f'Apply patch: {path}')
+                command = f'(cd {fetch_path} && patch -p1) < {path}'
+                subprocess.run([command], stdout=subprocess.PIPE, shell=True, check=True)
+
     for idx in reversed(idxs):
         del sources[idx]
 
@@ -132,16 +147,7 @@ def _process_sources(module, fetch_path: str):
     return tag
 
 
-def _get_flutter_pub(build_path_app: str, pubspec_path = None):
-    full_pubspec_path = build_path_app if pubspec_path is None else f'{build_path_app}/{pubspec_path}'
-    pub_cache = f'{os.getcwd()}/{build_path_app}/.{PUB_CACHE}'
-    flutter = 'flutter/bin/flutter'
-    options = f'PUB_CACHE={pub_cache} {build_path_app}/{flutter} pub get -C {full_pubspec_path}'
-
-    subprocess.run([options], stdout=subprocess.PIPE, shell=True, check=True)
-
-
-def fetch_flutter_app(manifest, build_path: str) -> Tuple[str, str, int]:
+def fetch_flutter_app(manifest, build_path: str, releases_path: str) -> Tuple[str, str, int]:
     if 'app-id' in manifest:
         app_id = 'app-id'
     elif 'id' in manifest:
@@ -160,21 +166,20 @@ def fetch_flutter_app(manifest, build_path: str) -> Tuple[str, str, int]:
             continue
 
         if not 'buildsystem' in module or module['buildsystem'] != 'simple':
-            print('Currently only the simple build system is supported')
+            print('Error: Only the simple build system is supported')
             exit(1)
 
-        break
+        _process_build_options(module)
+        _process_build_commands(module)
 
-    _process_build_options(module)
-    _process_build_commands(module)
+        build_path_app = f'{build_path}/{app}'
+        build_id = len(glob.glob(f'{build_path_app}-*')) + 1
+        tag = _process_sources(module, f'{build_path_app}-{build_id}', releases_path)
 
-    build_path_app = f'{build_path}/{app}'
-    build_id = len(glob.glob(f'{build_path_app}-*')) + 1
-    tag = _process_sources(module, f'{build_path_app}-{build_id}')
+        options = [f'cd {build_path} && ln -snf {app}-{build_id} {app}']
+        subprocess.run(options, stdout=subprocess.PIPE, shell=True, check=True)
 
-    options = [f'cd {build_path} && ln -snf {app}-{build_id} {app}']
-    subprocess.run(options, stdout=subprocess.PIPE, shell=True, check=True)
-
-    _get_flutter_pub(build_path_app)
-
-    return manifest[app_id], tag, build_id
+        return manifest[app_id], tag, build_id
+    else:
+        print(f'Error: No module named {app} found!')
+        exit(1)

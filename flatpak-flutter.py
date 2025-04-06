@@ -5,6 +5,7 @@ import subprocess
 import shutil
 import argparse
 import os
+import sys
 import yaml
 import json
 
@@ -45,7 +46,7 @@ def _get_manifest_from_git(manifest: str, from_git: str, from_git_branch: str):
         shutil.copyfile(manifest_path, manifest)
 
 
-def _fetch_flutter_app(manifest_path: str):
+def _fetch_flutter_app(manifest_path: str, releases_path: str):
     with open(manifest_path, 'r') as input_stream:
         suffix = (Path(manifest_path).suffix)
 
@@ -54,7 +55,7 @@ def _fetch_flutter_app(manifest_path: str):
         else:
             manifest = json.load(input_stream)
 
-        app_id, tag, build_id = fetch_flutter_app(manifest, build_path)
+        app_id, tag, build_id = fetch_flutter_app(manifest, build_path, releases_path)
 
         # Write converted manifest to file
         with open(f'{app_id}{suffix}', 'w') as output_stream:
@@ -70,6 +71,15 @@ def _fetch_flutter_app(manifest_path: str):
         app = app_id.split('.')[-1:][0]
 
         return app, tag, build_id
+
+
+def _get_flutter_pub(build_path_app: str, pubspec_path = None):
+    full_pubspec_path = build_path_app if pubspec_path is None else f'{build_path_app}/{pubspec_path}'
+    pub_cache = f'{os.getcwd()}/{build_path_app}/.{PUB_CACHE}'
+    flutter = 'flutter/bin/flutter'
+    options = f'PUB_CACHE={pub_cache} {build_path_app}/{flutter} pub get -C {full_pubspec_path}'
+
+    subprocess.run([options], stdout=subprocess.PIPE, shell=True, check=True)
 
 
 def _generate_pubspec_sources(app: str, extra_pubspecs: str, build_id: int):
@@ -106,6 +116,17 @@ def _generate_pubspec_sources(app: str, extra_pubspecs: str, build_id: int):
         out.write(package_config)
 
 
+def _get_sdk_module(app: str, tag: str, releases: str):
+    if os.path.isdir(releases):
+        shutil.copyfile(f'{releases}/flutter-shared.sh.patch', 'flutter-shared.sh.patch')
+        shutil.copyfile(f'{releases}/{tag}/flutter-sdk.json', f'flutter-sdk-{tag}.json')
+    else:
+        generated_sdk = generate_sdk(f'{build_path}/{app}/flutter')
+
+        with open(f'flutter-sdk-{tag}.json', 'w') as out:
+            json.dump(generated_sdk, out, indent=4, sort_keys=False)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('MANIFEST', help='Path to the manifest')
@@ -116,17 +137,19 @@ def main():
     parser.add_argument('--keep-build-dirs', action='store_true', help="Don't remove build directories after processing")
     args = parser.parse_args()
 
+    if 'FLUTTER_SDK_RELEASES' in os.environ:
+        releases_path = os.environ['FLUTTER_SDK_RELEASES']
+    else:
+        releases_path = f'{str(Path(sys.argv[0]).parent)}/releases'
+
     if args.from_git:
         _get_manifest_from_git(args.MANIFEST, args.from_git, args.from_git_branch)
 
-    app, tag, build_id = _fetch_flutter_app(args.MANIFEST)
+    app, tag, build_id = _fetch_flutter_app(args.MANIFEST, releases_path)
 
+    _get_flutter_pub(f'{build_path}/{app}')
     _generate_pubspec_sources(app, args.extra_pubspecs, build_id)
-
-    generated_sdk = generate_sdk(f'{build_path}/{app}/flutter')
-
-    with open(f'flutter-sdk-{tag}.json', 'w') as out:
-        json.dump(generated_sdk, out, indent=4, sort_keys=False)
+    _get_sdk_module(app, tag, releases_path)
 
     if not args.keep_build_dirs:
         shutil.rmtree(f'{build_path}/{app}-{build_id}')
