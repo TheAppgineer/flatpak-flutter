@@ -113,6 +113,7 @@ def main():
     parser.add_argument('--extra-pubspecs', metavar='PATHS', help='Comma separated list of extra pubspec paths')
     parser.add_argument('--from-git', metavar='URL', required=False, help='Get input files from git repo')
     parser.add_argument('--from-git-branch', metavar='BRANCH', required=False, help='Branch to use in --from-git')
+    parser.add_argument('--keep-build-dirs', action='store_true', help="Don't remove build directories after processing")
     args = parser.parse_args()
 
     if args.from_git:
@@ -127,6 +128,9 @@ def main():
     with open(f'flutter-sdk-{tag}.json', 'w') as out:
         json.dump(generated_sdk, out, indent=4, sort_keys=False)
 
+    if not args.keep_build_dirs:
+        shutil.rmtree(f'{build_path}/{app}-{build_id}')
+        os.remove(f'{build_path}/{app}')
 
 if __name__ == '__main__':
     main()
