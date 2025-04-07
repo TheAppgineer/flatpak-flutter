@@ -19,23 +19,30 @@ class Dumper(yaml.Dumper):
         return super().increase_indent(flow=flow, indentless=False)
 
 
-def _fetch_with_git(url: str, ref: str, fetch_path: str):
-    options = [
-        'git',
-        'clone',
-        '--branch',
-        ref,
-        '--depth',
-        '1',
-        url,
-        fetch_path,
-    ]
+def _fetch_repos(repos: list):
+    def by_path_depth(fetch_repo):
+        return len(str(fetch_repo[2]).split('/'))
 
-    try:
-        subprocess.run(options, stdout=subprocess.PIPE, check=True)
-    except subprocess.CalledProcessError:
-        command = [f'git clone {url} {fetch_path} && cd {fetch_path} && git reset --hard {ref}']
-        subprocess.run(command, stdout=subprocess.PIPE, shell=True, check=True)
+    repos.sort(key=by_path_depth)
+    print(repos)
+
+    for url, ref, path in repos:
+        options = [
+            'git',
+            'clone',
+            '--branch',
+            ref,
+            '--depth',
+            '1',
+            url,
+            path,
+        ]
+
+        try:
+            subprocess.run(options, stdout=subprocess.PIPE, check=True)
+        except subprocess.CalledProcessError:
+            command = [f'git clone {url} {path} && cd {path} && git reset --hard {ref}']
+            subprocess.run(command, stdout=subprocess.PIPE, shell=True, check=True)
 
 
 def _process_build_options(module):
@@ -87,8 +94,9 @@ def _process_sources(module, fetch_path: str, releases_path: str):
         return
 
     sources = module['sources']
-
     idxs = []
+    repos = []
+
     for idx, source in enumerate(sources):
         if 'type' in source:
             if source['type'] == 'git':
@@ -102,8 +110,13 @@ def _process_sources(module, fetch_path: str, releases_path: str):
                 else:
                     continue
 
+                if 'dest' in source:
+                    dest = str(source['dest'])
+                    repos.append((source['url'], ref, f'{fetch_path}/{dest}'))
+                else:
+                    repos.append((source['url'], ref, fetch_path))
+
                 if source['url'] == FLUTTER_URL and 'tag' in source:
-                    _fetch_with_git(source['url'], ref, f'{fetch_path}/flutter')
                     idxs.append(idx)
 
                     if 'modules' in module:
@@ -112,11 +125,11 @@ def _process_sources(module, fetch_path: str, releases_path: str):
                         module['modules'] = [f"flutter-sdk-{source['tag']}.json"]
 
                     tag = source['tag']
-                else:
-                    _fetch_with_git(source['url'], ref, fetch_path)
 
             if source['type'] == 'patch' and '.flutter.patch' in str(source['path']):
                 idxs.append(idx)
+
+    _fetch_repos(repos)
 
     for patch in glob.glob(f'{releases_path}/{tag}/*.flutter.patch'):
         shutil.copyfile(patch, Path(patch).name)
