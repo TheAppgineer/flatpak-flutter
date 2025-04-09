@@ -24,7 +24,6 @@ def _fetch_repos(repos: list):
         return len(str(fetch_repo[2]).split('/'))
 
     repos.sort(key=by_path_depth)
-    print(repos)
 
     for url, ref, path in repos:
         options = [
