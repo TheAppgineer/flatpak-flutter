@@ -1,63 +1,129 @@
 # flatpak-flutter
-Flatpak manifest tooling for the offline build of Flutter apps
+The Flatpak pre-processor for Flutter apps
 
 ## Project Goal
-The goal of the flatpak-flutter project is to bridge the gap between the Flatpak and the Flutter project.
+The goal of the flatpak-flutter project is to simplify the publishing of Flutter based Linux apps on Flathub.
 
-The gap being the incompatibility in its connectivity requirements. Flutter requires being online at build time, while Flatpak requires being offline at build time. This incompatibility limits the choice for developers. A Flutter developer who want to publish for Linux is more likely to use Snaps, as that is the supported and documented solution:
+## The Flathub vs Flutter Status Quo
+When a Flutter app is ready for publishing on Flathub then, as part of the PR, the manifest gets build on Flathub infra. At the time the build reaches the first use of the `flutter` tool, it tries to download the Dart SDK and fails in the sandboxed build environment for lack of online access.
+
+For both the Flathub and Flutter project there have been requests to change behavior, but these requests get low priority or are not in line with project policy, keeping the status quo. This limits the options for developers. A Flutter developer who want to publish for Linux is more likely to use Snaps, as that is the supported and documented solution:
 
 https://docs.flutter.dev/deployment/linux
 
 Let's get to a more equal playing field!
 
-## A Three Stage Rocket
-These are the three steps that flatpak-flutter takes during the building process:
+> Note: The progress already made is that flatpak-flutter is [referenced](https://docs.flutter.dev/deployment/linux#additional-deployment-resources) on the Flutter documentation site!
 
-* Perform a local and online build
-* Extract the necessary sources from the online build
-* Perform the offline build
+### The Current Approach
+The approach taken by Flutter app developers to get them published on Flathub, is to create an archive with pre-built binaries and download that within the app manifest. This can lead to the recurring question during the PR review process of "Why not build from source?", but when the reviewer gets aware of the Fluter nature of the app it gets accepted.
 
-Now the reproducible and offline build can be published.
-The above process only has to be repeated if app dependencies change or have updates.
+### The flatpak-flutter Approach
+flatpak-flutter performs a pre-processing run on the app manifest to collect all the required sources for an offline build and stores their origins in the form of flatpak-builder `modules` and `sources`. The output of this pre-processing step is a manifest that can be built in a sandboxed environment, which can be verified locally by running `flatpak-builder` with the `--sandbox` option.
 
-## The TODO Example
+### Why build from source?
+With the approach of pre-built binaries it is not certain that the local build used the same library versions as included in the Flatpak Runtime, this can cause compatibility issues.
+
+An added benefit of the source build is that both the x86_64 and aarch64 architecture will be built on the Flathub infra. No longer the need to skip aarch64 support in the `flathub.json` file.
+
+## The flatpak-flutter Workflow
 What better way to demonstrate the tool then by building a TODO app :)
-
-Easily done by executing the flatpak-flutter script:
-
-    ./flatpak-flutter.sh
 
 <img src="images/flatpak-flutter-todo.png" alt="flatpak-flutter TODO Example" width="600"/>
 
+This workflow chapter uses the `com.example.todo` directory included in the git repository. The `flatpak-flutter.yml` file can be used as an example.
+
 > Note: The TODO app is an unmodified [3th party app](https://github.com/5minslearn/Flutter-Todo-App).
 
-## Flutter App Integration
-The basic steps for building any flutter app are:
+### Create the Manifest
+As is the case for every Flatpak, it all starts with the manifest file, but flatpak-flutter eases some criteria to deal with Flutter apps.
 
-* Create the app manifest for online build, name it: `<app_id>/flatpak-flutter.yml`
-* Build it!
-    ```
-    ./flatpak-flutter.sh </path/to/app_id>
-    ```
+> Note: It is recommended to name the manifest `flatpak-flutter.{yml,yaml,json}`, to differentiate it from the generated manifest named after the app-id.
 
-The app manifest repo should be named equal to the app ID, as is also required for publishing.
+#### Modules
+* Name the main module after the app name in the app id
+  ```yml
+  modules:
+    - name: todo
+  ```
+* Use build system simple
+  ```yml
+      buildsystem: simple
+  ```
 
-> Note: For the creation of the online manifest file (`flatpak-flutter.yml`) the included TODO app can be used as an example.
+#### Build Commands
+* Use the Flutter build command, as if it is a local build
+  ```yml
+      build-commands:
+        - flutter build linux --release
+  ```
+* Add the other commands to install the app and metadata
 
-## Selecting the Flutter SDK
-It is not necessary to use the latest and greatest Flutter version, just specify the tag of the used SDK version in `flatpak-flutter.yml`.
+#### Sources
+* Add the git repository of the app
+  ```yml
+      sources:
+        - type: git
+          url: https://github.com/5minslearn/Flutter-Todo-App.git
+          commit: 2a98e745969dd657efe2eccd964253cd20d13e25
+  ```
+* Add the git repository of Flutter, use the tag that the app needs
+  ```yml
+        - type: git
+          url: https://github.com/flutter/flutter.git
+          tag: 3.29.2
+          dest: flutter
+  ```
+* Add any other dependencies
 
+### Pre-process With flatpak-flutter
+By passing the manifest to flatpak-flutter it will collect all the dependency sources and generate the manifest for the offline build, to be performed by flatpak-builder. This process pins each dependency to a specific revision, ensuring a reproducible build.
+
+```sh
+cd com.example.todo
+../flatpak-flutter.py flatpak-flutter.yml
 ```
-  - type: git
-    url: https://github.com/flutter/flutter.git
-    tag: 3.29.0
-    dest: flutter
+
+> Note: The above generation process only has to be repeated if app dependencies change, or have updates.
+
+> Note: Use `./flatpak-flutter.py --help` to read about the available options.
+
+#### Conversion steps taken
+The conversion steps taken on the manifest to come to the offline manifest are:
+
+* The `git` entry for flutter is replaced with the matching SDK module, based on the specified tag
+* The PATH is adjusted to include the Flutter SDK for the offline build
+* The command to activate the SDK (`setup-flutter.sh`) is inserted in the `build-commands`
+* The `pubspec-sources.json` manifest is appended to the `sources`
+
+### Build With flatpak-builder
+The generated manifest can now to passed to flatpak-builder, to verify correctness.
+
+```sh
+flatpak-builder --repo=repo --force-clean --sandbox --user --install --install-deps-from=flathub build com.example.todo.yml
 ```
 
-A subset of SDK versions is included in the form of flatpak-builder modules, if the specified version is not in this subset the matching module will be created during the offline build preparation.
+> Note: Or use `flatpak run org.flatpak.Builder` instead of `flatpak-builder`.
+
+### Submit to Flathub
+With a manifest suitable for a sandboxed build, the [Flathub Submission](https://docs.flathub.org/docs/for-app-authors/submission) can take place.
+
+## The flatpak-flutter Shell Script
+The `flatpak-flutter.sh` script, as known from previous releases, is still available as a convenience wrapper around flatpak-flutter and flatpak-builder. Any options given will be passed on to flatpak-flutter.
+
+
+    ./flatpak-flutter.sh </path/to/app_id> [options]
+
+> Note: The app manifest repo should be named equal to the app ID, as is also required for publishing.
+
+### flatpak.Builder
+`flatpak-flutter.sh` uses org.flatpak.Builder, per Flathub's recommendation, install with:
+
+    flatpak install -y flathub org.flatpak.Builder
 
 ## Prerequisites
-The top level shell script uses some (included) Python modules. These modules depend on the `pyyaml` package that needs to be installed on the system.
+### Python
+flatpak-flutter requires Python 3.8 or later and the `pyyaml` package.
 
 Poetry users:
 run `poetry install` to setup, activate your virtual env by running `poetry shell`.
@@ -70,9 +136,8 @@ Otherwise install Python 3.8+ with the `pyyaml` package:
 The Python modules, taking care of the different processing steps, are further
 described in the README file within the module subdirectory:
 
-* [flutter-sdk-generator](flutter-sdk-generator/README.md)
-* [pubspec-generator](pubspec-generator/README.md)
-* [offline-manifest-generator](offline-manifest-generator/README.md)
+* [flutter_sdk_generator](flutter_sdk_generator/README.md)
+* [pubspec_generator](pubspec_generator/README.md)
 
 > Note: The modules can be executed stand-alone from the command line, use `python3 <module>.py --help` for the specifics.
 

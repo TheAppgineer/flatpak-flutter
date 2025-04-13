@@ -1,4 +1,4 @@
-# flutter-sdk-generator
+# flutter_sdk_generator
 
 Tool to automatically generate `flatpak-builder` manifest json from Flutter SDK.
 

@@ -1,4 +1,4 @@
-# pubspec-generator
+# pubspec_generator
 
 Tool to automatically generate `flatpak-builder` manifest json from a `pubspec.lock`.
 

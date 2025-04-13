@@ -4,21 +4,20 @@ __license__ = 'MIT'
 import json
 import subprocess
 import argparse
-import logging
 from typing import Any, Dict, List
 
 
 _FlatpakSourceType = Dict[str, Any]
 
 
-def get_sha256(url: str) -> str:
+def _get_sha256(url: str) -> str:
     print(f'Getting sha256 of {url}...')
     stdout = subprocess.run([f'curl -s {url} | sha256sum'], stdout=subprocess.PIPE, shell=True, check=True).stdout
 
     return stdout.decode('utf-8').split(' ')[0]
 
 
-def get_commit(sdk_path: str) -> str:
+def _get_commit(sdk_path: str) -> str:
     stdout = subprocess.run([f'git -C {sdk_path} rev-parse HEAD'], stdout=subprocess.PIPE, shell=True, check=True).stdout
 
     return stdout.decode('utf-8').strip()
@@ -28,7 +27,7 @@ def generate_sdk(
     sdk_path: str,
 ) -> List[_FlatpakSourceType]:
     sdk_version = open(f'{sdk_path}/version', 'r').readline().strip()
-    sdk_commit = get_commit(sdk_path)
+    sdk_commit = _get_commit(sdk_path)
     engine = open(f'{sdk_path}/bin/internal/engine.version', 'r').readline().strip()
     gradle_wrapper = open(f'{sdk_path}/bin/internal/gradle_wrapper.version', 'r').readline().strip()
     material_fonts = open(f'{sdk_path}/bin/internal/material_fonts.version', 'r').readline().strip()
@@ -79,7 +78,7 @@ def generate_sdk(
                 'x86_64'
             ],
             'url': dart_sdk_x64,
-            'sha256': get_sha256(dart_sdk_x64),
+            'sha256': _get_sha256(dart_sdk_x64),
             'strip-components': 0,
             'dest': 'flutter/bin/cache'
         },
@@ -89,45 +88,45 @@ def generate_sdk(
                 'aarch64'
             ],
             'url': dart_sdk_arm64,
-            'sha256': get_sha256(dart_sdk_arm64),
+            'sha256': _get_sha256(dart_sdk_arm64),
             'strip-components': 0,
             'dest': 'flutter/bin/cache'
         },
         {
             'type': 'archive',
             'url': material_fonts,
-            'sha256': get_sha256(material_fonts),
+            'sha256': _get_sha256(material_fonts),
             'dest': 'flutter/bin/cache/artifacts/material_fonts'
         },
         {
             'type': 'archive',
             'url': gradle_wrapper,
-            'sha256': get_sha256(gradle_wrapper),
+            'sha256': _get_sha256(gradle_wrapper),
             'strip-components': 0,
             'dest': 'flutter/bin/cache/artifacts/gradle_wrapper'
         },
         {
             'type': 'archive',
             'url': sky_engine,
-            'sha256': get_sha256(sky_engine),
+            'sha256': _get_sha256(sky_engine),
             'dest': 'flutter/bin/cache/pkg/sky_engine'
         },
         {
             'type': 'archive',
             'url': flutter_gpu,
-            'sha256': get_sha256(flutter_gpu),
+            'sha256': _get_sha256(flutter_gpu),
             'dest': 'flutter/bin/cache/pkg/flutter_gpu'
         },
         {
             'type': 'archive',
             'url': flutter_patched_sdk,
-            'sha256': get_sha256(flutter_patched_sdk),
+            'sha256': _get_sha256(flutter_patched_sdk),
             'dest': 'flutter/bin/cache/artifacts/engine/common/flutter_patched_sdk'
         },
         {
             'type': 'archive',
             'url': flutter_patched_sdk_product,
-            'sha256': get_sha256(flutter_patched_sdk_product),
+            'sha256': _get_sha256(flutter_patched_sdk_product),
             'dest': 'flutter/bin/cache/artifacts/engine/common/flutter_patched_sdk_product'
         },
         {
@@ -136,7 +135,7 @@ def generate_sdk(
                 'x86_64'
             ],
             'url': artifacts_x64,
-            'sha256': get_sha256(artifacts_x64),
+            'sha256': _get_sha256(artifacts_x64),
             'strip-components': 0,
             'dest': 'flutter/bin/cache/artifacts/engine/linux-x64'
         },
@@ -146,7 +145,7 @@ def generate_sdk(
                 'x86_64'
             ],
             'url': font_subset_x64,
-            'sha256': get_sha256(font_subset_x64),
+            'sha256': _get_sha256(font_subset_x64),
             'dest': 'flutter/bin/cache/artifacts/engine/linux-x64'
         },
         {
@@ -155,7 +154,7 @@ def generate_sdk(
                 'x86_64'
             ],
             'url': flutter_gtk_x64_profile,
-            'sha256': get_sha256(flutter_gtk_x64_profile),
+            'sha256': _get_sha256(flutter_gtk_x64_profile),
             'strip-components': 0,
             'dest': 'flutter/bin/cache/artifacts/engine/linux-x64-profile'
         },
@@ -165,7 +164,7 @@ def generate_sdk(
                 'x86_64'
             ],
             'url': flutter_gtk_x64_release,
-            'sha256': get_sha256(flutter_gtk_x64_release),
+            'sha256': _get_sha256(flutter_gtk_x64_release),
             'strip-components': 0,
             'dest': 'flutter/bin/cache/artifacts/engine/linux-x64-release'
         },
@@ -175,7 +174,7 @@ def generate_sdk(
                 'aarch64'
             ],
             'url': artifacts_arm64,
-            'sha256': get_sha256(artifacts_arm64),
+            'sha256': _get_sha256(artifacts_arm64),
             'strip-components': 0,
             'dest': 'flutter/bin/cache/artifacts/engine/linux-arm64'
         },
@@ -185,7 +184,7 @@ def generate_sdk(
                 'aarch64'
             ],
             'url': font_subset_arm64,
-            'sha256': get_sha256(font_subset_arm64),
+            'sha256': _get_sha256(font_subset_arm64),
             'dest': 'flutter/bin/cache/artifacts/engine/linux-arm64'
         },
         {
@@ -194,7 +193,7 @@ def generate_sdk(
                 'aarch64'
             ],
             'url': flutter_gtk_arm64_profile,
-            'sha256': get_sha256(flutter_gtk_arm64_profile),
+            'sha256': _get_sha256(flutter_gtk_arm64_profile),
             'strip-components': 0,
             'dest': 'flutter/bin/cache/artifacts/engine/linux-arm64-profile'
         },
@@ -204,7 +203,7 @@ def generate_sdk(
                 'aarch64'
             ],
             'url': flutter_gtk_arm64_release,
-            'sha256': get_sha256(flutter_gtk_arm64_release),
+            'sha256': _get_sha256(flutter_gtk_arm64_release),
             'strip-components': 0,
             'dest': 'flutter/bin/cache/artifacts/engine/linux-arm64-release'
         },
@@ -238,17 +237,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('sdk_path', help='Path to the Flutter SDK')
     parser.add_argument('-o', '--output', required=False, help='Where to write generated sources')
-    parser.add_argument('-d', '--debug', action='store_true')
     args = parser.parse_args()
+
     if args.output is not None:
         outfile = args.output
     else:
         outfile = 'flutter-sdk.json'
-    if args.debug:
-        loglevel = logging.DEBUG
-    else:
-        loglevel = logging.INFO
-    logging.basicConfig(level=loglevel)
+
     generated_sdk = generate_sdk(args.sdk_path)
 
     with open(outfile, 'w') as out:

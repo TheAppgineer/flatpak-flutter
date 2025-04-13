@@ -3,13 +3,12 @@
 # Read about the pub cache: https://dart.googlesource.com/pub.git/+/1d7b0d9a/doc/cache_layout.md
 
 __license__ = 'MIT'
-import json
 import argparse
 import hashlib
-import asyncio
-from typing import Any, Dict, List, Optional
-
+import json
 import yaml
+
+from typing import Any, Dict, List, Optional
 
 PUB_DEV = 'https://pub.dev/api/archives'
 PUB_CACHE = 'pub-cache'
@@ -19,7 +18,7 @@ GIT_CACHE = f'.{PUB_CACHE}/git/cache'
 _FlatpakSourceType = Dict[str, Any]
 
 
-def get_git_package_sources(
+def _get_git_package_sources(
     package: Any,
 ) -> List[_FlatpakSourceType]:
     repo_url = str(package['description']['url'])
@@ -54,7 +53,7 @@ def get_git_package_sources(
     return git_sources
 
 
-async def get_package_sources(
+def _get_package_sources(
     name: str,
     package: Any,
 ) -> Optional[List[_FlatpakSourceType]]:
@@ -66,7 +65,7 @@ async def get_package_sources(
     source = package['source']
 
     if source == 'git':
-        return get_git_package_sources(package)
+        return _get_git_package_sources(package)
 
     if source != 'hosted':
         return None
@@ -77,11 +76,7 @@ async def get_package_sources(
         print(f'No sha256 in description of {name}')
         return None
 
-    # TODO: Buildup .pub-cache/hosted/pub.dev/.cache
-    # fetch releases using: https://pub.dev/api/packages/_fe_analyzer_shared
-    # turns out be non-critical for offline pub use
-
-    pubdev_sources = [
+    sources = [
         {
             'type': 'archive',
             'archive-type': 'tar-gzip',
@@ -97,33 +92,39 @@ async def get_package_sources(
             'dest-filename': f'{name}-{version}.sha256',
         },
     ]
-    return pubdev_sources
-
-
-async def generate_sources(
-    pubspec_lock: Any,
-) -> List[_FlatpakSourceType]:
-    sources: List[_FlatpakSourceType] = []
-    package_sources = []
-
-    pkg_coros = [get_package_sources(name, pubspec_lock['packages'][name]) for name in pubspec_lock['packages']]
-    for pkg in await asyncio.gather(*pkg_coros):
-        if pkg is None:
-            continue
-        else:
-            pkg_sources = pkg
-        package_sources.extend(pkg_sources)
-
-    sources.extend(package_sources)
 
     return sources
 
 
+def generate_sources(
+    pubspec_paths: List[str],
+) -> List[_FlatpakSourceType]:
+    pubspec_sources = []
+    deduped = 0
+
+    for path in pubspec_paths:
+        stream = open(path, 'r')
+        pubspec_lock = yaml.load(stream, Loader=yaml.FullLoader)
+
+        for name in pubspec_lock['packages']:
+            sources = _get_package_sources(name, pubspec_lock['packages'][name])
+
+            if sources is not None:
+                for source in sources:
+                    if source in pubspec_sources:
+                        deduped += 1
+                    else:
+                        pubspec_sources.append(source)
+
+    print(f'Deduped {deduped} packages')
+
+    return pubspec_sources
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('pubspec_lock', help='Path to the pubspec.lock file')
+    parser.add_argument('pubspec_paths', help='Path to the pubspec.lock file')
     parser.add_argument('-o', '--output', required=False, help='Where to write generated sources')
-    parser.add_argument('-a', '--append', action='store_true')
     args = parser.parse_args()
 
     if args.output is not None:
@@ -131,26 +132,12 @@ def main():
     else:
         outfile = 'pubspec-sources.json'
 
-    stream = open(args.pubspec_lock, 'r')
-    pubspec_lock = yaml.load(stream, Loader=yaml.FullLoader)
-    generated_sources = asyncio.run(generate_sources(pubspec_lock))
-
-    if args.append:
-        with open(outfile, 'r') as current:
-            current_sources = list(json.load(current))
-            deduped = 0
-
-            for source in generated_sources:
-                if not source in current_sources:
-                    current_sources.append(source)
-                else:
-                    deduped += 1
-
-            print(f'Deduped {deduped} packages')
-            generated_sources = current_sources
+    pubspec_paths = str(args.pubspec_paths).split(',')
+    pubspec_sources = generate_sources(pubspec_paths)
 
     with open(outfile, 'w') as out:
-        json.dump(generated_sources, out, indent=4, sort_keys=False)
+        json.dump(pubspec_sources, out, indent=4, sort_keys=False)
+        out.write('\n')
 
 
 if __name__ == '__main__':

@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION=0.3.5
+VERSION=0.4.0
 APP=todo
 APP_ID=com.example.$APP
 HOME_PATH=$(pwd)
@@ -15,10 +15,11 @@ fail() {
     exit 1
 }
 
-if [ "$1" != "" ]; then
+if [ $# != 0 ]; then
     MANIFEST_PATH=$1
     APP_ID=$(IFS="/" && read -ra array <<< $MANIFEST_PATH && echo ${array[-1]})
     APP=$(IFS="." && read -ra array <<< $APP_ID && echo ${array[-1]})
+    shift
 else
     MANIFEST_PATH=$APP_ID
 fi
@@ -47,56 +48,16 @@ else
     fail "No flatpak-flutter.{yml,yaml,json} found"
 fi
 
-FLUTTER_VERSION=$(python3 $HOME_PATH/offline-manifest-generator/offline-manifest-generator.py flatpak-flutter.$MANIFEST_TYPE)
-
-if [ $? != 0 ]; then
-    fail "Failed to convert to offline mode"
-fi
-
 echo -e "flatpak-flutter version:\t$VERSION"
 echo -e "Building App ID:\t\t$APP_ID"
-echo -e "Targeting Flutter SDK version:\t$FLUTTER_VERSION"
 echo
-echo "To change build target: ./flatpak-flutter.sh </path/to/app_id>"
-
-BUILD_PATH=.flatpak-builder/build/$APP
-FLUTTER_PATH=$BUILD_PATH/flutter
-
-if [ -f $HOME_PATH/releases/$FLUTTER_VERSION/*.flutter.patch ]; then
-    action "Getting patches for Flutter $FLUTTER_VERSION"
-    cp $HOME_PATH/releases/$FLUTTER_VERSION/*.flutter.patch .
-fi
+echo "To change build target: ./flatpak-flutter.sh </path/to/app_id> [options]"
 
 action "Starting online build"
-flatpak run org.flatpak.Builder --force-clean --user --install-deps-from=flathub --build-only --keep-build-dirs build flatpak-flutter.$MANIFEST_TYPE
+$HOME_PATH/flatpak-flutter.py $@ flatpak-flutter.$MANIFEST_TYPE
 
 if [ $? != 0 ]; then
     fail "Online build failed, please verify output for details"
-fi
-
-if [ -d $FLUTTER_PATH ]; then
-    action "Collecting sources for offline build"
-    set -e
-    python3 $HOME_PATH/pubspec-generator/pubspec-generator.py $BUILD_PATH/pubspec.lock
-    python3 $HOME_PATH/pubspec-generator/pubspec-generator.py $FLUTTER_PATH/packages/flutter_tools/pubspec.lock -a
-    cp $FLUTTER_PATH/packages/flutter_tools/.dart_tool/package_config.json .
-    set +e
-
-    if [ -x flatpak-flutter/custom-sources.sh ]; then
-        action "Collecting custom sources for offline build"
-        ./flatpak-flutter/custom-sources.sh $BUILD_PATH $HOME_PATH
-    fi
-
-    if [ -f $HOME_PATH/releases/$FLUTTER_VERSION/flutter-sdk.json ]; then
-        cp -r $HOME_PATH/releases/$FLUTTER_VERSION/flutter-sdk.json flutter-sdk-$FLUTTER_VERSION.json
-    else
-        action "Generating Flutter SDK for version $FLUTTER_VERSION"
-        python3 $HOME_PATH/flutter-sdk-generator/flutter-sdk-generator.py $FLUTTER_PATH -o flutter-sdk-$FLUTTER_VERSION.json
-    fi
-
-    cp -r $HOME_PATH/releases/flutter-shared.sh.patch .
-
-    rm -rf $BUILD_PATH-*
 fi
 
 if [ ! -f pubspec-sources*.json ]; then
