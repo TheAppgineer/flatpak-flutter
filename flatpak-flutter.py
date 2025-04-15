@@ -122,8 +122,9 @@ def _generate_pubspec_sources(app: str, extra_pubspecs: str, build_id: int):
 
 
 def _get_sdk_module(app: str, tag: str, releases: str):
-    if os.path.isdir(releases):
-        shutil.copyfile(f'{releases}/flutter-shared.sh.patch', 'flutter-shared.sh.patch')
+    shutil.copyfile(f'{releases}/flutter-shared.sh.patch', 'flutter-shared.sh.patch')
+
+    if os.path.isdir(f'{releases}/{tag}'):
         shutil.copyfile(f'{releases}/{tag}/flutter-sdk.json', f'flutter-sdk-{tag}.json')
     else:
         generated_sdk = generate_sdk(f'{build_path}/{app}/flutter')
