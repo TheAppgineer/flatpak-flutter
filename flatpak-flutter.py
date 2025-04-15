@@ -8,13 +8,15 @@ import os
 import sys
 import yaml
 import json
+import urllib.parse
+import urllib.request
 
 from pathlib import Path
 from flutter_sdk_generator.flutter_sdk_generator import generate_sdk
 from flutter_app_fetcher.flutter_app_fetcher import fetch_flutter_app
 from pubspec_generator.pubspec_generator import generate_sources, PUB_CACHE
 
-__version__ = '0.4.0'
+__version__ = '0.4.1'
 build_path = '.flatpak-builder/build'
 sandbox_root = '/run/build'
 
@@ -25,6 +27,7 @@ class Dumper(yaml.Dumper):
 
 
 def _get_manifest_from_git(manifest: str, from_git: str, from_git_branch: str):
+    manifest_name = Path(manifest).name
     options = [
         'git',
         'clone',
@@ -33,9 +36,9 @@ def _get_manifest_from_git(manifest: str, from_git: str, from_git_branch: str):
         '--depth',
         '1',
         from_git,
-        f'{build_path}/{manifest}',
+        f'{build_path}/{manifest_name}',
     ]
-    manifest_path = f'{build_path}/{manifest}/{manifest}'
+    manifest_path = f'{build_path}/{manifest_name}/{manifest}'
 
     if os.path.isfile(manifest_path):
         return_code = 0
@@ -43,10 +46,11 @@ def _get_manifest_from_git(manifest: str, from_git: str, from_git_branch: str):
         return_code = subprocess.run(options, stdout=subprocess.PIPE, check=True).returncode
 
     if return_code == 0:
-        shutil.copyfile(manifest_path, manifest)
+        shutil.copyfile(manifest_path, manifest_name)
+        shutil.rmtree(f'{build_path}/{manifest_name}')
 
 
-def _fetch_flutter_app(manifest_path: str, releases_path: str):
+def _fetch_flutter_app(manifest_path: str, releases_path: str, source: str=None):
     with open(manifest_path, 'r') as input_stream:
         suffix = (Path(manifest_path).suffix)
 
@@ -62,7 +66,8 @@ def _fetch_flutter_app(manifest_path: str, releases_path: str):
             if suffix == '.json':
                 json.dump(manifest, output_stream, indent=4, sort_keys=False)
             else:
-                prepend = f'''# Generated from {manifest_path}, do not edit
+                source = source if source is not None else manifest_path
+                prepend = f'''# Generated from {source}, do not edit
 # Visit the flatpak-flutter project at https://github.com/TheAppgineer/flatpak-flutter
 '''
                 output_stream.write(prepend)
@@ -135,7 +140,10 @@ def main():
     parser.add_argument('--from-git', metavar='URL', required=False, help='Get input files from git repo')
     parser.add_argument('--from-git-branch', metavar='BRANCH', required=False, help='Branch to use in --from-git')
     parser.add_argument('--keep-build-dirs', action='store_true', help="Don't remove build directories after processing")
+
     args = parser.parse_args()
+    manifest_path = args.MANIFEST
+    raw_url = None
 
     if 'FLUTTER_SDK_RELEASES' in os.environ:
         releases_path = os.environ['FLUTTER_SDK_RELEASES']
@@ -143,9 +151,17 @@ def main():
         releases_path = f'{str(Path(sys.argv[0]).parent)}/releases'
 
     if args.from_git:
-        _get_manifest_from_git(args.MANIFEST, args.from_git, args.from_git_branch)
+        url = urllib.parse.urlparse(args.from_git)
+        manifest_path = Path(manifest_path).name
 
-    app, tag, build_id = _fetch_flutter_app(args.MANIFEST, releases_path)
+        if url.hostname == 'github.com':
+            path = str(url.path).split('.git')[0]
+            raw_url = f'https://raw.githubusercontent.com{path}/{args.from_git_branch}/{args.MANIFEST}'
+            urllib.request.urlretrieve(raw_url, manifest_path)
+        else:
+            _get_manifest_from_git(args.MANIFEST, args.from_git, args.from_git_branch)
+
+    app, tag, build_id = _fetch_flutter_app(manifest_path, releases_path, raw_url)
 
     _get_flutter_pub(f'{build_path}/{app}')
     _generate_pubspec_sources(app, args.extra_pubspecs, build_id)
