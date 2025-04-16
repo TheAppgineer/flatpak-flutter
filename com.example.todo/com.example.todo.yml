@@ -42,4 +42,4 @@ modules:
         commit: 2a98e745969dd657efe2eccd964253cd20d13e25
       - pubspec-sources.json
     modules:
-      - flutter-sdk-3.29.2.json
+      - flutter-sdk-3.29.3.json
