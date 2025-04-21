@@ -217,7 +217,7 @@ def generate_sdk(
             'dest-filename': 'setup-flutter.sh',
             'commands': [
                 'mkdir -p flutter/bin && cp -r /var/lib/flutter/bin/cache-base flutter/bin/cache',
-                'flutter pub get --offline'
+                'flutter pub get --offline $@'
             ]
         },
         {

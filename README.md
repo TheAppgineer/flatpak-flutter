@@ -15,8 +15,8 @@ Let's get to a more equal playing field!
 
 > Note: The progress already made is that flatpak-flutter is [referenced](https://docs.flutter.dev/deployment/linux#additional-deployment-resources) on the Flutter documentation site!
 
-### The Current Approach
-The approach taken by Flutter app developers to get them published on Flathub, is to create an archive with pre-built binaries and download that within the app manifest. This can lead to the recurring question during the PR review process of "Why not build from source?", but when the reviewer gets aware of the Fluter nature of the app it gets accepted.
+### The Common Approach
+The approach often taken by Flutter app developers to get their apps published on Flathub, is to create an archive with pre-built binaries and download that within the app manifest. This can lead to the recurring question during the PR review process of "Why not build from source?", but when the reviewer gets aware of the Fluter nature of the app it gets accepted.
 
 ### The flatpak-flutter Approach
 flatpak-flutter performs a pre-processing run on the app manifest to collect all the required sources for an offline build and stores their origins in the form of flatpak-builder `modules` and `sources`. The output of this pre-processing step is a manifest that can be built in a sandboxed environment, which can be verified locally by running `flatpak-builder` with the `--sandbox` option.
@@ -76,6 +76,8 @@ As is the case for every Flatpak, it all starts with the manifest file, but flat
   ```
 * Add any other dependencies
 
+> Note: The Flutter source entry should have `flutter` as destination directory.
+
 ### Pre-process With flatpak-flutter
 By passing the manifest to flatpak-flutter it will collect all the dependency sources and generate the manifest for the offline build, to be performed by flatpak-builder. This process pins each dependency to a specific revision, ensuring a reproducible build.
 
@@ -95,6 +97,29 @@ The conversion steps taken on the manifest to come to the offline manifest are:
 * The PATH is adjusted to include the Flutter SDK for the offline build
 * The command to activate the SDK (`setup-flutter.sh`) is inserted in the `build-commands`
 * The `pubspec-sources.json` manifest is appended to the `sources`
+
+#### Command Line Options
+```
+$ ./flatpak-flutter.py --help
+usage: flatpak-flutter.py [-h] [-V] [--app-pubspec PATH]
+                          [--extra-pubspecs PATHS] [--from-git URL]
+                          [--from-git-branch BRANCH] [--keep-build-dirs]
+                          MANIFEST
+
+positional arguments:
+  MANIFEST              Path to the manifest
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -V, --version         show program's version number and exit
+  --app-pubspec PATH    Path to the app pubspec
+  --extra-pubspecs PATHS
+                        Comma separated list of extra pubspec paths
+  --from-git URL        Get input files from git repo
+  --from-git-branch BRANCH
+                        Branch to use in --from-git
+  --keep-build-dirs     Don't remove build directories after processing
+```
 
 ### Build With flatpak-builder
 The generated manifest can now to passed to flatpak-builder, to verify correctness.
@@ -143,6 +168,7 @@ described in the README file within the module subdirectory:
 
 ## Apps Published Using flatpak-flutter
 
+* [CloudOTP](https://flathub.org/apps/com.cloudchewie.cloudotp)
 * [Community Remote](https://flathub.org/apps/com.theappgineer.community_remote)
 * [Gopeed](https://flathub.org/apps/com.gopeed.Gopeed)
 * Your app here?

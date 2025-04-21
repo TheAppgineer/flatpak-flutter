@@ -30,8 +30,7 @@ modules:
       env:
         PUB_CACHE: /run/build/todo/.pub-cache
     build-commands:
-      - mkdir -p build/native_assets/linux
-      - setup-flutter.sh
+      - setup-flutter.sh -C .
       - flutter build linux --release
       - install -D $BUNDLE_PATH/todo /app/bin/todo
       - cp -r $BUNDLE_PATH/lib /app/bin/lib

@@ -16,7 +16,7 @@ from flutter_sdk_generator.flutter_sdk_generator import generate_sdk
 from flutter_app_fetcher.flutter_app_fetcher import fetch_flutter_app
 from pubspec_generator.pubspec_generator import generate_sources, PUB_CACHE
 
-__version__ = '0.4.1'
+__version__ = '0.4.3'
 build_path = '.flatpak-builder/build'
 sandbox_root = '/run/build'
 
@@ -50,7 +50,7 @@ def _get_manifest_from_git(manifest: str, from_git: str, from_git_branch: str):
         shutil.rmtree(f'{build_path}/{manifest_name}')
 
 
-def _fetch_flutter_app(manifest_path: str, releases_path: str, source: str=None):
+def _fetch_flutter_app(manifest_path: str, releases_path: str, app_pubspec: str, source: str=None):
     with open(manifest_path, 'r') as input_stream:
         suffix = (Path(manifest_path).suffix)
 
@@ -59,7 +59,7 @@ def _fetch_flutter_app(manifest_path: str, releases_path: str, source: str=None)
         else:
             manifest = json.load(input_stream)
 
-        app_id, tag, build_id = fetch_flutter_app(manifest, build_path, releases_path)
+        app_id, tag, build_id = fetch_flutter_app(manifest, build_path, releases_path, app_pubspec)
 
         # Write converted manifest to file
         with open(f'{app_id}{suffix}', 'w') as output_stream:
@@ -87,10 +87,10 @@ def _get_flutter_pub(build_path_app: str, pubspec_path = None):
     subprocess.run([options], stdout=subprocess.PIPE, shell=True, check=True)
 
 
-def _generate_pubspec_sources(app: str, extra_pubspecs: str, build_id: int):
+def _generate_pubspec_sources(app: str, app_pubspec:str, extra_pubspecs: str, build_id: int):
     flutter_tools = 'flutter/packages/flutter_tools'
     pubspec_paths = [
-        f'{build_path}/{app}/pubspec.lock',
+        f'{build_path}/{app}/{app_pubspec}/pubspec.lock',
         f'{build_path}/{app}/{flutter_tools}/pubspec.lock',
     ]
 
@@ -137,6 +137,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('MANIFEST', help='Path to the manifest')
     parser.add_argument('-V', '--version', action='version', version=f'%(prog)s-{__version__}')
+    parser.add_argument('--app-pubspec', metavar='PATH', help='Path to the app pubspec')
     parser.add_argument('--extra-pubspecs', metavar='PATHS', help='Comma separated list of extra pubspec paths')
     parser.add_argument('--from-git', metavar='URL', required=False, help='Get input files from git repo')
     parser.add_argument('--from-git-branch', metavar='BRANCH', required=False, help='Branch to use in --from-git')
@@ -162,10 +163,11 @@ def main():
         else:
             _get_manifest_from_git(args.MANIFEST, args.from_git, args.from_git_branch)
 
-    app, tag, build_id = _fetch_flutter_app(manifest_path, releases_path, raw_url)
+    app_pubspec = '.' if args.app_pubspec is None else args.app_pubspec
+    app, tag, build_id = _fetch_flutter_app(manifest_path, releases_path, app_pubspec, raw_url)
 
-    _get_flutter_pub(f'{build_path}/{app}')
-    _generate_pubspec_sources(app, args.extra_pubspecs, build_id)
+    _get_flutter_pub(f'{build_path}/{app}', args.app_pubspec)
+    _generate_pubspec_sources(app, app_pubspec, args.extra_pubspecs, build_id)
     _get_sdk_module(app, tag, releases_path)
 
     if not args.keep_build_dirs:
