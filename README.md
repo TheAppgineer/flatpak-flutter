@@ -88,8 +88,6 @@ cd com.example.todo
 
 > Note: The above generation process only has to be repeated if app dependencies change, or have updates.
 
-> Note: Use `./flatpak-flutter.py --help` to read about the available options.
-
 #### Conversion steps taken
 The conversion steps taken on the manifest to come to the offline manifest are:
 
@@ -171,6 +169,7 @@ described in the README file within the module subdirectory:
 * [CloudOTP](https://flathub.org/apps/com.cloudchewie.cloudotp)
 * [Community Remote](https://flathub.org/apps/com.theappgineer.community_remote)
 * [Gopeed](https://flathub.org/apps/com.gopeed.Gopeed)
+* [Sly](https://flathub.org/apps/page.kramo.Sly)
 * Your app here?
 
 > Note: Please get in contact if you know about an app using flatpak-flutter that is not on this list!
