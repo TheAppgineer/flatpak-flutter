@@ -66,21 +66,19 @@ def _process_build_options(module):
                     break
 
 
-def _process_build_commands(module):
+def _process_build_commands(module, app_pubspec: str):
     if 'build-commands' in module:
-        insert_commands = ['mkdir -p build/native_assets/linux', 'setup-flutter.sh']
+        insert_command = f'setup-flutter.sh -C {app_pubspec}'
         build_commands = list(module['build-commands'])
 
         for idx, command in enumerate(build_commands):
             if str(command).startswith('flutter pub get'):
                 del build_commands[idx]
-                for command in reversed(insert_commands):
-                    build_commands.insert(idx, command)
+                build_commands.insert(idx, insert_command)
                 break
 
-            if str(command).startswith('flutter '):
-                for command in reversed(insert_commands):
-                    build_commands.insert(idx, command)
+            if 'flutter ' in str(command):
+                build_commands.insert(idx, insert_command)
                 break
 
         module['build-commands'] = build_commands
@@ -137,9 +135,10 @@ def _process_sources(module, fetch_path: str, releases_path: str):
                 if not 'path' in source:
                     continue
 
+                dest = source['dest'] if 'dest' in source else ''
                 path = str(source['path'])
                 print(f'Apply patch: {path}')
-                command = f'(cd {fetch_path} && patch -p1) < {path}'
+                command = f'(cd {fetch_path}/{dest} && patch -p1) < {path}'
                 subprocess.run([command], stdout=subprocess.PIPE, shell=True, check=True)
 
     for idx in reversed(idxs):
@@ -157,7 +156,7 @@ def _process_sources(module, fetch_path: str, releases_path: str):
     return tag
 
 
-def fetch_flutter_app(manifest, build_path: str, releases_path: str) -> Tuple[str, str, int]:
+def fetch_flutter_app(manifest, build_path: str, releases_path: str, app_pubspec: str) -> Tuple[str, str, int]:
     if 'app-id' in manifest:
         app_id = 'app-id'
     elif 'id' in manifest:
@@ -180,7 +179,7 @@ def fetch_flutter_app(manifest, build_path: str, releases_path: str) -> Tuple[st
             exit(1)
 
         _process_build_options(module)
-        _process_build_commands(module)
+        _process_build_commands(module, app_pubspec)
 
         build_path_app = f'{build_path}/{app}'
         build_id = len(glob.glob(f'{build_path_app}-*')) + 1
