@@ -31,6 +31,13 @@ def _get_manifest_from_git(manifest: str, from_git: str, from_git_branch: str):
     options = [
         'git',
         'clone',
+        '--depth',
+        '1',
+        from_git,
+        f'{build_path}/{manifest_name}',
+    ] if from_git_branch is None else [
+        'git',
+        'clone',
         '--branch',
         from_git_branch,
         '--depth',
@@ -156,7 +163,7 @@ def main():
         url = urllib.parse.urlparse(args.from_git)
         manifest_path = Path(manifest_path).name
 
-        if url.hostname == 'github.com':
+        if url.hostname == 'github.com' and args.from_git_branch is not None:
             path = str(url.path).split('.git')[0]
             raw_url = f'https://raw.githubusercontent.com{path}/{args.from_git_branch}/{args.MANIFEST}'
             urllib.request.urlretrieve(raw_url, manifest_path)
