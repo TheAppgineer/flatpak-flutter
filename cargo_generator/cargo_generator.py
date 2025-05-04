@@ -6,25 +6,17 @@ from urllib.parse import urlparse, ParseResult, parse_qs
 import os
 import contextlib
 import copy
-import glob
 import subprocess
 import argparse
 import logging
 import hashlib
 import asyncio
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple, TypedDict, TYPE_CHECKING
+
+from pathlib import Path
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, TypedDict
 
 import aiohttp
 import toml
-
-try:
-    import yaml
-    YAML_AVAIL = True
-except ImportError:
-    YAML_AVAIL = False
-
-if TYPE_CHECKING and not YAML_AVAIL:
-    import yaml
 
 CRATES_IO = 'https://static.crates.io/crates'
 CARGO_HOME = 'cargo'
@@ -232,26 +224,13 @@ _FlatpakSourceType = Dict[str, Any]
 async def get_git_repo_sources(
     url: str,
     commit: str,
-    tarball: bool = False,
 ) -> List[_FlatpakSourceType]:
-    name = git_repo_name(url, commit)
-    if tarball:
-        tarball_url = get_git_tarball(url, commit)
-        git_repo_sources = [{
-            'type': 'archive',
-            'archive-type': 'tar-gzip',
-            'url': tarball_url,
-            'sha256': await get_remote_sha256(tarball_url),
-            'dest': f'{GIT_CACHE}/{name}',
-        }]
-    else:
-        git_repo_sources = [{
-            'type': 'git',
-            'url': url,
-            'commit': commit,
-            'dest': f'{GIT_CACHE}/{name}',
-        }]
-    return git_repo_sources
+    return [{
+        'type': 'git',
+        'url': url,
+        'commit': commit,
+        'dest': f'{GIT_CACHE}/{git_repo_name(url, commit)}',
+    }]
 
 
 _GitRepo = TypedDict('_GitRepo', {'lock': asyncio.Lock, 'commits': Dict[str, _GitPackagesType]})
@@ -304,7 +283,7 @@ async def get_git_package_sources(
         {
             'type': 'shell',
             'commands': [
-                f'cp -r --reflink=auto "{pkg_repo_dir}" "{CARGO_CRATES}/{name}"'
+                f'cp -rf --reflink=auto "{pkg_repo_dir}" "{CARGO_CRATES}/{name}"'
             ],
         },
         {
@@ -367,20 +346,7 @@ async def get_package_sources(
     return (crate_sources, {'crates-io': {'replace-with': VENDORED_SOURCES}})
 
 
-async def generate_sources(
-    cargo_lock: _TomlType,
-    git_tarballs: bool = False,
-) -> List[_FlatpakSourceType]:
-    # {
-    #     "git-repo-url": {
-    #         "lock": asyncio.Lock(),
-    #         "commits": {
-    #             "commit-hash": {
-    #                 "package-name": "./relative/package/path"
-    #             }
-    #         }
-    #     }
-    # }
+async def generate_sources(cargo_lock_paths: List[str]) -> List[_FlatpakSourceType]:
     git_repos: _GitReposType = {}
     sources: List[_FlatpakSourceType] = []
     package_sources = []
@@ -388,23 +354,28 @@ async def generate_sources(
         VENDORED_SOURCES: {'directory': f'{CARGO_CRATES}'},
     }
 
-    pkg_coros = [get_package_sources(p, cargo_lock, git_repos) for p in cargo_lock['package']]
-    for pkg in await asyncio.gather(*pkg_coros):
-        if pkg is None:
-            continue
-        else:
-            pkg_sources, cargo_vendored_entry = pkg
-        package_sources.extend(pkg_sources)
-        cargo_vendored_sources.update(cargo_vendored_entry)
+    for cargo_lock_path in cargo_lock_paths:
+        cargo_lock_path = str(Path(cargo_lock_path).expanduser())
+        logging.debug(cargo_lock_path)
+        cargo_lock = load_toml(cargo_lock_path)
 
-    logging.debug('Adding collected git repos:\n%s', json.dumps(list(git_repos), indent=4))
-    git_repo_coros = []
-    for git_url, git_repo in git_repos.items():
-        for git_commit in git_repo['commits']:
-            git_repo_coros.append(get_git_repo_sources(git_url, git_commit, git_tarballs))
-    sources.extend(sum(await asyncio.gather(*git_repo_coros), []))
+        pkg_coros = [get_package_sources(p, cargo_lock, git_repos) for p in cargo_lock['package']]
+        for pkg in await asyncio.gather(*pkg_coros):
+            if pkg is None:
+                continue
+            else:
+                pkg_sources, cargo_vendored_entry = pkg
+            package_sources.extend(pkg_sources)
+            cargo_vendored_sources.update(cargo_vendored_entry)
 
-    sources.extend(package_sources)
+        logging.debug('Adding collected git repos:\n%s', json.dumps(list(git_repos), indent=4))
+        git_repo_coros = []
+        for git_url, git_repo in git_repos.items():
+            for git_commit in git_repo['commits']:
+                git_repo_coros.append(get_git_repo_sources(git_url, git_commit))
+
+        sources.extend(sum(await asyncio.gather(*git_repo_coros), []))
+        sources.extend(package_sources)
 
     logging.debug('Vendored sources:\n%s', json.dumps(cargo_vendored_sources, indent=4))
     sources.append({
@@ -415,39 +386,31 @@ async def generate_sources(
         'dest': CARGO_HOME,
         'dest-filename': 'config'
     })
+
     return sources
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('cargo_lock', help='Path to the Cargo.lock file')
+    parser.add_argument('cargo_lock_paths', help='Comma separated list of paths to Cargo.lock files')
     parser.add_argument('-o', '--output', required=False, help='Where to write generated sources')
-    parser.add_argument('--yaml', action='store_true', help='Output as YAML instead of JSON')
-    parser.add_argument('-t', '--git-tarballs', action='store_true', help='Download git repos as tarballs')
     parser.add_argument('-d', '--debug', action='store_true')
     args = parser.parse_args()
-
     if args.output is not None:
         outfile = args.output
-    elif args.yaml and YAML_AVAIL:
-        outfile = 'generated-sources.yml'
     else:
-        outfile = 'generated-sources.json'
+        outfile = 'cargo-sources.json'
     if args.debug:
         loglevel = logging.DEBUG
     else:
         loglevel = logging.INFO
     logging.basicConfig(level=loglevel)
 
-    generated_sources = asyncio.run(generate_sources(load_toml(args.cargo_lock),
-                                    git_tarballs=args.git_tarballs))
+    cargo_lock_paths = str(args.cargo_lock_paths).split(',')
+    generated_sources = asyncio.run(generate_sources(cargo_lock_paths))
 
-    if args.yaml and YAML_AVAIL:
-        with open(outfile, 'w') as out:
-            yaml.dump(generated_sources, out, sort_keys=False)
-    else:
-        with open(outfile, 'w') as out:
-            json.dump(generated_sources, out, indent=4, sort_keys=False)
+    with open(outfile, 'w') as out:
+        json.dump(generated_sources, out, indent=4, sort_keys=False)
 
 
 if __name__ == '__main__':

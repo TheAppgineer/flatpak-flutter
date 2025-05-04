@@ -84,7 +84,7 @@ def _process_build_commands(module, app_pubspec: str):
         module['build-commands'] = build_commands
 
 
-def _process_sources(module, fetch_path: str, releases_path: str):
+def _process_sources(module, fetch_path: str, releases_path: str, rust_version: str):
     if not 'sources' in module:
         return
 
@@ -152,11 +152,20 @@ def _process_sources(module, fetch_path: str, releases_path: str):
             }
         ]
 
-    sources += ["pubspec-sources.json"]
+    if rust_version is not None:
+        module['sources'] = ["pubspec-sources.json", 'cargo-sources.json'] + sources
+
+        if 'modules' in module:
+            module['modules'] += [f"rustup-{rust_version}.json"]
+        else:
+            module['modules'] = [f"rustup-{rust_version}.json"]
+    else:
+        module['sources'] = ["pubspec-sources.json"] + sources
+
     return tag
 
 
-def fetch_flutter_app(manifest, build_path: str, releases_path: str, app_pubspec: str) -> Tuple[str, str, int]:
+def fetch_flutter_app(manifest, build_path: str, releases_path: str, app_pubspec: str, rust_version: str) -> Tuple[str, str, int]:
     if 'app-id' in manifest:
         app_id = 'app-id'
     elif 'id' in manifest:
@@ -183,7 +192,7 @@ def fetch_flutter_app(manifest, build_path: str, releases_path: str, app_pubspec
 
         build_path_app = f'{build_path}/{app}'
         build_id = len(glob.glob(f'{build_path_app}-*')) + 1
-        tag = _process_sources(module, f'{build_path_app}-{build_id}', releases_path)
+        tag = _process_sources(module, f'{build_path_app}-{build_id}', releases_path, rust_version)
 
         options = [f'cd {build_path} && ln -snf {app}-{build_id} {app}']
         subprocess.run(options, stdout=subprocess.PIPE, shell=True, check=True)

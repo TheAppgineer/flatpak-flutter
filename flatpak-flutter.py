@@ -10,13 +10,18 @@ import yaml
 import json
 import urllib.parse
 import urllib.request
+import asyncio
 
 from pathlib import Path
 from flutter_sdk_generator.flutter_sdk_generator import generate_sdk
 from flutter_app_fetcher.flutter_app_fetcher import fetch_flutter_app
-from pubspec_generator.pubspec_generator import generate_sources, PUB_CACHE
+from pubspec_generator.pubspec_generator import PUB_CACHE
+from cargo_generator.cargo_generator import generate_sources as generate_cargo_sources
+from pubspec_generator.pubspec_generator import generate_sources as generate_pubspec_sources
 
-__version__ = '0.4.3'
+RUST_VERSION = '1.83.0'
+
+__version__ = '0.5.0'
 build_path = '.flatpak-builder/build'
 sandbox_root = '/run/build'
 
@@ -57,7 +62,7 @@ def _get_manifest_from_git(manifest: str, from_git: str, from_git_branch: str):
         shutil.rmtree(f'{build_path}/{manifest_name}')
 
 
-def _fetch_flutter_app(manifest_path: str, releases_path: str, app_pubspec: str, source: str=None):
+def _fetch_flutter_app(manifest_path: str, releases_path: str, app_pubspec: str, source: str=None, rust_version: str=None):
     with open(manifest_path, 'r') as input_stream:
         suffix = (Path(manifest_path).suffix)
 
@@ -66,7 +71,8 @@ def _fetch_flutter_app(manifest_path: str, releases_path: str, app_pubspec: str,
         else:
             manifest = json.load(input_stream)
 
-        app_id, tag, build_id = fetch_flutter_app(manifest, build_path, releases_path, app_pubspec)
+        releases_path += '/flutter'
+        app_id, tag, build_id = fetch_flutter_app(manifest, build_path, releases_path, app_pubspec, rust_version)
 
         # Write converted manifest to file
         with open(f'{app_id}{suffix}', 'w') as output_stream:
@@ -85,7 +91,7 @@ def _fetch_flutter_app(manifest_path: str, releases_path: str, app_pubspec: str,
         return app, tag, build_id
 
 
-def _get_flutter_pub(build_path_app: str, pubspec_path = None):
+def _create_pub_cache(build_path_app: str, pubspec_path = None):
     full_pubspec_path = build_path_app if pubspec_path is None else f'{build_path_app}/{pubspec_path}'
     pub_cache = f'{os.getcwd()}/{build_path_app}/.{PUB_CACHE}'
     flutter = 'flutter/bin/flutter'
@@ -106,7 +112,7 @@ def _generate_pubspec_sources(app: str, app_pubspec:str, extra_pubspecs: str, bu
         for path in paths:
             pubspec_paths.append(f'{build_path}/{app}/{path}/pubspec.lock')
 
-    pubspec_sources = generate_sources(pubspec_paths)
+    pubspec_sources = generate_pubspec_sources(pubspec_paths)
     pubspec_sources.append({
         'type': 'file',
         'path': 'package_config.json',
@@ -128,11 +134,28 @@ def _generate_pubspec_sources(app: str, app_pubspec:str, extra_pubspecs: str, bu
         out.write(package_config)
 
 
-def _get_sdk_module(app: str, tag: str, releases: str):
-    shutil.copyfile(f'{releases}/flutter-shared.sh.patch', 'flutter-shared.sh.patch')
+def _generate_cargo_sources(app: str, cargo_locks: str, releases: str):
+    if cargo_locks:
+        cargo_paths = []
+        paths = cargo_locks.split(',')
 
-    if os.path.isdir(f'{releases}/{tag}'):
-        shutil.copyfile(f'{releases}/{tag}/flutter-sdk.json', f'flutter-sdk-{tag}.json')
+        for path in paths:
+            cargo_paths.append(f'{build_path}/{app}/{path}/Cargo.lock')
+
+        cargo_sources = asyncio.run(generate_cargo_sources(cargo_paths))
+
+        with open('cargo-sources.json', 'w') as out:
+            json.dump(cargo_sources, out, indent=4, sort_keys=False)
+            out.write('\n')
+
+        shutil.copyfile(f'{releases}/rust/{RUST_VERSION}/rustup.json', f'rustup-{RUST_VERSION}.json')
+
+
+def _get_sdk_module(app: str, tag: str, releases: str):
+    shutil.copyfile(f'{releases}/flutter/flutter-shared.sh.patch', 'flutter-shared.sh.patch')
+
+    if os.path.isdir(f'{releases}/flutter/{tag}'):
+        shutil.copyfile(f'{releases}/flutter/{tag}/flutter-sdk.json', f'flutter-sdk-{tag}.json')
     else:
         generated_sdk = generate_sdk(f'{build_path}/{app}/flutter')
 
@@ -146,6 +169,7 @@ def main():
     parser.add_argument('-V', '--version', action='version', version=f'%(prog)s-{__version__}')
     parser.add_argument('--app-pubspec', metavar='PATH', help='Path to the app pubspec')
     parser.add_argument('--extra-pubspecs', metavar='PATHS', help='Comma separated list of extra pubspec paths')
+    parser.add_argument('--cargo-locks', metavar='PATHS', help='Comma separated list of Cargo.lock paths')
     parser.add_argument('--from-git', metavar='URL', required=False, help='Get input files from git repo')
     parser.add_argument('--from-git-branch', metavar='BRANCH', required=False, help='Branch to use in --from-git')
     parser.add_argument('--keep-build-dirs', action='store_true', help="Don't remove build directories after processing")
@@ -171,10 +195,11 @@ def main():
             _get_manifest_from_git(args.MANIFEST, args.from_git, args.from_git_branch)
 
     app_pubspec = '.' if args.app_pubspec is None else args.app_pubspec
-    app, tag, build_id = _fetch_flutter_app(manifest_path, releases_path, app_pubspec, raw_url)
+    app, tag, build_id = _fetch_flutter_app(manifest_path, releases_path, app_pubspec, raw_url, RUST_VERSION)
 
-    _get_flutter_pub(f'{build_path}/{app}', args.app_pubspec)
+    _create_pub_cache(f'{build_path}/{app}', args.app_pubspec)
     _generate_pubspec_sources(app, app_pubspec, args.extra_pubspecs, build_id)
+    _generate_cargo_sources(app, args.cargo_locks, releases_path)
     _get_sdk_module(app, tag, releases_path)
 
     if not args.keep_build_dirs:
