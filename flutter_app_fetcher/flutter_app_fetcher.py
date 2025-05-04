@@ -42,6 +42,14 @@ def _fetch_repos(repos: list):
             subprocess.run(command, stdout=subprocess.PIPE, shell=True, check=True)
 
 
+def _add_submodule(module, submodule):
+    if 'modules' in module:
+        if submodule not in module['modules']:
+            module['modules'] += [submodule]
+    else:
+        module['modules'] = [submodule]
+
+
 def _process_build_options(module):
     if 'build-options' in module:
         build_options = module['build-options']
@@ -114,10 +122,7 @@ def _process_sources(module, fetch_path: str, releases_path: str, rust_version: 
                 if source['url'] == FLUTTER_URL and 'tag' in source:
                     idxs.append(idx)
 
-                    if 'modules' in module:
-                        module['modules'] += [f"flutter-sdk-{source['tag']}.json"]
-                    else:
-                        module['modules'] = [f"flutter-sdk-{source['tag']}.json"]
+                    _add_submodule(module, f"flutter-sdk-{source['tag']}.json")
 
                     tag = source['tag']
 
@@ -155,10 +160,7 @@ def _process_sources(module, fetch_path: str, releases_path: str, rust_version: 
     if rust_version is not None:
         module['sources'] = ["pubspec-sources.json", 'cargo-sources.json'] + sources
 
-        if 'modules' in module:
-            module['modules'] += [f"rustup-{rust_version}.json"]
-        else:
-            module['modules'] = [f"rustup-{rust_version}.json"]
+        _add_submodule(module, f"rustup-{rust_version}.json")
     else:
         module['sources'] = ["pubspec-sources.json"] + sources
 
