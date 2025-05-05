@@ -245,7 +245,7 @@ async def get_git_package_sources(
     name = package['name']
     source = package['source']
     commit = urlparse(source).fragment
-    assert commit, 'The commit needs to be indicated in the fragement part'
+    assert commit, 'The commit needs to be indicated in the fragment part'
     canonical = canonical_url(source)
     repo_url = canonical.geturl()
 
@@ -346,15 +346,31 @@ async def get_package_sources(
     return (crate_sources, {'crates-io': {'replace-with': VENDORED_SOURCES}})
 
 
+def dedupe(current: list, new: list):
+    deduped = 0
+
+    if len(current) == 0:
+        current.extend(new)
+    else:
+        for item in new:
+            if item in current:
+                deduped += 1
+            else:
+                current.append(item)
+
+    return deduped
+
+
 async def generate_sources(cargo_lock_paths: List[str]) -> List[_FlatpakSourceType]:
-    git_repos: _GitReposType = {}
     sources: List[_FlatpakSourceType] = []
-    package_sources = []
     cargo_vendored_sources = {
         VENDORED_SOURCES: {'directory': f'{CARGO_CRATES}'},
     }
+    deduped = 0
 
     for cargo_lock_path in cargo_lock_paths:
+        git_repos: _GitReposType = {}
+        package_sources = []
         cargo_lock_path = str(Path(cargo_lock_path).expanduser())
         logging.debug(cargo_lock_path)
         cargo_lock = load_toml(cargo_lock_path)
@@ -363,8 +379,8 @@ async def generate_sources(cargo_lock_paths: List[str]) -> List[_FlatpakSourceTy
         for pkg in await asyncio.gather(*pkg_coros):
             if pkg is None:
                 continue
-            else:
-                pkg_sources, cargo_vendored_entry = pkg
+
+            pkg_sources, cargo_vendored_entry = pkg
             package_sources.extend(pkg_sources)
             cargo_vendored_sources.update(cargo_vendored_entry)
 
@@ -374,8 +390,8 @@ async def generate_sources(cargo_lock_paths: List[str]) -> List[_FlatpakSourceTy
             for git_commit in git_repo['commits']:
                 git_repo_coros.append(get_git_repo_sources(git_url, git_commit))
 
-        sources.extend(sum(await asyncio.gather(*git_repo_coros), []))
-        sources.extend(package_sources)
+        deduped += dedupe(sources, sum(await asyncio.gather(*git_repo_coros), []))
+        deduped += dedupe(sources, package_sources)
 
     logging.debug('Vendored sources:\n%s', json.dumps(cargo_vendored_sources, indent=4))
     sources.append({
@@ -386,6 +402,8 @@ async def generate_sources(cargo_lock_paths: List[str]) -> List[_FlatpakSourceTy
         'dest': CARGO_HOME,
         'dest-filename': 'config'
     })
+
+    print(f'Deduped {deduped} cargo source entries')
 
     return sources
 

@@ -116,7 +116,7 @@ def generate_sources(
                     else:
                         pubspec_sources.append(source)
 
-    print(f'Deduped {deduped} packages')
+    print(f'Deduped {deduped} pubspec source entries')
 
     return pubspec_sources
 
