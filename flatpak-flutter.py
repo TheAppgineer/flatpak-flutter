@@ -195,7 +195,8 @@ def main():
             _get_manifest_from_git(args.MANIFEST, args.from_git, args.from_git_branch)
 
     app_pubspec = '.' if args.app_pubspec is None else args.app_pubspec
-    app, tag, build_id = _fetch_flutter_app(manifest_path, releases_path, app_pubspec, raw_url, RUST_VERSION)
+    rust_version = None if args.cargo_locks is None else RUST_VERSION
+    app, tag, build_id = _fetch_flutter_app(manifest_path, releases_path, app_pubspec, raw_url, rust_version)
 
     _create_pub_cache(f'{build_path}/{app}', args.app_pubspec)
     _generate_pubspec_sources(app, app_pubspec, args.extra_pubspecs, build_id)
