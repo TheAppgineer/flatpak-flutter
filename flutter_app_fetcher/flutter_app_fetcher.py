@@ -9,7 +9,7 @@ from typing import Tuple
 from pubspec_generator.pubspec_generator import PUB_CACHE
 
 
-FLUTTER_URL = 'https://github.com/flutter/flutter.git'
+FLUTTER_URL = 'https://github.com/flutter/flutter'
 
 
 class Dumper(yaml.Dumper):
@@ -119,7 +119,7 @@ def _process_sources(module, fetch_path: str, releases_path: str, rust_version: 
                 else:
                     repos.append((source['url'], ref, fetch_path))
 
-                if source['url'] == FLUTTER_URL and 'tag' in source:
+                if str(source['url']).startswith(FLUTTER_URL) and 'tag' in source:
                     idxs.append(idx)
 
                     _add_submodule(module, f"flutter-sdk-{source['tag']}.json")
