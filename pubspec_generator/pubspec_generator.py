@@ -116,14 +116,14 @@ def generate_sources(
                     else:
                         pubspec_sources.append(source)
 
-    print(f'Deduped {deduped} packages')
+    print(f'Deduped {deduped} pubspec source entries')
 
     return pubspec_sources
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('pubspec_paths', help='Path to the pubspec.lock file')
+    parser.add_argument('pubspec_paths', help='Comma separated list of paths to pubspec.lock files')
     parser.add_argument('-o', '--output', required=False, help='Where to write generated sources')
     args = parser.parse_args()
 

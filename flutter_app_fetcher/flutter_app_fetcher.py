@@ -9,7 +9,7 @@ from typing import Tuple
 from pubspec_generator.pubspec_generator import PUB_CACHE
 
 
-FLUTTER_URL = 'https://github.com/flutter/flutter.git'
+FLUTTER_URL = 'https://github.com/flutter/flutter'
 
 
 class Dumper(yaml.Dumper):
@@ -40,6 +40,14 @@ def _fetch_repos(repos: list):
         except subprocess.CalledProcessError:
             command = [f'git clone {url} {path} && cd {path} && git reset --hard {ref}']
             subprocess.run(command, stdout=subprocess.PIPE, shell=True, check=True)
+
+
+def _add_submodule(module, submodule):
+    if 'modules' in module:
+        if submodule not in module['modules']:
+            module['modules'] += [submodule]
+    else:
+        module['modules'] = [submodule]
 
 
 def _process_build_options(module):
@@ -84,7 +92,7 @@ def _process_build_commands(module, app_pubspec: str):
         module['build-commands'] = build_commands
 
 
-def _process_sources(module, fetch_path: str, releases_path: str):
+def _process_sources(module, fetch_path: str, releases_path: str, rust_version: str):
     if not 'sources' in module:
         return
 
@@ -111,13 +119,10 @@ def _process_sources(module, fetch_path: str, releases_path: str):
                 else:
                     repos.append((source['url'], ref, fetch_path))
 
-                if source['url'] == FLUTTER_URL and 'tag' in source:
+                if str(source['url']).startswith(FLUTTER_URL) and 'tag' in source:
                     idxs.append(idx)
 
-                    if 'modules' in module:
-                        module['modules'] += [f"flutter-sdk-{source['tag']}.json"]
-                    else:
-                        module['modules'] = [f"flutter-sdk-{source['tag']}.json"]
+                    _add_submodule(module, f"flutter-sdk-{source['tag']}.json")
 
                     tag = source['tag']
 
@@ -152,11 +157,17 @@ def _process_sources(module, fetch_path: str, releases_path: str):
             }
         ]
 
-    sources += ["pubspec-sources.json"]
+    if rust_version is not None:
+        module['sources'] = ["pubspec-sources.json", 'cargo-sources.json'] + sources
+
+        _add_submodule(module, f"rustup-{rust_version}.json")
+    else:
+        module['sources'] = ["pubspec-sources.json"] + sources
+
     return tag
 
 
-def fetch_flutter_app(manifest, build_path: str, releases_path: str, app_pubspec: str) -> Tuple[str, str, int]:
+def fetch_flutter_app(manifest, build_path: str, releases_path: str, app_pubspec: str, rust_version: str) -> Tuple[str, str, int]:
     if 'app-id' in manifest:
         app_id = 'app-id'
     elif 'id' in manifest:
@@ -183,7 +194,7 @@ def fetch_flutter_app(manifest, build_path: str, releases_path: str, app_pubspec
 
         build_path_app = f'{build_path}/{app}'
         build_id = len(glob.glob(f'{build_path_app}-*')) + 1
-        tag = _process_sources(module, f'{build_path_app}-{build_id}', releases_path)
+        tag = _process_sources(module, f'{build_path_app}-{build_id}', releases_path, rust_version)
 
         options = [f'cd {build_path} && ln -snf {app}-{build_id} {app}']
         subprocess.run(options, stdout=subprocess.PIPE, shell=True, check=True)
