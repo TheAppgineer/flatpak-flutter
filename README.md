@@ -146,14 +146,14 @@ The `flatpak-flutter.sh` script, as known from previous releases, is still avail
 
 ## Prerequisites
 ### Python
-flatpak-flutter requires Python 3.8 or later and the `pyyaml` package.
+flatpak-flutter requires Python 3.8 or later.
 
 Poetry users:
 run `poetry install` to setup, activate your virtual env by running `poetry shell`.
 
-Otherwise install Python 3.8+ with the `pyyaml` package:
+Otherwise install Python 3.8+ and the dependency packages:
 
-    pip install pyyaml
+    pip install aiohttp pyyaml toml
 
 ## Python module details
 The Python modules, taking care of the different processing steps, are further
