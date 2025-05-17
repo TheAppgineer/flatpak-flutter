@@ -144,7 +144,20 @@ The `flatpak-flutter.sh` script, as known from previous releases, is still avail
 
     flatpak install -y flathub org.flatpak.Builder
 
-## Prerequisites
+## Setup
+### Docker
+The recommended setup is to use the Docker image.
+
+    docker run --rm -v "$PWD":/usr/src/flatpak -u `id -u`:`id -g` theappgineer/flatpak-flutter:latest
+
+An alias can be defined to get a clean command line (`.bashrc`):
+
+    alias flatpak-flutter='docker run --rm -v "$PWD":/usr/src/flatpak -u `id -u`:`id -g` theappgineer/flatpak-flutter:latest'
+
+Basic usage:
+
+    flatpak-flutter flatpak-flutter.yml
+
 ### Python
 flatpak-flutter requires Python 3.8 or later.
 
