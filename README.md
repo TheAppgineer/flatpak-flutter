@@ -166,7 +166,7 @@ run `poetry install` to setup, activate your virtual env by running `poetry shel
 
 Otherwise install Python 3.8+ and the dependency packages:
 
-    pip install aiohttp pyyaml toml
+    pip install pyyaml toml
 
 ## Python module details
 The Python modules, taking care of the different processing steps, are further
@@ -179,6 +179,7 @@ described in the README file within the module subdirectory:
 
 ## Apps Published Using flatpak-flutter
 
+* [Brisk](https://flathub.org/apps/io.github.BrisklyDev.Brisk)
 * [CloudOTP](https://flathub.org/apps/com.cloudchewie.cloudotp)
 * [Community Remote](https://flathub.org/apps/com.theappgineer.community_remote)
 * [Gopeed](https://flathub.org/apps/com.gopeed.Gopeed)

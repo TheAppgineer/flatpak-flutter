@@ -5,8 +5,7 @@ import glob
 import shutil
 
 from pathlib import Path
-from typing import Tuple
-from pubspec_generator.pubspec_generator import PUB_CACHE
+from typing import Optional, Tuple
 
 
 FLUTTER_URL = 'https://github.com/flutter/flutter'
@@ -92,9 +91,9 @@ def _process_build_commands(module, app_pubspec: str):
         module['build-commands'] = build_commands
 
 
-def _process_sources(module, fetch_path: str, releases_path: str, rust_version: str):
+def _process_sources(module, fetch_path: str, releases_path: str, rust_version: Optional[str]) -> Optional[str]:
     if not 'sources' in module:
-        return
+        return None
 
     sources = module['sources']
     idxs = []
@@ -167,7 +166,13 @@ def _process_sources(module, fetch_path: str, releases_path: str, rust_version: 
     return tag
 
 
-def fetch_flutter_app(manifest, build_path: str, releases_path: str, app_pubspec: str, rust_version: str) -> Tuple[str, str, int]:
+def fetch_flutter_app(
+    manifest,
+    build_path: str,
+    releases_path: str,
+    app_pubspec: str,
+    rust_version: Optional[str]
+) -> Tuple[str, Optional[str], int]:
     if 'app-id' in manifest:
         app_id = 'app-id'
     elif 'id' in manifest:
@@ -199,7 +204,7 @@ def fetch_flutter_app(manifest, build_path: str, releases_path: str, app_pubspec
         options = [f'cd {build_path} && ln -snf {app}-{build_id} {app}']
         subprocess.run(options, stdout=subprocess.PIPE, shell=True, check=True)
 
-        return manifest[app_id], tag, build_id
+        return str(manifest[app_id]), tag, build_id
     else:
         print(f'Error: No module named {app} found!')
         exit(1)

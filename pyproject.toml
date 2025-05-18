@@ -3,7 +3,6 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.8"
-aiohttp = "^3.9.5"
 pyyaml = "^6.0.2"
 toml = "^0.10.2"
 
