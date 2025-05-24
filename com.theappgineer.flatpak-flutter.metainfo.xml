@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="console-application">
+  <id>com.theappgineer.flatpak-flutter</id>
+  <name>flatpak-flutter</name>
+  <summary>The Flatpak pre-processor for Flutter apps</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <developer id="com.theappgineer">
+    <name>The Appgineer</name>
+  </developer>
+  <url type="homepage">https://github.com/TheAppgineer/flatpak-flutter</url>
+  <url type="bugtracker">https://github.com/TheAppgineer/flatpak-flutter/issues</url>
+  <url type="contribute">https://github.com/TheAppgineer/flatpak-flutter</url>
+  <url type="vcs-browser">https://github.com/TheAppgineer/flatpak-flutter</url>
+  <url type="donation">https://buymeacoffee.com/theappgineer</url>
+  <provides>
+    <binary>flatpak-flutter</binary>
+  </provides>
+  <content_rating type="oars-1.1"/>
+  <description>
+    <p>
+      flatpak-flutter is a development tool that simplifies the publishing of Flutter based Linux apps on Flathub.
+      It acts as a companion to org.flatpak.Builder, in that it performs an initial run on the manifest
+      to collect all dependency sources, and make the necessary adjustments for an offline build.
+    </p>
+  </description>
+  <releases>
+    <release version="0.5.0" date="2025-05-17" />
+  </releases>
+</component>

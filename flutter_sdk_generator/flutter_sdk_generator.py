@@ -4,17 +4,24 @@ __license__ = 'MIT'
 import json
 import subprocess
 import argparse
-from typing import Any, Dict, List
+import hashlib
+import urllib.request
+
+from typing import Any, Dict
 
 
 _FlatpakSourceType = Dict[str, Any]
 
 
-def _get_sha256(url: str) -> str:
+def _get_remote_sha256(url: str) -> str:
     print(f'Getting sha256 of {url}...')
-    stdout = subprocess.run([f'curl -s {url} | sha256sum'], stdout=subprocess.PIPE, shell=True, check=True).stdout
+    sha256 = hashlib.sha256()
 
-    return stdout.decode('utf-8').split(' ')[0]
+    with urllib.request.urlopen(url) as response:
+        data = response.read()
+        sha256.update(data)
+
+    return sha256.hexdigest()
 
 
 def _get_commit(sdk_path: str) -> str:
@@ -25,7 +32,7 @@ def _get_commit(sdk_path: str) -> str:
 
 def generate_sdk(
     sdk_path: str,
-) -> List[_FlatpakSourceType]:
+) -> _FlatpakSourceType:
     sdk_version = open(f'{sdk_path}/version', 'r').readline().strip()
     sdk_commit = _get_commit(sdk_path)
     engine = open(f'{sdk_path}/bin/internal/engine.version', 'r').readline().strip()
@@ -65,172 +72,173 @@ def generate_sdk(
             'mkdir -p /var/lib && cp -r flutter /var/lib'
         ],
         'sources': [
-        {
-            'type': 'git',
-            'url': 'https://github.com/flutter/flutter.git',
-            'tag': sdk_version,
-            'commit': sdk_commit,
-            'dest': 'flutter'
-        },
-        {
-            'type': 'archive',
-            'only-arches': [
-                'x86_64'
-            ],
-            'url': dart_sdk_x64,
-            'sha256': _get_sha256(dart_sdk_x64),
-            'strip-components': 0,
-            'dest': 'flutter/bin/cache'
-        },
-        {
-            'type': 'archive',
-            'only-arches': [
-                'aarch64'
-            ],
-            'url': dart_sdk_arm64,
-            'sha256': _get_sha256(dart_sdk_arm64),
-            'strip-components': 0,
-            'dest': 'flutter/bin/cache'
-        },
-        {
-            'type': 'archive',
-            'url': material_fonts,
-            'sha256': _get_sha256(material_fonts),
-            'dest': 'flutter/bin/cache/artifacts/material_fonts'
-        },
-        {
-            'type': 'archive',
-            'url': gradle_wrapper,
-            'sha256': _get_sha256(gradle_wrapper),
-            'strip-components': 0,
-            'dest': 'flutter/bin/cache/artifacts/gradle_wrapper'
-        },
-        {
-            'type': 'archive',
-            'url': sky_engine,
-            'sha256': _get_sha256(sky_engine),
-            'dest': 'flutter/bin/cache/pkg/sky_engine'
-        },
-        {
-            'type': 'archive',
-            'url': flutter_gpu,
-            'sha256': _get_sha256(flutter_gpu),
-            'dest': 'flutter/bin/cache/pkg/flutter_gpu'
-        },
-        {
-            'type': 'archive',
-            'url': flutter_patched_sdk,
-            'sha256': _get_sha256(flutter_patched_sdk),
-            'dest': 'flutter/bin/cache/artifacts/engine/common/flutter_patched_sdk'
-        },
-        {
-            'type': 'archive',
-            'url': flutter_patched_sdk_product,
-            'sha256': _get_sha256(flutter_patched_sdk_product),
-            'dest': 'flutter/bin/cache/artifacts/engine/common/flutter_patched_sdk_product'
-        },
-        {
-            'type': 'archive',
-            'only-arches': [
-                'x86_64'
-            ],
-            'url': artifacts_x64,
-            'sha256': _get_sha256(artifacts_x64),
-            'strip-components': 0,
-            'dest': 'flutter/bin/cache/artifacts/engine/linux-x64'
-        },
-        {
-            'type': 'archive',
-            'only-arches': [
-                'x86_64'
-            ],
-            'url': font_subset_x64,
-            'sha256': _get_sha256(font_subset_x64),
-            'dest': 'flutter/bin/cache/artifacts/engine/linux-x64'
-        },
-        {
-            'type': 'archive',
-            'only-arches': [
-                'x86_64'
-            ],
-            'url': flutter_gtk_x64_profile,
-            'sha256': _get_sha256(flutter_gtk_x64_profile),
-            'strip-components': 0,
-            'dest': 'flutter/bin/cache/artifacts/engine/linux-x64-profile'
-        },
-        {
-            'type': 'archive',
-            'only-arches': [
-                'x86_64'
-            ],
-            'url': flutter_gtk_x64_release,
-            'sha256': _get_sha256(flutter_gtk_x64_release),
-            'strip-components': 0,
-            'dest': 'flutter/bin/cache/artifacts/engine/linux-x64-release'
-        },
-        {
-            'type': 'archive',
-            'only-arches': [
-                'aarch64'
-            ],
-            'url': artifacts_arm64,
-            'sha256': _get_sha256(artifacts_arm64),
-            'strip-components': 0,
-            'dest': 'flutter/bin/cache/artifacts/engine/linux-arm64'
-        },
-        {
-            'type': 'archive',
-            'only-arches': [
-                'aarch64'
-            ],
-            'url': font_subset_arm64,
-            'sha256': _get_sha256(font_subset_arm64),
-            'dest': 'flutter/bin/cache/artifacts/engine/linux-arm64'
-        },
-        {
-            'type': 'archive',
-            'only-arches': [
-                'aarch64'
-            ],
-            'url': flutter_gtk_arm64_profile,
-            'sha256': _get_sha256(flutter_gtk_arm64_profile),
-            'strip-components': 0,
-            'dest': 'flutter/bin/cache/artifacts/engine/linux-arm64-profile'
-        },
-        {
-            'type': 'archive',
-            'only-arches': [
-                'aarch64'
-            ],
-            'url': flutter_gtk_arm64_release,
-            'sha256': _get_sha256(flutter_gtk_arm64_release),
-            'strip-components': 0,
-            'dest': 'flutter/bin/cache/artifacts/engine/linux-arm64-release'
-        },
-        {
-            'type': 'patch',
-            'path': 'flutter-shared.sh.patch'
-        },
-        {
-            'type': 'script',
-            'dest': 'flutter/bin',
-            'dest-filename': 'setup-flutter.sh',
-            'commands': [
-                'mkdir -p flutter/bin && cp -r /var/lib/flutter/bin/cache-base flutter/bin/cache',
-                'flutter pub get --offline $@'
-            ]
-        },
-        {
-            'type': 'script',
-            'dest-filename': 'setup-links.sh',
-            'commands': [
-                'mv flutter/bin/cache{,-base}',
-                'APP=$(IFS=\".\" && read -ra array <<< $FLATPAK_ID && echo ${array[-1]})',
-                'ln -s /run/build/$APP/flutter/bin/cache flutter/bin/cache',
-                'ln -s /run/build/$APP/flutter/packages/flutter_tools/.dart_tool flutter/packages/flutter_tools/.dart_tool'
-            ]
-        }
-    ]}
+            {
+                'type': 'git',
+                'url': 'https://github.com/flutter/flutter.git',
+                'tag': sdk_version,
+                'commit': sdk_commit,
+                'dest': 'flutter'
+            },
+            {
+                'type': 'archive',
+                'only-arches': [
+                    'x86_64'
+                ],
+                'url': dart_sdk_x64,
+                'sha256': _get_remote_sha256(dart_sdk_x64),
+                'strip-components': 0,
+                'dest': 'flutter/bin/cache'
+            },
+            {
+                'type': 'archive',
+                'only-arches': [
+                    'aarch64'
+                ],
+                'url': dart_sdk_arm64,
+                'sha256': _get_remote_sha256(dart_sdk_arm64),
+                'strip-components': 0,
+                'dest': 'flutter/bin/cache'
+            },
+            {
+                'type': 'archive',
+                'url': material_fonts,
+                'sha256': _get_remote_sha256(material_fonts),
+                'dest': 'flutter/bin/cache/artifacts/material_fonts'
+            },
+            {
+                'type': 'archive',
+                'url': gradle_wrapper,
+                'sha256': _get_remote_sha256(gradle_wrapper),
+                'strip-components': 0,
+                'dest': 'flutter/bin/cache/artifacts/gradle_wrapper'
+            },
+            {
+                'type': 'archive',
+                'url': sky_engine,
+                'sha256': _get_remote_sha256(sky_engine),
+                'dest': 'flutter/bin/cache/pkg/sky_engine'
+            },
+            {
+                'type': 'archive',
+                'url': flutter_gpu,
+                'sha256': _get_remote_sha256(flutter_gpu),
+                'dest': 'flutter/bin/cache/pkg/flutter_gpu'
+            },
+            {
+                'type': 'archive',
+                'url': flutter_patched_sdk,
+                'sha256': _get_remote_sha256(flutter_patched_sdk),
+                'dest': 'flutter/bin/cache/artifacts/engine/common/flutter_patched_sdk'
+            },
+            {
+                'type': 'archive',
+                'url': flutter_patched_sdk_product,
+                'sha256': _get_remote_sha256(flutter_patched_sdk_product),
+                'dest': 'flutter/bin/cache/artifacts/engine/common/flutter_patched_sdk_product'
+            },
+            {
+                'type': 'archive',
+                'only-arches': [
+                    'x86_64'
+                ],
+                'url': artifacts_x64,
+                'sha256': _get_remote_sha256(artifacts_x64),
+                'strip-components': 0,
+                'dest': 'flutter/bin/cache/artifacts/engine/linux-x64'
+            },
+            {
+                'type': 'archive',
+                'only-arches': [
+                    'x86_64'
+                ],
+                'url': font_subset_x64,
+                'sha256': _get_remote_sha256(font_subset_x64),
+                'dest': 'flutter/bin/cache/artifacts/engine/linux-x64'
+            },
+            {
+                'type': 'archive',
+                'only-arches': [
+                    'x86_64'
+                ],
+                'url': flutter_gtk_x64_profile,
+                'sha256': _get_remote_sha256(flutter_gtk_x64_profile),
+                'strip-components': 0,
+                'dest': 'flutter/bin/cache/artifacts/engine/linux-x64-profile'
+            },
+            {
+                'type': 'archive',
+                'only-arches': [
+                    'x86_64'
+                ],
+                'url': flutter_gtk_x64_release,
+                'sha256': _get_remote_sha256(flutter_gtk_x64_release),
+                'strip-components': 0,
+                'dest': 'flutter/bin/cache/artifacts/engine/linux-x64-release'
+            },
+            {
+                'type': 'archive',
+                'only-arches': [
+                    'aarch64'
+                ],
+                'url': artifacts_arm64,
+                'sha256': _get_remote_sha256(artifacts_arm64),
+                'strip-components': 0,
+                'dest': 'flutter/bin/cache/artifacts/engine/linux-arm64'
+            },
+            {
+                'type': 'archive',
+                'only-arches': [
+                    'aarch64'
+                ],
+                'url': font_subset_arm64,
+                'sha256': _get_remote_sha256(font_subset_arm64),
+                'dest': 'flutter/bin/cache/artifacts/engine/linux-arm64'
+            },
+            {
+                'type': 'archive',
+                'only-arches': [
+                    'aarch64'
+                ],
+                'url': flutter_gtk_arm64_profile,
+                'sha256': _get_remote_sha256(flutter_gtk_arm64_profile),
+                'strip-components': 0,
+                'dest': 'flutter/bin/cache/artifacts/engine/linux-arm64-profile'
+            },
+            {
+                'type': 'archive',
+                'only-arches': [
+                    'aarch64'
+                ],
+                'url': flutter_gtk_arm64_release,
+                'sha256': _get_remote_sha256(flutter_gtk_arm64_release),
+                'strip-components': 0,
+                'dest': 'flutter/bin/cache/artifacts/engine/linux-arm64-release'
+            },
+            {
+                'type': 'patch',
+                'path': 'flutter-shared.sh.patch'
+            },
+            {
+                'type': 'script',
+                'dest': 'flutter/bin',
+                'dest-filename': 'setup-flutter.sh',
+                'commands': [
+                    'mkdir -p flutter/bin && cp -r /var/lib/flutter/bin/cache-base flutter/bin/cache',
+                    'flutter pub get --offline $@'
+                ]
+            },
+            {
+                'type': 'script',
+                'dest-filename': 'setup-links.sh',
+                'commands': [
+                    'mv flutter/bin/cache{,-base}',
+                    'APP=$(IFS=\".\" && read -ra array <<< $FLATPAK_ID && echo ${array[-1]})',
+                    'ln -s /run/build/$APP/flutter/bin/cache flutter/bin/cache',
+                    'ln -s /run/build/$APP/flutter/packages/flutter_tools/.dart_tool flutter/packages/flutter_tools/.dart_tool'
+                ]
+            }
+        ]
+    }
 
 
 def main():

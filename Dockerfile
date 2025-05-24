@@ -3,9 +3,9 @@ FROM python:3.8-slim
 WORKDIR /usr/src/app
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive \
-    apt-get install -y --no-install-recommends curl git unzip
+    apt-get install -y --no-install-recommends git unzip
 
-RUN pip install --no-cache-dir aiohttp pyyaml toml
+RUN pip install --no-cache-dir pyyaml toml
 
 COPY flatpak-flutter.py ./flatpak-flutter
 COPY cargo_generator/cargo_generator.py ./cargo_generator/

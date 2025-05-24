@@ -13,7 +13,7 @@ https://docs.flutter.dev/deployment/linux
 
 Let's get to a more equal playing field!
 
-> Note: The progress already made is that flatpak-flutter is [referenced](https://docs.flutter.dev/deployment/linux#additional-deployment-resources) on the Flutter documentation site!
+> Note: The progress already made is that flatpak-flutter is referenced in both the [Flutter](https://docs.flutter.dev/deployment/linux#additional-deployment-resources) and [Flatpak](https://github.com/flatpak/flatpak-builder-tools?tab=readme-ov-file#flutter) documentation!
 
 ### The Common Approach
 The approach often taken by Flutter app developers to get their apps published on Flathub, is to create an archive with pre-built binaries and download that within the app manifest. This can lead to the recurring question during the PR review process of "Why not build from source?", but when the reviewer gets aware of the Fluter nature of the app it gets accepted.
@@ -100,8 +100,9 @@ The conversion steps taken on the manifest to come to the offline manifest are:
 ```
 $ ./flatpak-flutter.py --help
 usage: flatpak-flutter.py [-h] [-V] [--app-pubspec PATH]
-                          [--extra-pubspecs PATHS] [--from-git URL]
-                          [--from-git-branch BRANCH] [--keep-build-dirs]
+                          [--extra-pubspecs PATHS] [--cargo-locks PATHS]
+                          [--from-git URL] [--from-git-branch BRANCH]
+                          [--keep-build-dirs]
                           MANIFEST
 
 positional arguments:
@@ -113,6 +114,7 @@ optional arguments:
   --app-pubspec PATH    Path to the app pubspec
   --extra-pubspecs PATHS
                         Comma separated list of extra pubspec paths
+  --cargo-locks PATHS   Comma separated list of Cargo.lock paths
   --from-git URL        Get input files from git repo
   --from-git-branch BRANCH
                         Branch to use in --from-git
@@ -166,7 +168,7 @@ run `poetry install` to setup, activate your virtual env by running `poetry shel
 
 Otherwise install Python 3.8+ and the dependency packages:
 
-    pip install aiohttp pyyaml toml
+    pip install pyyaml toml
 
 ## Python module details
 The Python modules, taking care of the different processing steps, are further
@@ -179,6 +181,7 @@ described in the README file within the module subdirectory:
 
 ## Apps Published Using flatpak-flutter
 
+* [Brisk](https://flathub.org/apps/io.github.BrisklyDev.Brisk)
 * [CloudOTP](https://flathub.org/apps/com.cloudchewie.cloudotp)
 * [Community Remote](https://flathub.org/apps/com.theappgineer.community_remote)
 * [Gopeed](https://flathub.org/apps/com.gopeed.Gopeed)

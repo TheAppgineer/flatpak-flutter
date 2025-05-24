@@ -12,6 +12,7 @@ import urllib.parse
 import urllib.request
 import asyncio
 
+from typing import Optional
 from pathlib import Path
 from flutter_sdk_generator.flutter_sdk_generator import generate_sdk
 from flutter_app_fetcher.flutter_app_fetcher import fetch_flutter_app
@@ -21,7 +22,7 @@ from pubspec_generator.pubspec_generator import generate_sources as generate_pub
 
 RUST_VERSION = '1.83.0'
 
-__version__ = '0.5.0'
+__version__ = '0.5.1'
 build_path = '.flatpak-builder/build'
 sandbox_root = '/run/build'
 
@@ -62,7 +63,13 @@ def _get_manifest_from_git(manifest: str, from_git: str, from_git_branch: str):
         shutil.rmtree(f'{build_path}/{manifest_name}')
 
 
-def _fetch_flutter_app(manifest_path: str, releases_path: str, app_pubspec: str, source: str=None, rust_version: str=None):
+def _fetch_flutter_app(
+    manifest_path: str,
+    releases_path: str,
+    app_pubspec: str,
+    source: Optional[str]=None,
+    rust_version: Optional[str]=None
+):
     with open(manifest_path, 'r') as input_stream:
         suffix = (Path(manifest_path).suffix)
 
@@ -154,7 +161,7 @@ def _generate_cargo_sources(app: str, cargo_locks: str, releases: str):
 def _get_sdk_module(app: str, tag: str, releases: str):
     shutil.copyfile(f'{releases}/flutter/flutter-shared.sh.patch', 'flutter-shared.sh.patch')
 
-    if os.path.isdir(f'{releases}/flutter/{tag}'):
+    if os.path.isfile(f'{releases}/flutter/{tag}/flutter-sdk.json'):
         shutil.copyfile(f'{releases}/flutter/{tag}/flutter-sdk.json', f'flutter-sdk-{tag}.json')
     else:
         generated_sdk = generate_sdk(f'{build_path}/{app}/flutter')
@@ -198,14 +205,15 @@ def main():
     rust_version = None if args.cargo_locks is None else RUST_VERSION
     app, tag, build_id = _fetch_flutter_app(manifest_path, releases_path, app_pubspec, raw_url, rust_version)
 
-    _create_pub_cache(f'{build_path}/{app}', args.app_pubspec)
-    _generate_pubspec_sources(app, app_pubspec, args.extra_pubspecs, build_id)
-    _generate_cargo_sources(app, args.cargo_locks, releases_path)
-    _get_sdk_module(app, tag, releases_path)
+    if tag is not None:
+        _create_pub_cache(f'{build_path}/{app}', args.app_pubspec)
+        _generate_pubspec_sources(app, app_pubspec, args.extra_pubspecs, build_id)
+        _generate_cargo_sources(app, args.cargo_locks, releases_path)
+        _get_sdk_module(app, tag, releases_path)
 
-    if not args.keep_build_dirs:
-        shutil.rmtree(f'{build_path}/{app}-{build_id}')
-        os.remove(f'{build_path}/{app}')
+        if not args.keep_build_dirs:
+            shutil.rmtree(f'{build_path}/{app}-{build_id}')
+            os.remove(f'{build_path}/{app}')
 
 if __name__ == '__main__':
     main()
