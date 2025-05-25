@@ -8,7 +8,6 @@
         "cp flutter/bin/internal/engine.version flutter/bin/cache/flutter_sdk.stamp",
         "cp flutter/bin/internal/engine.version flutter/bin/cache/font-subset.stamp",
         "cp flutter/bin/internal/engine.version flutter/bin/cache/linux-sdk.stamp",
-        "./setup-links.sh",
         "mkdir -p /var/lib && cp -r flutter /var/lib"
     ],
     "sources": [
@@ -163,18 +162,9 @@
             "dest": "flutter/bin",
             "dest-filename": "setup-flutter.sh",
             "commands": [
-                "mkdir -p flutter/bin && cp -r /var/lib/flutter/bin/cache-base flutter/bin/cache",
+                "mkdir -p /var/lib/flutter/packages/flutter_tools/.dart_tool",
+                "mv flutter/packages/flutter_tools/.dart_tool/package_config.json /var/lib/flutter/packages/flutter_tools/.dart_tool",
                 "flutter pub get --offline $@"
-            ]
-        },
-        {
-            "type": "script",
-            "dest-filename": "setup-links.sh",
-            "commands": [
-                "mv flutter/bin/cache{,-base}",
-                "APP=$(IFS=\".\" && read -ra array <<< $FLATPAK_ID && echo ${array[-1]})",
-                "ln -s /run/build/$APP/flutter/bin/cache flutter/bin/cache",
-                "ln -s /run/build/$APP/flutter/packages/flutter_tools/.dart_tool flutter/packages/flutter_tools/.dart_tool"
             ]
         }
     ]
