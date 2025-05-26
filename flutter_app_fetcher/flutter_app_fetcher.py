@@ -168,6 +168,7 @@ def _process_sources(module, fetch_path: str, releases_path: str, rust_version: 
 
 def fetch_flutter_app(
     manifest,
+    app_module: str,
     build_path: str,
     releases_path: str,
     app_pubspec: str,
@@ -180,14 +181,13 @@ def fetch_flutter_app(
     else:
         exit(1)
 
-    app_id_parts = str(manifest[app_id]).split('.')
-    app = app_id_parts[len(app_id_parts) - 1]
+    app = app_module if app_module is not None else str(manifest[app_id]).split('.')[-1]
 
     if not 'modules' in manifest:
         exit(1)
 
     for module in manifest['modules']:
-        if not 'name' in module or module['name'] != app:
+        if not 'name' in module or str(module['name']).lower() != app.lower():
             continue
 
         if not 'buildsystem' in module or module['buildsystem'] != 'simple':

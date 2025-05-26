@@ -22,7 +22,7 @@ from pubspec_generator.pubspec_generator import generate_sources as generate_pub
 
 RUST_VERSION = '1.83.0'
 
-__version__ = '0.5.1'
+__version__ = '0.6.0'
 build_path = '.flatpak-builder/build'
 sandbox_root = '/run/build'
 
@@ -65,6 +65,7 @@ def _get_manifest_from_git(manifest: str, from_git: str, from_git_branch: str):
 
 def _fetch_flutter_app(
     manifest_path: str,
+    app_module: str,
     releases_path: str,
     app_pubspec: str,
     source: Optional[str]=None,
@@ -79,7 +80,7 @@ def _fetch_flutter_app(
             manifest = json.load(input_stream)
 
         releases_path += '/flutter'
-        app_id, tag, build_id = fetch_flutter_app(manifest, build_path, releases_path, app_pubspec, rust_version)
+        app_id, tag, build_id = fetch_flutter_app(manifest, app_module, build_path, releases_path, app_pubspec, rust_version)
 
         # Write converted manifest to file
         with open(f'{app_id}{suffix}', 'w') as output_stream:
@@ -93,7 +94,7 @@ def _fetch_flutter_app(
                 output_stream.write(prepend)
                 yaml.dump(data=manifest, stream=output_stream, indent=2, sort_keys=False, Dumper=Dumper)
 
-        app = app_id.split('.')[-1:][0]
+        app = app_module if app_module is not None else app_id.split('.')[-1]
 
         return app, tag, build_id
 
@@ -174,6 +175,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('MANIFEST', help='Path to the manifest')
     parser.add_argument('-V', '--version', action='version', version=f'%(prog)s-{__version__}')
+    parser.add_argument('--app-module', metavar='NAME', help='Name of the app module in the manifest')
     parser.add_argument('--app-pubspec', metavar='PATH', help='Path to the app pubspec')
     parser.add_argument('--extra-pubspecs', metavar='PATHS', help='Comma separated list of extra pubspec paths')
     parser.add_argument('--cargo-locks', metavar='PATHS', help='Comma separated list of Cargo.lock paths')
@@ -203,7 +205,7 @@ def main():
 
     app_pubspec = '.' if args.app_pubspec is None else args.app_pubspec
     rust_version = None if args.cargo_locks is None else RUST_VERSION
-    app, tag, build_id = _fetch_flutter_app(manifest_path, releases_path, app_pubspec, raw_url, rust_version)
+    app, tag, build_id = _fetch_flutter_app(manifest_path, args.app_module, releases_path, app_pubspec, raw_url, rust_version)
 
     if tag is not None:
         _create_pub_cache(f'{build_path}/{app}', args.app_pubspec)

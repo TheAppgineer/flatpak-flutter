@@ -25,6 +25,11 @@
     </p>
   </description>
   <releases>
-    <release version="0.5.0" date="2025-05-17" />
+    <release version="0.6.0" date="2025-05-26">
+      <url type="details">https://github.com/TheAppgineer/flatpak-flutter/releases/tag/0.6.0</url>
+    </release>
+    <release version="0.5.0" date="2025-05-17">
+      <url type="details">https://github.com/TheAppgineer/flatpak-flutter/releases/tag/0.5.0</url>
+    </release>
   </releases>
 </component>
