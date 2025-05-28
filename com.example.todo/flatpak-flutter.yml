@@ -2,6 +2,8 @@ id: com.example.todo
 runtime: org.freedesktop.Platform
 runtime-version: '24.08'
 sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.llvm19
 command: todo
 finish-args:
   - --share=ipc

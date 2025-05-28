@@ -51,6 +51,8 @@ As is the case for every Flatpak, it all starts with the manifest file, but flat
       buildsystem: simple
   ```
 
+> Note: If the main module name differs from the app name, then it be specified via the `--app-module` command line option.
+
 #### Build Commands
 * Use the Flutter build command, as if it is a local build
   ```yml
@@ -71,7 +73,7 @@ As is the case for every Flatpak, it all starts with the manifest file, but flat
   ```yml
         - type: git
           url: https://github.com/flutter/flutter.git
-          tag: 3.29.2
+          tag: 3.32.0
           dest: flutter
   ```
 * Add any other dependencies
@@ -99,7 +101,7 @@ The conversion steps taken on the manifest to come to the offline manifest are:
 #### Command Line Options
 ```
 $ ./flatpak-flutter.py --help
-usage: flatpak-flutter.py [-h] [-V] [--app-pubspec PATH]
+usage: flatpak-flutter.py [-h] [-V] [--app-module NAME] [--app-pubspec PATH]
                           [--extra-pubspecs PATHS] [--cargo-locks PATHS]
                           [--from-git URL] [--from-git-branch BRANCH]
                           [--keep-build-dirs]
@@ -111,6 +113,7 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -V, --version         show program's version number and exit
+  --app-module NAME     Name of the app module in the manifest
   --app-pubspec PATH    Path to the app pubspec
   --extra-pubspecs PATHS
                         Comma separated list of extra pubspec paths
