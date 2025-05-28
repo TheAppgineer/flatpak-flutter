@@ -189,6 +189,7 @@ described in the README file within the module subdirectory:
 * [Community Remote](https://flathub.org/apps/com.theappgineer.community_remote)
 * [Gopeed](https://flathub.org/apps/com.gopeed.Gopeed)
 * [Sly](https://flathub.org/apps/page.kramo.Sly)
+* [wger](https://flathub.org/apps/de.wger.flutter)
 * Your app here?
 
 > Note: Please get in contact if you know about an app using flatpak-flutter that is not on this list!
