@@ -49,6 +49,27 @@ def _add_submodule(module, submodule):
         module['modules'] = [submodule]
 
 
+def _get_skip_paths(skips):
+    skip_paths = {}
+
+    for skip in skips:
+        split = str(skip).split('/')
+
+        if len(split) > 1:
+            root = '/'.join(split[0:-1])
+            branch = split[-1]
+        else:
+            root = '.'
+            branch = split[0]
+
+        if root not in skip_paths:
+            skip_paths[root] = []
+
+        skip_paths[root].append(branch)
+
+    return skip_paths
+
+
 def _process_build_options(module):
     if 'build-options' in module:
         build_options = module['build-options']
@@ -91,20 +112,24 @@ def _process_build_commands(module, app_pubspec: str):
         module['build-commands'] = build_commands
 
 
-def _process_sources(module, fetch_path: str, releases_path: str, rust_version: Optional[str]) -> Optional[str]:
+def _process_sources(
+        module,
+        fetch_path: str,
+        releases_path: str,
+        sdk_version: Optional[str],
+        rust_version: Optional[str],
+    ) -> Optional[str]:
     if not 'sources' in module:
         return None
 
     sources = module['sources']
     idxs = []
     repos = []
+    tag = sdk_version
 
     for idx, source in enumerate(sources):
         if 'type' in source:
-            if source['type'] == 'git':
-                if not 'url' in source:
-                    continue
-
+            if source['type'] == 'git' and 'url' in source:
                 if 'tag' in source:
                     ref = source['tag']
                 elif 'commit' in source:
@@ -112,11 +137,8 @@ def _process_sources(module, fetch_path: str, releases_path: str, rust_version: 
                 else:
                     continue
 
-                if 'dest' in source:
-                    dest = str(source['dest'])
-                    repos.append((source['url'], ref, f'{fetch_path}/{dest}'))
-                else:
-                    repos.append((source['url'], ref, fetch_path))
+                dest = source['dest'] if 'dest' in source else ''
+                repos.append((source['url'], ref, f'{fetch_path}/{dest}'))
 
                 if str(source['url']).startswith(FLUTTER_URL) and 'tag' in source:
                     idxs.append(idx)
@@ -124,6 +146,15 @@ def _process_sources(module, fetch_path: str, releases_path: str, rust_version: 
                     _add_submodule(module, f"flutter-sdk-{source['tag']}.json")
 
                     tag = source['tag']
+
+            if source['type'] == 'dir' and 'path' in source:
+                skips = _get_skip_paths(source['skip'] if 'skip' in source else [])
+                dest = source['dest'] if 'dest' in source else ''
+
+                def ignore(src, names):
+                    return skips[src] if src in skips else []
+
+                shutil.copytree(src=source['path'], dst=f'{fetch_path}/{dest}', ignore=ignore)
 
             if source['type'] == 'patch' and '.flutter.patch' in str(source['path']):
                 idxs.append(idx)
@@ -172,7 +203,8 @@ def fetch_flutter_app(
     build_path: str,
     releases_path: str,
     app_pubspec: str,
-    rust_version: Optional[str]
+    sdk_version: Optional[str],
+    rust_version: Optional[str],
 ) -> Tuple[str, Optional[str], int]:
     if 'app-id' in manifest:
         app_id = 'app-id'
@@ -199,7 +231,7 @@ def fetch_flutter_app(
 
         build_path_app = f'{build_path}/{app}'
         build_id = len(glob.glob(f'{build_path_app}-*')) + 1
-        tag = _process_sources(module, f'{build_path_app}-{build_id}', releases_path, rust_version)
+        tag = _process_sources(module, f'{build_path_app}-{build_id}', releases_path, sdk_version, rust_version)
 
         options = [f'cd {build_path} && ln -snf {app}-{build_id} {app}']
         subprocess.run(options, stdout=subprocess.PIPE, shell=True, check=True)
