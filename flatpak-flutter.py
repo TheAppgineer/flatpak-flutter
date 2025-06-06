@@ -22,7 +22,7 @@ from pubspec_generator.pubspec_generator import generate_sources as generate_pub
 
 RUST_VERSION = '1.83.0'
 
-__version__ = '0.6.0'
+__version__ = '0.6.1'
 build_path = '.flatpak-builder/build'
 sandbox_root = '/run/build'
 
