@@ -117,9 +117,9 @@
     },
     {
       "name": "dds",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/dds-5.0.0",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/dds-5.0.2",
       "packageUri": "lib/",
-      "languageVersion": "3.0"
+      "languageVersion": "3.5"
     },
     {
       "name": "dds_service_extensions",
@@ -129,7 +129,7 @@
     },
     {
       "name": "devtools_shared",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/devtools_shared-11.2.0",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/devtools_shared-11.2.1",
       "packageUri": "lib/",
       "languageVersion": "3.6"
     },
@@ -585,6 +585,6 @@
     }
   ],
   "generator": "pub",
-  "generatorVersion": "3.8.0",
+  "generatorVersion": "3.8.1",
   "pubCache": "file:///run/build/todo/.pub-cache"
 }

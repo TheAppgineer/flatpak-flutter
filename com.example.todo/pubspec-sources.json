@@ -548,16 +548,16 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://pub.dev/api/archives/dds-5.0.0.tar.gz",
-        "sha256": "4e206d308bd94595af42e4a561948ef8dba211c9db47f4360c48a5a1f8b44cb5",
+        "url": "https://pub.dev/api/archives/dds-5.0.2.tar.gz",
+        "sha256": "76fc5140ce4e8922711bbe6dfd3713283ecc7f386c52fc7f594cd5f3e6b80633",
         "strip-components": 0,
-        "dest": ".pub-cache/hosted/pub.dev/dds-5.0.0"
+        "dest": ".pub-cache/hosted/pub.dev/dds-5.0.2"
     },
     {
         "type": "inline",
-        "contents": "4e206d308bd94595af42e4a561948ef8dba211c9db47f4360c48a5a1f8b44cb5",
+        "contents": "76fc5140ce4e8922711bbe6dfd3713283ecc7f386c52fc7f594cd5f3e6b80633",
         "dest": ".pub-cache/hosted-hashes/pub.dev",
-        "dest-filename": "dds-5.0.0.sha256"
+        "dest-filename": "dds-5.0.2.sha256"
     },
     {
         "type": "archive",
@@ -576,16 +576,16 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://pub.dev/api/archives/devtools_shared-11.2.0.tar.gz",
-        "sha256": "fa71f07006dfdf3f226ec76db95a4bad156820c081452cc99d18a4f291001bee",
+        "url": "https://pub.dev/api/archives/devtools_shared-11.2.1.tar.gz",
+        "sha256": "659e2d65aa5ef5c3551163811c5c6fa1b973b3df80d8cac6f618035edcdc1096",
         "strip-components": 0,
-        "dest": ".pub-cache/hosted/pub.dev/devtools_shared-11.2.0"
+        "dest": ".pub-cache/hosted/pub.dev/devtools_shared-11.2.1"
     },
     {
         "type": "inline",
-        "contents": "fa71f07006dfdf3f226ec76db95a4bad156820c081452cc99d18a4f291001bee",
+        "contents": "659e2d65aa5ef5c3551163811c5c6fa1b973b3df80d8cac6f618035edcdc1096",
         "dest": ".pub-cache/hosted-hashes/pub.dev",
-        "dest-filename": "devtools_shared-11.2.0.sha256"
+        "dest-filename": "devtools_shared-11.2.1.sha256"
     },
     {
         "type": "archive",
