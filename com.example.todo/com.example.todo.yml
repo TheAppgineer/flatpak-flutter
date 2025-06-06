@@ -12,8 +12,6 @@ finish-args:
   - --socket=fallback-x11
   - --socket=wayland
   - --device=dri
-cleanup:
-  - /var/lib
 modules:
   - name: todo
     buildsystem: simple
@@ -41,4 +39,4 @@ modules:
         url: https://github.com/5minslearn/Flutter-Todo-App.git
         commit: 2a98e745969dd657efe2eccd964253cd20d13e25
     modules:
-      - flutter-sdk-3.32.0.json
+      - flutter-sdk-3.32.1.json
