@@ -188,6 +188,7 @@ described in the README file within the module subdirectory:
 * [CloudOTP](https://flathub.org/apps/com.cloudchewie.cloudotp)
 * [Community Remote](https://flathub.org/apps/com.theappgineer.community_remote)
 * [Gopeed](https://flathub.org/apps/com.gopeed.Gopeed)
+* [Mapiah](https://flathub.org/apps/io.github.rsevero.mapiah)
 * [Sly](https://flathub.org/apps/page.kramo.Sly)
 * [wger](https://flathub.org/apps/de.wger.flutter)
 * Your app here?
