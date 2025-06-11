@@ -1,0 +1,95 @@
+{
+    "flutter_discord_rpc": {
+        "cargo_locks": [
+            "$PUB_DEV"
+        ],
+        "extra_pubspecs": [
+            "$PUB_DEV/cargokit/build_tool"
+        ],
+        "manifest": {
+            "sources": [
+                {
+                    "type": "patch",
+                    "path": "cargokit/run_build_tool.sh.patch",
+                    "dest": "$PUB_DEV/cargokit"
+                }
+            ]
+        }
+    },
+    "media_kit_libs_linux": {
+        "manifest": {
+            "sources": [
+                {
+                    "type": "file",
+                    "url": "https://github.com/microsoft/mimalloc/archive/refs/tags/v2.1.2.tar.gz",
+                    "sha256": "2b1bff6f717f9725c70bf8d79e4786da13de8a270059e4ba0bdd262ae7be46eb",
+                    "dest": "$APP/build/linux/x64/release",
+                    "dest-filename": "mimalloc-2.1.2.tar.gz"
+                }
+            ]
+        }
+    },
+    "rhttp": {
+        "cargo_locks": [
+            "$PUB_DEV/rust"
+        ],
+        "extra_pubspecs": [
+            "$PUB_DEV/cargokit/build_tool"
+        ],
+        "manifest": {
+            "sources": [
+                {
+                    "type": "patch",
+                    "path": "cargokit/run_build_tool.sh.patch",
+                    "dest": "$PUB_DEV/cargokit"
+                }
+            ]
+        }
+    },
+    "sqlite3_flutter_libs": {
+        "manifest": {
+            "sources": [
+                {
+                    "type": "file",
+                    "only-arches": [
+                        "x86_64"
+                    ],
+                    "url": "https://sqlite.org/2025/sqlite-autoconf-3490100.tar.gz",
+                    "sha256": "106642d8ccb36c5f7323b64e4152e9b719f7c0215acf5bfeac3d5e7f97b59254",
+                    "dest": "$APP/build/linux/x64/release/_deps/sqlite3-subbuild/sqlite3-populate-prefix/src"
+                },
+                {
+                    "type": "file",
+                    "only-arches": [
+                        "aarch64"
+                    ],
+                    "url": "https://sqlite.org/2025/sqlite-autoconf-3490100.tar.gz",
+                    "sha256": "106642d8ccb36c5f7323b64e4152e9b719f7c0215acf5bfeac3d5e7f97b59254",
+                    "dest": "$APP/build/linux/arm64/release/_deps/sqlite3-subbuild/sqlite3-populate-prefix/src"
+                },
+                {
+                    "type": "patch",
+                    "path": "sqlite3_flutter_libs/CMakeLists.txt.patch",
+                    "dest": "$PUB_DEV"
+                }
+            ]
+        }
+    },
+    "super_native_extensions": {
+        "cargo_locks": [
+            "$PUB_DEV/rust"
+        ],
+        "extra_pubspecs": [
+            "$PUB_DEV/cargokit/build_tool"
+        ],
+        "manifest": {
+            "sources": [
+                {
+                    "type": "patch",
+                    "path": "cargokit/run_build_tool.sh.patch",
+                    "dest": "$PUB_DEV/cargokit"
+                }
+            ]
+        }
+    }
+}

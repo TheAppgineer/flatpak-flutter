@@ -4,6 +4,7 @@ __license__ = 'MIT'
 import subprocess
 import shutil
 import argparse
+import glob
 import os
 import sys
 import yaml
@@ -12,7 +13,6 @@ import urllib.parse
 import urllib.request
 import asyncio
 
-from typing import Optional
 from pathlib import Path
 from flutter_sdk_generator.flutter_sdk_generator import generate_sdk
 from flutter_app_fetcher.flutter_app_fetcher import fetch_flutter_app
@@ -22,7 +22,7 @@ from pubspec_generator.pubspec_generator import generate_sources as generate_pub
 
 RUST_VERSION = '1.83.0'
 
-__version__ = '0.6.1'
+__version__ = '0.7.0'
 build_path = '.flatpak-builder/build'
 sandbox_root = '/run/build'
 
@@ -64,15 +64,13 @@ def _get_manifest_from_git(manifest: str, from_git: str, from_git_branch: str):
 
 
 def _fetch_flutter_app(
-    manifest_path: str,
+    manifest_path: Path,
     app_module: str,
     releases_path: str,
     app_pubspec: str,
-    source: Optional[str]=None,
-    rust_version: Optional[str]=None
 ):
     with open(manifest_path, 'r') as input_stream:
-        suffix = (Path(manifest_path).suffix)
+        suffix = manifest_path.suffix
 
         if suffix == '.yml' or  suffix == '.yaml':
             manifest = yaml.full_load(input_stream)
@@ -80,23 +78,9 @@ def _fetch_flutter_app(
             manifest = json.load(input_stream)
 
         releases_path += '/flutter'
-        app_id, tag, build_id = fetch_flutter_app(manifest, app_module, build_path, releases_path, app_pubspec, rust_version)
+        app_id, tag, build_id = fetch_flutter_app(manifest, app_module, build_path, releases_path, app_pubspec)
 
-        # Write converted manifest to file
-        with open(f'{app_id}{suffix}', 'w') as output_stream:
-            if suffix == '.json':
-                json.dump(manifest, output_stream, indent=4, sort_keys=False)
-            else:
-                source = source if source is not None else manifest_path
-                prepend = f'''# Generated from {source}, do not edit
-# Visit the flatpak-flutter project at https://github.com/TheAppgineer/flatpak-flutter
-'''
-                output_stream.write(prepend)
-                yaml.dump(data=manifest, stream=output_stream, indent=2, sort_keys=False, Dumper=Dumper)
-
-        app = app_module if app_module is not None else app_id.split('.')[-1]
-
-        return app, tag, build_id
+        return manifest, app_id, tag, build_id
 
 
 def _create_pub_cache(build_path_app: str, pubspec_path = None):
@@ -108,7 +92,50 @@ def _create_pub_cache(build_path_app: str, pubspec_path = None):
     subprocess.run([options], stdout=subprocess.PIPE, shell=True, check=True)
 
 
-def _generate_pubspec_sources(app: str, app_pubspec:str, extra_pubspecs: str, build_id: int):
+def _handle_foreign_dependencies(app: str, build_path_app: str, foreign_deps_path: str):
+    abs_path = f'{os.getcwd()}/{build_path_app}'
+    deps_root = f'.{PUB_CACHE}/hosted/pub.dev'
+    extra_pubspecs = []
+    cargo_locks = []
+
+    with open(f'{foreign_deps_path}/foreign_deps.json', 'r') as input_stream:
+        foreign_deps = json.load(input_stream)
+        sources = []
+
+        for path in glob.glob(f'{abs_path}/{deps_root}/*'):
+            dependency = path.split('/')[-1]
+            name = dependency.split('-')[-2]
+
+            if name in foreign_deps:
+                pub_dev = f'{deps_root}/{dependency}'
+                foreign_dep = foreign_deps[name]
+
+                if 'extra_pubspecs' in foreign_dep:
+                    for pubspec in foreign_dep['extra_pubspecs']:
+                        extra_pubspecs.append(str(pubspec).replace('$PUB_DEV', pub_dev))
+
+                if 'cargo_locks' in foreign_dep:
+                    for cargo_lock in foreign_dep['cargo_locks']:
+                        cargo_locks.append(str(cargo_lock).replace('$PUB_DEV', pub_dev))
+
+                if 'manifest' in foreign_dep and 'sources' in foreign_dep['manifest']:
+                    for source in foreign_dep['manifest']['sources']:
+                        if source['type'] == 'patch':
+                            path = source['path']
+                            os.makedirs(Path(path).parent, exist_ok=True)
+                            shutil.copyfile(f'{foreign_deps_path}/{path}', path)
+
+                        if 'dest' in source:
+                            dest = str(source['dest']).replace('$PUB_DEV', pub_dev)
+                            dest = dest.replace('$APP', app)
+                            source['dest'] = dest
+
+                        sources.append(source)
+
+    return extra_pubspecs, cargo_locks, sources
+
+
+def _generate_pubspec_sources(app: str, app_pubspec:str, extra_pubspecs: list, build_id: int):
     flutter_tools = 'flutter/packages/flutter_tools'
     pubspec_paths = [
         f'{build_path}/{app}/{app_pubspec}/pubspec.lock',
@@ -116,8 +143,7 @@ def _generate_pubspec_sources(app: str, app_pubspec:str, extra_pubspecs: str, bu
     ]
 
     if extra_pubspecs:
-        paths = extra_pubspecs.split(',')
-        for path in paths:
+        for path in extra_pubspecs:
             pubspec_paths.append(f'{build_path}/{app}/{path}/pubspec.lock')
 
     pubspec_sources = generate_pubspec_sources(pubspec_paths)
@@ -142,12 +168,11 @@ def _generate_pubspec_sources(app: str, app_pubspec:str, extra_pubspecs: str, bu
         out.write(package_config)
 
 
-def _generate_cargo_sources(app: str, cargo_locks: str, releases: str):
+def _generate_cargo_sources(app: str, cargo_locks: list, releases: str):
     if cargo_locks:
         cargo_paths = []
-        paths = cargo_locks.split(',')
 
-        for path in paths:
+        for path in cargo_locks:
             cargo_paths.append(f'{build_path}/{app}/{path}/Cargo.lock')
 
         cargo_sources = asyncio.run(generate_cargo_sources(cargo_paths))
@@ -184,38 +209,70 @@ def main():
     parser.add_argument('--keep-build-dirs', action='store_true', help="Don't remove build directories after processing")
 
     args = parser.parse_args()
-    manifest_path = args.MANIFEST
+    manifest_path = Path(args.MANIFEST)
     raw_url = None
 
-    if 'FLUTTER_SDK_RELEASES' in os.environ:
-        releases_path = os.environ['FLUTTER_SDK_RELEASES']
+    if 'FLATPAK_FLUTTER_ROOT' in os.environ:
+        parent = os.environ['FLATPAK_FLUTTER_ROOT']
     else:
-        releases_path = f'{str(Path(sys.argv[0]).parent)}/releases'
+        parent = str(Path(sys.argv[0]).parent)
+
+    releases_path = f'{parent}/releases'
+    foreign_deps_path = f'{parent}/foreign_deps'
 
     if args.from_git:
         url = urllib.parse.urlparse(args.from_git)
-        manifest_path = Path(manifest_path).name
 
         if url.hostname == 'github.com' and args.from_git_branch is not None:
             path = str(url.path).split('.git')[0]
             raw_url = f'https://raw.githubusercontent.com{path}/{args.from_git_branch}/{args.MANIFEST}'
-            urllib.request.urlretrieve(raw_url, manifest_path)
+            urllib.request.urlretrieve(raw_url, manifest_path.name)
         else:
             _get_manifest_from_git(args.MANIFEST, args.from_git, args.from_git_branch)
 
-    app_pubspec = '.' if args.app_pubspec is None else args.app_pubspec
-    rust_version = None if args.cargo_locks is None else RUST_VERSION
-    app, tag, build_id = _fetch_flutter_app(manifest_path, args.app_module, releases_path, app_pubspec, raw_url, rust_version)
+    app_pubspec = '.' if args.app_pubspec is None else str(args.app_pubspec)
+    manifest, app_id, tag, build_id = _fetch_flutter_app(manifest_path, args.app_module, releases_path, app_pubspec)
 
     if tag is not None:
-        _create_pub_cache(f'{build_path}/{app}', args.app_pubspec)
-        _generate_pubspec_sources(app, app_pubspec, args.extra_pubspecs, build_id)
-        _generate_cargo_sources(app, args.cargo_locks, releases_path)
+        app = str(args.app_module) if args.app_module is not None else app_id.split('.')[-1]
+        build_path_app = f'{build_path}/{app}'
+        _create_pub_cache(build_path_app, args.app_pubspec)
+
+        extra_pubspecs, cargo_locks, sources = _handle_foreign_dependencies(app_pubspec, build_path_app, foreign_deps_path)
+        if args.extra_pubspecs is not None:
+            extra_pubspecs += str(args.extra_pubspecs).split(',')
+        if args.cargo_locks is not None:
+            cargo_locks += str(args.cargo_locks).split(',')
+
+        _generate_pubspec_sources(app, app_pubspec, extra_pubspecs, build_id)
+        _generate_cargo_sources(app, cargo_locks, releases_path)
         _get_sdk_module(app, tag, releases_path)
+
+        # Write converted manifest to file
+        suffix = manifest_path.suffix
+        with open(f'{app_id}{suffix}', 'w') as output_stream:
+            for module in manifest['modules']:
+                if 'name' in module and module['name'] == app:
+                    if len(sources):
+                        module['sources'] += sources
+                    if len(cargo_locks):
+                        module['sources'] += ['cargo-sources.json']
+                    break
+
+            if suffix == '.json':
+                json.dump(manifest, output_stream, indent=4, sort_keys=False)
+            else:
+                source = raw_url if raw_url is not None else manifest_path
+                prepend = f'''# Generated from {source}, do not edit
+# Visit the flatpak-flutter project at https://github.com/TheAppgineer/flatpak-flutter
+'''
+                output_stream.write(prepend)
+                yaml.dump(data=manifest, stream=output_stream, indent=2, sort_keys=False, Dumper=Dumper)
 
         if not args.keep_build_dirs:
             shutil.rmtree(f'{build_path}/{app}-{build_id}')
             os.remove(f'{build_path}/{app}')
+
 
 if __name__ == '__main__':
     main()
