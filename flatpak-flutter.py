@@ -94,43 +94,45 @@ def _create_pub_cache(build_path_app: str, pubspec_path = None):
 
 def _handle_foreign_dependencies(app: str, build_path_app: str, foreign_deps_path: str):
     abs_path = f'{os.getcwd()}/{build_path_app}'
-    deps_root = f'.{PUB_CACHE}/hosted/pub.dev'
     extra_pubspecs = []
     cargo_locks = []
+    sources = []
 
-    with open(f'{foreign_deps_path}/foreign_deps.json', 'r') as input_stream:
-        foreign_deps = json.load(input_stream)
-        sources = []
+    with open(f'{foreign_deps_path}/foreign_deps.json', 'r') as foreign_deps, open(f'{abs_path}/pubspec.lock') as deps:
+        foreign_deps = json.load(foreign_deps)
+        deps = yaml.full_load(deps)
 
-        for path in glob.glob(f'{abs_path}/{deps_root}/*'):
-            dependency = path.split('/')[-1]
-            name = dependency.split('-')[-2]
-
-            if name in foreign_deps:
-                pub_dev = f'{deps_root}/{dependency}'
+        for name in foreign_deps.keys():
+            if name in deps['packages']:
                 foreign_dep = foreign_deps[name]
+                dep = deps['packages'][name]
 
-                if 'extra_pubspecs' in foreign_dep:
-                    for pubspec in foreign_dep['extra_pubspecs']:
-                        extra_pubspecs.append(str(pubspec).replace('$PUB_DEV', pub_dev))
+                if dep['source'] == 'hosted':
+                    pub_dev = f".{PUB_CACHE}/hosted/pub.dev/{name}-{dep['version']}"
 
-                if 'cargo_locks' in foreign_dep:
-                    for cargo_lock in foreign_dep['cargo_locks']:
-                        cargo_locks.append(str(cargo_lock).replace('$PUB_DEV', pub_dev))
+                    if 'extra_pubspecs' in foreign_dep:
+                        for pubspec in foreign_dep['extra_pubspecs']:
+                            extra_pubspecs.append(str(pubspec).replace('$PUB_DEV', pub_dev))
 
-                if 'manifest' in foreign_dep and 'sources' in foreign_dep['manifest']:
-                    for source in foreign_dep['manifest']['sources']:
-                        if source['type'] == 'patch':
-                            path = source['path']
-                            os.makedirs(Path(path).parent, exist_ok=True)
-                            shutil.copyfile(f'{foreign_deps_path}/{path}', path)
+                    if 'cargo_locks' in foreign_dep:
+                        for cargo_lock in foreign_dep['cargo_locks']:
+                            cargo_locks.append(str(cargo_lock).replace('$PUB_DEV', pub_dev))
 
-                        if 'dest' in source:
-                            dest = str(source['dest']).replace('$PUB_DEV', pub_dev)
-                            dest = dest.replace('$APP', app)
-                            source['dest'] = dest
+                    if 'manifest' in foreign_dep and 'sources' in foreign_dep['manifest']:
+                        for source in foreign_dep['manifest']['sources']:
+                            if source['type'] == 'patch':
+                                path = source['path']
+                                os.makedirs(Path(path).parent, exist_ok=True)
+                                shutil.copyfile(f'{foreign_deps_path}/{path}', path)
 
-                        sources.append(source)
+                            if 'dest' in source:
+                                dest = str(source['dest']).replace('$PUB_DEV', pub_dev)
+                                dest = dest.replace('$APP', app)
+                                source['dest'] = dest
+
+                            sources.append(source)
+                else:
+                    print(f'Warning: Skipping foreign dependency {name}, not sourced from pub.dev')
 
     return extra_pubspecs, cargo_locks, sources
 
@@ -252,7 +254,7 @@ def main():
         suffix = manifest_path.suffix
         with open(f'{app_id}{suffix}', 'w') as output_stream:
             for module in manifest['modules']:
-                if 'name' in module and module['name'] == app:
+                if 'name' in module and str(module['name']).lower() == app.lower():
                     if len(sources):
                         module['sources'] += sources
                     if len(cargo_locks):
