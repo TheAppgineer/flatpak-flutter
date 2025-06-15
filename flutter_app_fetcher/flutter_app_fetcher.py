@@ -2,6 +2,7 @@ __license__ = 'MIT'
 import subprocess
 import yaml
 import glob
+import os
 import shutil
 
 from pathlib import Path
@@ -91,7 +92,7 @@ def _process_build_commands(module, app_pubspec: str):
         module['build-commands'] = build_commands
 
 
-def _process_sources(module, fetch_path: str, releases_path: str, rust_version: Optional[str]) -> Optional[str]:
+def _process_sources(module, fetch_path: str, releases_path: str) -> Optional[str]:
     if not 'sources' in module:
         return None
 
@@ -141,9 +142,13 @@ def _process_sources(module, fetch_path: str, releases_path: str, rust_version: 
 
                 dest = source['dest'] if 'dest' in source else ''
                 path = str(source['path'])
-                print(f'Apply patch: {path}')
-                command = f'(cd {fetch_path}/{dest} && patch -p1) < {path}'
-                subprocess.run([command], stdout=subprocess.PIPE, shell=True, check=True)
+
+                if os.path.isdir(dest):
+                    print(f'Apply patch: {path}')
+                    command = f'(cd {fetch_path}/{dest} && patch -p1) < {path}'
+                    subprocess.run([command], stdout=subprocess.PIPE, shell=True, check=True)
+                else:
+                    print(f'Warning: Skipping patch {path}, directory {dest} does not exist')
 
     for idx in reversed(idxs):
         del sources[idx]
@@ -156,12 +161,7 @@ def _process_sources(module, fetch_path: str, releases_path: str, rust_version: 
             }
         ]
 
-    if rust_version is not None:
-        module['sources'] = ["pubspec-sources.json", 'cargo-sources.json'] + sources
-
-        _add_submodule(module, f"rustup-{rust_version}.json")
-    else:
-        module['sources'] = ["pubspec-sources.json"] + sources
+    module['sources'] = ["pubspec-sources.json"] + sources
 
     return tag
 
@@ -172,8 +172,7 @@ def fetch_flutter_app(
     build_path: str,
     releases_path: str,
     app_pubspec: str,
-    rust_version: Optional[str]
-) -> Tuple[str, Optional[str], int]:
+) -> Tuple[str, str, Optional[str], int]:
     if 'app-id' in manifest:
         app_id = 'app-id'
     elif 'id' in manifest:
@@ -197,14 +196,15 @@ def fetch_flutter_app(
         _process_build_options(module)
         _process_build_commands(module, app_pubspec)
 
-        build_path_app = f'{build_path}/{app}'
+        app_module = app_module if app_module is not None else str(module['name'])
+        build_path_app = f'{build_path}/{app_module}'
         build_id = len(glob.glob(f'{build_path_app}-*')) + 1
-        tag = _process_sources(module, f'{build_path_app}-{build_id}', releases_path, rust_version)
+        tag = _process_sources(module, f'{build_path_app}-{build_id}', releases_path)
 
-        options = [f'cd {build_path} && ln -snf {app}-{build_id} {app}']
+        options = [f'cd {build_path} && ln -snf {app_module}-{build_id} {app_module}']
         subprocess.run(options, stdout=subprocess.PIPE, shell=True, check=True)
 
-        return str(manifest[app_id]), tag, build_id
+        return str(manifest[app_id]), app_module, tag, build_id
     else:
         print(f'Error: No module named {app} found!')
         exit(1)
