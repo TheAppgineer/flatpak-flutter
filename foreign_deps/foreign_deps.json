@@ -21,9 +21,22 @@
             "sources": [
                 {
                     "type": "file",
+                    "only-arches": [
+                        "x86_64"
+                    ],
                     "url": "https://github.com/microsoft/mimalloc/archive/refs/tags/v2.1.2.tar.gz",
                     "sha256": "2b1bff6f717f9725c70bf8d79e4786da13de8a270059e4ba0bdd262ae7be46eb",
                     "dest": "$APP/build/linux/x64/release",
+                    "dest-filename": "mimalloc-2.1.2.tar.gz"
+                },
+                {
+                    "type": "file",
+                    "only-arches": [
+                        "aarch64"
+                    ],
+                    "url": "https://github.com/microsoft/mimalloc/archive/refs/tags/v2.1.2.tar.gz",
+                    "sha256": "2b1bff6f717f9725c70bf8d79e4786da13de8a270059e4ba0bdd262ae7be46eb",
+                    "dest": "$APP/build/linux/arm64/release",
                     "dest-filename": "mimalloc-2.1.2.tar.gz"
                 }
             ]

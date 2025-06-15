@@ -4,7 +4,6 @@ __license__ = 'MIT'
 import subprocess
 import shutil
 import argparse
-import glob
 import os
 import sys
 import yaml
@@ -78,9 +77,9 @@ def _fetch_flutter_app(
             manifest = json.load(input_stream)
 
         releases_path += '/flutter'
-        app_id, tag, build_id = fetch_flutter_app(manifest, app_module, build_path, releases_path, app_pubspec)
+        app_id, app_module, tag, build_id = fetch_flutter_app(manifest, app_module, build_path, releases_path, app_pubspec)
 
-        return manifest, app_id, tag, build_id
+        return manifest, app_id, app_module, tag, build_id
 
 
 def _create_pub_cache(build_path_app: str, pubspec_path = None):
@@ -233,11 +232,10 @@ def main():
             _get_manifest_from_git(args.MANIFEST, args.from_git, args.from_git_branch)
 
     app_pubspec = '.' if args.app_pubspec is None else str(args.app_pubspec)
-    manifest, app_id, tag, build_id = _fetch_flutter_app(manifest_path, args.app_module, releases_path, app_pubspec)
+    manifest, app_id, app_module, tag, build_id = _fetch_flutter_app(manifest_path, args.app_module, releases_path, app_pubspec)
 
     if tag is not None:
-        app = str(args.app_module) if args.app_module is not None else app_id.split('.')[-1]
-        build_path_app = f'{build_path}/{app}'
+        build_path_app = f'{build_path}/{app_module}'
         _create_pub_cache(build_path_app, args.app_pubspec)
 
         extra_pubspecs, cargo_locks, sources = _handle_foreign_dependencies(app_pubspec, build_path_app, foreign_deps_path)
@@ -246,15 +244,15 @@ def main():
         if args.cargo_locks is not None:
             cargo_locks += str(args.cargo_locks).split(',')
 
-        _generate_pubspec_sources(app, app_pubspec, extra_pubspecs, build_id)
-        _generate_cargo_sources(app, cargo_locks, releases_path)
-        _get_sdk_module(app, tag, releases_path)
+        _generate_pubspec_sources(app_module, app_pubspec, extra_pubspecs, build_id)
+        _generate_cargo_sources(app_module, cargo_locks, releases_path)
+        _get_sdk_module(app_module, tag, releases_path)
 
         # Write converted manifest to file
         suffix = manifest_path.suffix
         with open(f'{app_id}{suffix}', 'w') as output_stream:
             for module in manifest['modules']:
-                if 'name' in module and str(module['name']).lower() == app.lower():
+                if 'name' in module and module['name'] == app_module:
                     if len(sources):
                         module['sources'] += sources
                     if len(cargo_locks):
@@ -272,8 +270,8 @@ def main():
                 yaml.dump(data=manifest, stream=output_stream, indent=2, sort_keys=False, Dumper=Dumper)
 
         if not args.keep_build_dirs:
-            shutil.rmtree(f'{build_path}/{app}-{build_id}')
-            os.remove(f'{build_path}/{app}')
+            shutil.rmtree(f'{build_path}/{app_module}-{build_id}')
+            os.remove(f'{build_path}/{app_module}')
 
 
 if __name__ == '__main__':
