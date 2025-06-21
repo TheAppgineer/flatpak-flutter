@@ -18,10 +18,11 @@ from flutter_app_fetcher.flutter_app_fetcher import fetch_flutter_app
 from pubspec_generator.pubspec_generator import PUB_CACHE
 from cargo_generator.cargo_generator import generate_sources as generate_cargo_sources
 from pubspec_generator.pubspec_generator import generate_sources as generate_pubspec_sources
+from packaging.version import Version
 
 RUST_VERSION = '1.83.0'
 
-__version__ = '0.7.0'
+__version__ = '0.7.1'
 build_path = '.flatpak-builder/build'
 sandbox_root = '/run/build'
 
@@ -104,10 +105,19 @@ def _handle_foreign_dependencies(app: str, build_path_app: str, foreign_deps_pat
         for name in foreign_deps.keys():
             if name in deps['packages']:
                 foreign_dep = foreign_deps[name]
+                foreign_dep_versions = list(foreign_dep.keys())
                 dep = deps['packages'][name]
+                dep_version = dep['version']
+
+                for foreign_dep_version in reversed(foreign_dep_versions):
+                    if Version(foreign_dep_version) <= Version(dep_version):
+                        foreign_dep = foreign_dep[foreign_dep_version]
+                        break
+                else:
+                    foreign_dep = foreign_dep[foreign_dep_versions[0]]
 
                 if dep['source'] == 'hosted':
-                    pub_dev = f".{PUB_CACHE}/hosted/pub.dev/{name}-{dep['version']}"
+                    pub_dev = f".{PUB_CACHE}/hosted/pub.dev/{name}-{dep_version}"
 
                     if 'extra_pubspecs' in foreign_dep:
                         for pubspec in foreign_dep['extra_pubspecs']:

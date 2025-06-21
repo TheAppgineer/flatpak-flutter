@@ -171,7 +171,7 @@ run `poetry install` to setup, activate your virtual env by running `poetry shel
 
 Otherwise install Python 3.8+ and the dependency packages:
 
-    pip install pyyaml toml
+    pip install packaging pyyaml toml
 
 ## Python module details
 The Python modules, taking care of the different processing steps, are further
