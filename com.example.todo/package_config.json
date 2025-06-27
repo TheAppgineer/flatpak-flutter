@@ -51,7 +51,7 @@
     },
     {
       "name": "built_value",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/built_value-8.9.5",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/built_value-8.10.1",
       "packageUri": "lib/",
       "languageVersion": "3.0"
     },
@@ -116,26 +116,32 @@
       "languageVersion": "2.19"
     },
     {
+      "name": "dart_service_protocol_shared",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/dart_service_protocol_shared-0.0.3",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
+    },
+    {
       "name": "dds",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/dds-5.0.2",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/dds-5.0.3",
       "packageUri": "lib/",
       "languageVersion": "3.5"
     },
     {
       "name": "dds_service_extensions",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/dds_service_extensions-2.0.1",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/dds_service_extensions-2.0.2",
       "packageUri": "lib/",
-      "languageVersion": "2.15"
+      "languageVersion": "3.5"
     },
     {
       "name": "devtools_shared",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/devtools_shared-11.2.1",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/devtools_shared-12.0.0",
       "packageUri": "lib/",
       "languageVersion": "3.6"
     },
     {
       "name": "dtd",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/dtd-2.5.0",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/dtd-4.0.0",
       "packageUri": "lib/",
       "languageVersion": "3.5"
     },
@@ -255,7 +261,7 @@
     },
     {
       "name": "json_rpc_2",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/json_rpc_2-3.0.3",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/json_rpc_2-4.0.0",
       "packageUri": "lib/",
       "languageVersion": "3.4"
     },
@@ -423,7 +429,7 @@
     },
     {
       "name": "sse",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/sse-4.1.7",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/sse-4.1.8",
       "packageUri": "lib/",
       "languageVersion": "3.3"
     },
