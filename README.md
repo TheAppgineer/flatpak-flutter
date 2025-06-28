@@ -5,7 +5,7 @@ The Flatpak pre-processor for Flutter apps
 The goal of the flatpak-flutter project is to simplify the publishing of Flutter based Linux apps on Flathub.
 
 ## The Flathub vs Flutter Status Quo
-When a Flutter app is ready for publishing on Flathub then, as part of the PR, the manifest gets build on Flathub infra. At the time the build reaches the first use of the `flutter` tool, it tries to download the Dart SDK and fails in the sandboxed build environment for lack of online access.
+When a Flutter app is ready for publishing on Flathub then, as part of the PR, the manifest gets build on Flathub infra. At the time the build reaches the first use of the `flutter` tool, it tries to download the Dart SDK and fails in the sandboxed build environment for [lack of online access](https://docs.flathub.org/docs/for-app-authors/requirements#no-network-access-during-build).
 
 For both the Flathub and Flutter project there have been requests to change behavior, but these requests get low priority or are not in line with project policy, keeping the status quo. This limits the options for developers. A Flutter developer who want to publish for Linux is more likely to use Snaps, as that is the supported and documented solution:
 
@@ -25,6 +25,8 @@ flatpak-flutter performs a pre-processing run on the app manifest to collect all
 With the approach of pre-built binaries it is not certain that the local build used the same library versions as included in the Flatpak Runtime, this can cause compatibility issues.
 
 An added benefit of the source build is that both the x86_64 and aarch64 architecture will be built on the Flathub infra. No longer the need to skip aarch64 support in the `flathub.json` file.
+
+Last but not least it is also in line with [Flathub requirements](https://docs.flathub.org/docs/for-app-authors/requirements#building-from-source).
 
 ## The flatpak-flutter Workflow
 What better way to demonstrate the tool then by building a TODO app :)
@@ -135,6 +137,37 @@ flatpak-builder --repo=repo --force-clean --sandbox --user --install --install-d
 
 ### Submit to Flathub
 With a manifest suitable for a sandboxed build, the [Flathub Submission](https://docs.flathub.org/docs/for-app-authors/submission) can take place.
+
+## Tackling a Failing Build
+Not every app will build right away, dependencies can still assume online access.
+
+### Perform an Online Build
+A first step in fixing build issues is to verify the build with online access. For this the network permission has to be temporarily added to the `flatpak-flutter.yml` file.
+
+```yml
+      buildsystem: simple
+      build-options:
+        args:
+          - --share=network
+```
+
+The build has to be performed without the `--sandbox` option of `flatpak-builder`.
+
+### Build Verbose
+Perform a verbose build to further investigate the failure.
+
+```yml
+      build-commands:
+        - flutter build linux --release --verbose
+```
+
+### Deal with Foreign Dependencies
+Some Dart packages, coming from pub.dev, are wrappers around C/C++ or Rust code. The build process of such a dependency can still try to download a resource. This behavior cannot be known upfront based on the `pubspec.lock` file. If the verbose build log shows a download attempt, then this download has to be added to the `sources` in the manifest. For Rust dependencies, making use of cargo, the `Cargo.lock` file can be specified with the `--cargo-locks` option of flatpak-flutter.
+
+Known foreign dependencies are described in the `foreign-deps.json` file, these are automatically handled by flatpak-flutter.
+
+### Report an Issue
+If build issues remain then [an issues](https://github.com/TheAppgineer/flatpak-flutter/issues) can be opened.
 
 ## The flatpak-flutter Shell Script
 The `flatpak-flutter.sh` script, as known from previous releases, is still available as a convenience wrapper around flatpak-flutter and flatpak-builder. Any options given will be passed on to flatpak-flutter.
