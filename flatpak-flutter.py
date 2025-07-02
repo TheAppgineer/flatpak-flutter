@@ -98,6 +98,37 @@ def _handle_foreign_dependencies(app: str, build_path_app: str, foreign_deps_pat
     cargo_locks = []
     sources = []
 
+    def append_dependency(foreign_dep, pub_dev: str= ""):
+        if 'extra_pubspecs' in foreign_dep:
+            for pubspec in foreign_dep['extra_pubspecs']:
+                extra_pubspecs.append(str(pubspec).replace('$PUB_DEV', pub_dev))
+
+        if 'cargo_locks' in foreign_dep:
+            for cargo_lock in foreign_dep['cargo_locks']:
+                cargo_locks.append(str(cargo_lock).replace('$PUB_DEV', pub_dev))
+
+        if 'manifest' in foreign_dep and 'sources' in foreign_dep['manifest']:
+            for source in foreign_dep['manifest']['sources']:
+                if source['type'] == 'patch':
+                    dst_path = source['path']
+                    src_path = f'{foreign_deps_path}/{dst_path}'
+
+                    if os.path.isfile(src_path):
+                        os.makedirs(Path(dst_path).parent, exist_ok=True)
+                        shutil.copyfile(src_path, dst_path)
+
+                if 'dest' in source:
+                    dest = str(source['dest']).replace('$PUB_DEV', pub_dev)
+                    dest = dest.replace('$APP', app)
+                    source['dest'] = dest
+
+                sources.append(source)
+
+    if os.path.isfile('foreign.json'):
+        with open('foreign.json') as foreign:
+            for foreign in json.load(foreign).values():
+                append_dependency(foreign)
+
     with open(f'{foreign_deps_path}/foreign_deps.json', 'r') as foreign_deps, open(f'{abs_path}/pubspec.lock') as deps:
         foreign_deps = json.load(foreign_deps)
         deps = yaml.full_load(deps)
@@ -118,28 +149,7 @@ def _handle_foreign_dependencies(app: str, build_path_app: str, foreign_deps_pat
 
                 if dep['source'] == 'hosted':
                     pub_dev = f".{PUB_CACHE}/hosted/pub.dev/{name}-{dep_version}"
-
-                    if 'extra_pubspecs' in foreign_dep:
-                        for pubspec in foreign_dep['extra_pubspecs']:
-                            extra_pubspecs.append(str(pubspec).replace('$PUB_DEV', pub_dev))
-
-                    if 'cargo_locks' in foreign_dep:
-                        for cargo_lock in foreign_dep['cargo_locks']:
-                            cargo_locks.append(str(cargo_lock).replace('$PUB_DEV', pub_dev))
-
-                    if 'manifest' in foreign_dep and 'sources' in foreign_dep['manifest']:
-                        for source in foreign_dep['manifest']['sources']:
-                            if source['type'] == 'patch':
-                                path = source['path']
-                                os.makedirs(Path(path).parent, exist_ok=True)
-                                shutil.copyfile(f'{foreign_deps_path}/{path}', path)
-
-                            if 'dest' in source:
-                                dest = str(source['dest']).replace('$PUB_DEV', pub_dev)
-                                dest = dest.replace('$APP', app)
-                                source['dest'] = dest
-
-                            sources.append(source)
+                    append_dependency(foreign_dep, pub_dev)
                 else:
                     print(f'Warning: Skipping foreign dependency {name}, not sourced from pub.dev')
 
