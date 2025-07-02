@@ -100,7 +100,7 @@ The conversion steps taken on the manifest to come to the offline manifest are:
 * The command to activate the SDK (`setup-flutter.sh`) is inserted in the `build-commands`
 * The `pubspec-sources.json` manifest is appended to the `sources`
 
-#### Command Line Options
+#### Command line options
 ```
 $ ./flatpak-flutter.py --help
 usage: flatpak-flutter.py [-h] [-V] [--app-module NAME] [--app-pubspec PATH]
@@ -124,6 +124,33 @@ optional arguments:
   --from-git-branch BRANCH
                         Branch to use in --from-git
   --keep-build-dirs     Don't remove build directories after processing
+```
+
+#### Foreign code
+If the app makes use of foreign code, like C/C++ or Rust, then instead of specifying `--extra-pubspecs` and `--cargo-locks` on the command line, a (source controlled) `foreign.json` file can be used instead. Independent code parts can be separated and named for readability/maintainability.
+
+Below is an example file from a [flutter_rust_bridge](https://pub.dev/packages/flutter_rust_bridge) based app.
+
+```json
+{
+    "rust_lib": {
+        "cargo_locks": [
+            "rust"
+        ],
+        "extra_pubspecs": [
+            "rust_builder/cargokit/build_tool"
+        ],
+        "manifest": {
+            "sources": [
+                {
+                    "type": "patch",
+                    "path": "cargokit/run_build_tool.sh.patch",
+                    "dest": "rust_builder/cargokit"
+                }
+            ]
+        }
+    }
+}
 ```
 
 ### Build With flatpak-builder
@@ -162,9 +189,9 @@ Perform a verbose build to further investigate the failure.
 ```
 
 ### Deal with Foreign Dependencies
-Some Dart packages, coming from pub.dev, are wrappers around C/C++ or Rust code. The build process of such a dependency can still try to download a resource. This behavior cannot be known upfront based on the `pubspec.lock` file. If the verbose build log shows a download attempt, then this download has to be added to the `sources` in the manifest. For Rust dependencies, making use of cargo, the `Cargo.lock` file can be specified with the `--cargo-locks` option of flatpak-flutter.
+Some Dart packages, coming from pub.dev, are wrappers around C/C++ or Rust code. The build process of such a dependency can still try to download a resource. This behavior cannot be known upfront based on the `pubspec.lock` file. If the verbose build log shows a download attempt, then this download has to be added to the `sources` in the manifest. For Rust dependencies, that make use of cargo, the `Cargo.lock` file can be specified with the `--cargo-locks` command line option, or with a [foreign.json](#foreign-code) file.
 
-Known foreign dependencies are described in the `foreign-deps.json` file, these are automatically handled by flatpak-flutter.
+Known foreign dependencies are described in the `foreign-deps/foreign-deps.json` file, these are automatically handled by flatpak-flutter.
 
 ### Report an Issue
 If build issues remain then [an issues](https://github.com/TheAppgineer/flatpak-flutter/issues) can be opened.
