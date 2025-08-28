@@ -92,7 +92,7 @@ def _create_pub_cache(build_path_app: str, pubspec_path = None):
     subprocess.run([options], stdout=subprocess.PIPE, shell=True, check=True)
 
 
-def _handle_foreign_dependencies(app: str, build_path_app: str, foreign_deps_path: str):
+def _handle_foreign_dependencies(app: str, build_path_app: str, foreign_deps_path: str, app_pubspec: str):
     abs_path = f'{os.getcwd()}/{build_path_app}'
     extra_pubspecs = []
     cargo_locks = []
@@ -129,7 +129,7 @@ def _handle_foreign_dependencies(app: str, build_path_app: str, foreign_deps_pat
             for foreign in json.load(foreign).values():
                 append_dependency(foreign)
 
-    with open(f'{foreign_deps_path}/foreign_deps.json', 'r') as foreign_deps, open(f'{abs_path}/pubspec.lock') as deps:
+    with open(f'{foreign_deps_path}/foreign_deps.json', 'r') as foreign_deps, open(f'{abs_path}/{app_pubspec}/pubspec.lock') as deps:
         foreign_deps = json.load(foreign_deps)
         deps = yaml.full_load(deps)
 
@@ -258,7 +258,7 @@ def main():
         build_path_app = f'{build_path}/{app_module}'
         _create_pub_cache(build_path_app, args.app_pubspec)
 
-        extra_pubspecs, cargo_locks, sources = _handle_foreign_dependencies(app_pubspec, build_path_app, foreign_deps_path)
+        extra_pubspecs, cargo_locks, sources = _handle_foreign_dependencies(app_pubspec, build_path_app, foreign_deps_path, app_pubspec)
         if args.extra_pubspecs is not None:
             extra_pubspecs += str(args.extra_pubspecs).split(',')
         if args.cargo_locks is not None:
