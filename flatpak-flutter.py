@@ -261,7 +261,9 @@ def main():
         build_path_app = f'{build_path}/{app_module}'
         _create_pub_cache(build_path_app, args.app_pubspec)
 
-        extra_pubspecs, cargo_locks, sources = _handle_foreign_dependencies(app_pubspec, build_path_app, foreign_deps_path)
+        full_pubspec_path = build_path_app if args.app_pubspec is None else f'{build_path_app}/{args.app_pubspec}'
+        extra_pubspecs, cargo_locks, sources = _handle_foreign_dependencies(app_pubspec, full_pubspec_path, foreign_deps_path)
+
         if args.extra_pubspecs is not None:
             extra_pubspecs += str(args.extra_pubspecs).split(',')
         if args.cargo_locks is not None:

@@ -28,7 +28,7 @@ def _fetch_repos(repos: list):
             'git',
             'clone',
             '--branch',
-            ref,
+            f"{ref}",
             '--depth',
             '1',
             url,
@@ -140,7 +140,7 @@ def _process_sources(module, fetch_path: str, releases_path: str) -> Optional[st
                 if not 'path' in source:
                     continue
 
-                dest = source['dest'] if 'dest' in source else ''
+                dest = source['dest'] if 'dest' in source else '.'
                 path = str(source['path'])
 
                 if os.path.isdir(dest):
