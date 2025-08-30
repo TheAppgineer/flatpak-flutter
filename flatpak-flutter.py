@@ -206,12 +206,15 @@ def _generate_cargo_sources(app: str, cargo_locks: list, releases: str):
 
 
 def _get_sdk_module(app: str, tag: str, releases: str):
-    shutil.copyfile(f'{releases}/flutter/flutter-shared.sh.patch', 'flutter-shared.sh.patch')
+    if Version(tag) < Version('3.35.0'):
+        shutil.copyfile(f'{releases}/flutter/flutter-pre-3_35-shared.sh.patch', 'flutter-shared.sh.patch')
+    else:
+        shutil.copyfile(f'{releases}/flutter/flutter-shared.sh.patch', 'flutter-shared.sh.patch')
 
     if os.path.isfile(f'{releases}/flutter/{tag}/flutter-sdk.json'):
         shutil.copyfile(f'{releases}/flutter/{tag}/flutter-sdk.json', f'flutter-sdk-{tag}.json')
     else:
-        generated_sdk = generate_sdk(f'{build_path}/{app}/flutter')
+        generated_sdk = generate_sdk(f'{build_path}/{app}/flutter', tag)
 
         with open(f'flutter-sdk-{tag}.json', 'w') as out:
             json.dump(generated_sdk, out, indent=4, sort_keys=False)
