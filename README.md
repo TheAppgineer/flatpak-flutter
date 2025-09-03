@@ -59,7 +59,7 @@ As is the case for every Flatpak, it all starts with the manifest file, but flat
 * Use the Flutter build command, as if it is a local build
   ```yml
       build-commands:
-        - flutter build linux --release
+        - flutter build linux --release --no-pub
   ```
 * Add the other commands to install the app and metadata
 
@@ -174,7 +174,7 @@ A first step in fixing build issues is to verify the build with online access. F
 ```yml
       buildsystem: simple
       build-options:
-        args:
+        build-args:
           - --share=network
 ```
 
@@ -185,7 +185,7 @@ Perform a verbose build to further investigate the failure.
 
 ```yml
       build-commands:
-        - flutter build linux --release --verbose
+        - flutter build linux --release --no-pub --verbose
 ```
 
 ### Deal with Foreign Dependencies

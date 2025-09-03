@@ -29,7 +29,7 @@ modules:
         PUB_CACHE: /run/build/todo/.pub-cache
     build-commands:
       - setup-flutter.sh -C .
-      - flutter build linux --release
+      - flutter build linux --release --no-pub
       - install -D $BUNDLE_PATH/todo /app/bin/todo
       - cp -r $BUNDLE_PATH/lib /app/bin/lib
       - cp -r $BUNDLE_PATH/data /app/bin/data
