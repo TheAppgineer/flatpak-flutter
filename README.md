@@ -245,6 +245,7 @@ described in the README file within the module subdirectory:
 ## Apps Published Using flatpak-flutter
 
 * [Brisk](https://flathub.org/apps/io.github.BrisklyDev.Brisk)
+* [Chameleon Ultra GUI](https://flathub.org/apps/run.chameleon.chameleonultragui)
 * [CloudOTP](https://flathub.org/apps/com.cloudchewie.cloudotp)
 * [Community Remote](https://flathub.org/apps/com.theappgineer.community_remote)
 * [Gopeed](https://flathub.org/apps/com.gopeed.Gopeed)
