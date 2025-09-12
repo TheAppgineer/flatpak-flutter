@@ -688,16 +688,16 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://pub.dev/api/archives/dwds-24.4.0+1.tar.gz",
-        "sha256": "b2f7e3241de2adbd5caa87ae9d05a0f9c59b9cbb8c77aeaeebf6c277821f25d5",
+        "url": "https://pub.dev/api/archives/dwds-24.4.0+2.tar.gz",
+        "sha256": "285736451c8e646ea99c50a6c47cde65d0eea55f0e1a995b5474b849d04af3ea",
         "strip-components": 0,
-        "dest": ".pub-cache/hosted/pub.dev/dwds-24.4.0+1"
+        "dest": ".pub-cache/hosted/pub.dev/dwds-24.4.0+2"
     },
     {
         "type": "inline",
-        "contents": "b2f7e3241de2adbd5caa87ae9d05a0f9c59b9cbb8c77aeaeebf6c277821f25d5",
+        "contents": "285736451c8e646ea99c50a6c47cde65d0eea55f0e1a995b5474b849d04af3ea",
         "dest": ".pub-cache/hosted-hashes/pub.dev",
-        "dest-filename": "dwds-24.4.0+1.sha256"
+        "dest-filename": "dwds-24.4.0+2.sha256"
     },
     {
         "type": "archive",

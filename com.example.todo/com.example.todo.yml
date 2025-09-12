@@ -39,4 +39,4 @@ modules:
         url: https://github.com/5minslearn/Flutter-Todo-App.git
         commit: 2a98e745969dd657efe2eccd964253cd20d13e25
     modules:
-      - flutter-sdk-3.35.2.json
+      - flutter-sdk-3.35.3.json

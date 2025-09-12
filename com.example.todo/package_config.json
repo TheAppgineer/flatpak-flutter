@@ -165,7 +165,7 @@
     },
     {
       "name": "dwds",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/dwds-24.4.0+1",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/dwds-24.4.0+2",
       "packageUri": "lib/",
       "languageVersion": "3.7"
     },
@@ -609,6 +609,6 @@
     }
   ],
   "generator": "pub",
-  "generatorVersion": "3.9.0",
+  "generatorVersion": "3.9.2",
   "pubCache": "file:///run/build/todo/.pub-cache"
 }
