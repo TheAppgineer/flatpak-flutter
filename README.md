@@ -251,6 +251,7 @@ described in the README file within the module subdirectory:
 * [Gopeed](https://flathub.org/apps/com.gopeed.Gopeed)
 * [Mapiah](https://flathub.org/apps/io.github.rsevero.mapiah)
 * [Sly](https://flathub.org/apps/page.kramo.Sly)
+* [Table Habit](https://flathub.org/apps/io.github.friesi23.mhabit)
 * [wger](https://flathub.org/apps/de.wger.flutter)
 * Your app here?
 
