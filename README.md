@@ -16,7 +16,9 @@ Let's get to a more equal playing field!
 > Note: The progress already made is that flatpak-flutter is referenced in both the [Flutter](https://docs.flutter.dev/deployment/linux#additional-deployment-resources) and [Flatpak](https://github.com/flatpak/flatpak-builder-tools?tab=readme-ov-file#flutter) documentation!
 
 ### The Common Approach
-The approach often taken by Flutter app developers to get their apps published on Flathub, is to create an archive with pre-built binaries and download that within the app manifest. This can lead to the recurring question during the PR review process of "Why not build from source?", but when the reviewer gets aware of the Fluter nature of the app it gets accepted.
+The approach often taken by Flutter app developers to get their apps published on Flathub, is to create an archive with pre-built binaries and download that within the app manifest. This can lead to the recurring question during the PR review process of "Why not build from source?", but when the reviewer gets aware of the Fluter nature of the app it used to get accepted.
+
+> Note: Recently the submission policy of Flathub has become more strict. For open source applications a source build is expected, for traceability and security reasons. Also because it is now known that Flutter apps can be built from source.
 
 ### The flatpak-flutter Approach
 flatpak-flutter performs a pre-processing run on the app manifest to collect all the required sources for an offline build and stores their origins in the form of flatpak-builder `modules` and `sources`. The output of this pre-processing step is a manifest that can be built in a sandboxed environment, which can be verified locally by running `flatpak-builder` with the `--sandbox` option.
@@ -250,6 +252,7 @@ described in the README file within the module subdirectory:
 * [Community Remote](https://flathub.org/apps/com.theappgineer.community_remote)
 * [Gopeed](https://flathub.org/apps/com.gopeed.Gopeed)
 * [Mapiah](https://flathub.org/apps/io.github.rsevero.mapiah)
+* [Passy](https://flathub.org/apps/io.github.glitterware.Passy)
 * [Sly](https://flathub.org/apps/page.kramo.Sly)
 * [Table Habit](https://flathub.org/apps/io.github.friesi23.mhabit)
 * [wger](https://flathub.org/apps/de.wger.flutter)
