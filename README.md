@@ -235,6 +235,10 @@ Otherwise install Python 3.8+ and the dependency packages:
 
     pip install packaging pyyaml toml
 
+Or, using the requirements file:
+
+    pip install -r requirements.txt
+
 ## Python module details
 The Python modules, taking care of the different processing steps, are further
 described in the README file within the module subdirectory:
