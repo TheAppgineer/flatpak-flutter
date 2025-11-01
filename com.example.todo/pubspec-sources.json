@@ -114,16 +114,16 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://pub.dev/api/archives/leak_tracker-11.0.1.tar.gz",
-        "sha256": "8dcda04c3fc16c14f48a7bb586d4be1f0d1572731b6d81d51772ef47c02081e0",
+        "url": "https://pub.dev/api/archives/leak_tracker-11.0.2.tar.gz",
+        "sha256": "33e2e26bdd85a0112ec15400c8cbffea70d0f9c3407491f672a2fad47915e2de",
         "strip-components": 0,
-        "dest": ".pub-cache/hosted/pub.dev/leak_tracker-11.0.1"
+        "dest": ".pub-cache/hosted/pub.dev/leak_tracker-11.0.2"
     },
     {
         "type": "inline",
-        "contents": "8dcda04c3fc16c14f48a7bb586d4be1f0d1572731b6d81d51772ef47c02081e0",
+        "contents": "33e2e26bdd85a0112ec15400c8cbffea70d0f9c3407491f672a2fad47915e2de",
         "dest": ".pub-cache/hosted-hashes/pub.dev",
-        "dest-filename": "leak_tracker-11.0.1.sha256"
+        "dest-filename": "leak_tracker-11.0.2.sha256"
     },
     {
         "type": "archive",
