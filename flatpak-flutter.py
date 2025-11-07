@@ -22,7 +22,7 @@ from packaging.version import Version
 
 RUST_VERSION = '1.83.0'
 
-__version__ = '0.7.4'
+__version__ = '0.7.5'
 build_path = '.flatpak-builder/build'
 sandbox_root = '/run/build'
 

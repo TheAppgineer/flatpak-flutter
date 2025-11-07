@@ -18,6 +18,20 @@
             }
         }
     },
+    "fvp": {
+        "0.35.0": {
+            "manifest": {
+                "sources": [
+                    {
+                        "type": "archive",
+                        "url": "https://github.com/wang-bin/mdk-sdk/releases/download/v0.35.0/mdk-sdk-linux.tar.xz",
+                        "sha256": "3ca102c26b3f246258b1822f51653450148bc25b188a4630dc81a57965e56ed8",
+                        "dest": "$PUB_DEV/linux/mdk-sdk"
+                    }
+                ]
+            }
+        }
+    },
     "media_kit_libs_linux": {
         "1.2.1": {
             "manifest": {
