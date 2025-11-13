@@ -3,15 +3,15 @@
   "packages": [
     {
       "name": "_fe_analyzer_shared",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/_fe_analyzer_shared-82.0.0",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/_fe_analyzer_shared-89.0.0",
       "packageUri": "lib/",
-      "languageVersion": "3.5"
+      "languageVersion": "3.9"
     },
     {
       "name": "analyzer",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/analyzer-7.4.5",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/analyzer-8.2.0",
       "packageUri": "lib/",
-      "languageVersion": "3.5"
+      "languageVersion": "3.9"
     },
     {
       "name": "archive",
@@ -51,7 +51,7 @@
     },
     {
       "name": "built_value",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/built_value-8.10.1",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/built_value-8.12.0",
       "packageUri": "lib/",
       "languageVersion": "3.0"
     },
@@ -75,15 +75,15 @@
     },
     {
       "name": "code_assets",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/code_assets-0.19.4",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/code_assets-0.19.7",
       "packageUri": "lib/",
       "languageVersion": "3.9"
     },
     {
       "name": "code_builder",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/code_builder-4.10.1",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/code_builder-4.11.0",
       "packageUri": "lib/",
-      "languageVersion": "3.5"
+      "languageVersion": "3.7"
     },
     {
       "name": "collection",
@@ -93,9 +93,9 @@
     },
     {
       "name": "completion",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/completion-1.0.1",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/completion-1.0.2",
       "packageUri": "lib/",
-      "languageVersion": "2.18"
+      "languageVersion": "3.7"
     },
     {
       "name": "convert",
@@ -105,7 +105,7 @@
     },
     {
       "name": "coverage",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/coverage-1.14.1",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/coverage-1.15.0",
       "packageUri": "lib/",
       "languageVersion": "3.4"
     },
@@ -135,9 +135,15 @@
     },
     {
       "name": "dart_style",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/dart_style-3.1.0",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/dart_style-3.1.2",
       "packageUri": "lib/",
       "languageVersion": "3.7"
+    },
+    {
+      "name": "data_assets",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/data_assets-0.19.3",
+      "packageUri": "lib/",
+      "languageVersion": "3.9"
     },
     {
       "name": "dds",
@@ -147,7 +153,7 @@
     },
     {
       "name": "dds_service_extensions",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/dds_service_extensions-2.0.2",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/dds_service_extensions-2.1.0",
       "packageUri": "lib/",
       "languageVersion": "3.5"
     },
@@ -165,7 +171,7 @@
     },
     {
       "name": "dwds",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/dwds-24.4.0+2",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/dwds-25.1.0+2",
       "packageUri": "lib/",
       "languageVersion": "3.7"
     },
@@ -231,13 +237,13 @@
     },
     {
       "name": "hooks",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/hooks-0.19.5",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/hooks-0.20.1",
       "packageUri": "lib/",
       "languageVersion": "3.9"
     },
     {
       "name": "hooks_runner",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/hooks_runner-0.21.0",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/hooks_runner-0.23.0",
       "packageUri": "lib/",
       "languageVersion": "3.9"
     },
@@ -249,7 +255,7 @@
     },
     {
       "name": "http",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/http-1.4.0",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/http-1.5.0",
       "packageUri": "lib/",
       "languageVersion": "3.4"
     },
@@ -327,9 +333,9 @@
     },
     {
       "name": "mustache_template",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/mustache_template-2.0.0",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/mustache_template-2.0.1",
       "packageUri": "lib/",
-      "languageVersion": "2.12"
+      "languageVersion": "3.7"
     },
     {
       "name": "native_stack_traces",
@@ -369,13 +375,13 @@
     },
     {
       "name": "pool",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/pool-1.5.1",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/pool-1.5.2",
       "packageUri": "lib/",
-      "languageVersion": "2.12"
+      "languageVersion": "3.4"
     },
     {
       "name": "process",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/process-5.0.4",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/process-5.0.5",
       "packageUri": "lib/",
       "languageVersion": "3.5"
     },
@@ -489,19 +495,19 @@
     },
     {
       "name": "test",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/test-1.26.2",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/test-1.26.3",
       "packageUri": "lib/",
       "languageVersion": "3.5"
     },
     {
       "name": "test_api",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/test_api-0.7.6",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/test_api-0.7.7",
       "packageUri": "lib/",
       "languageVersion": "3.5"
     },
     {
       "name": "test_core",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/test_core-0.6.11",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/test_core-0.6.12",
       "packageUri": "lib/",
       "languageVersion": "3.5"
     },
@@ -549,7 +555,7 @@
     },
     {
       "name": "watcher",
-      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/watcher-1.1.2",
+      "rootUri": "file:///run/build/todo/.pub-cache/hosted/pub.dev/watcher-1.1.4",
       "packageUri": "lib/",
       "languageVersion": "3.1"
     },
@@ -609,6 +615,6 @@
     }
   ],
   "generator": "pub",
-  "generatorVersion": "3.9.2",
+  "generatorVersion": "3.10.0-290.4.beta",
   "pubCache": "file:///run/build/todo/.pub-cache"
 }

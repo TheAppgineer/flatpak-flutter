@@ -32,7 +32,6 @@ def _get_commit(sdk_path: str) -> str:
 
 
 def generate_sdk(sdk_path: str, tag: str) -> _FlatpakSourceType:
-    sdk_version = open(f'{sdk_path}/version', 'r').readline().strip()
     sdk_commit = _get_commit(sdk_path)
     engine = open(f'{sdk_path}/bin/internal/engine.version', 'r').readline().strip()
     gradle_wrapper = open(f'{sdk_path}/bin/internal/gradle_wrapper.version', 'r').readline().strip()
@@ -61,7 +60,7 @@ def generate_sdk(sdk_path: str, tag: str) -> _FlatpakSourceType:
         {
             'type': 'git',
             'url': 'https://github.com/flutter/flutter.git',
-            'tag': sdk_version,
+            'tag': tag,
             'commit': sdk_commit,
             'dest': 'flutter'
         },
