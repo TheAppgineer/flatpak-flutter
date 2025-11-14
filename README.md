@@ -260,6 +260,7 @@ described in the README file within the module subdirectory:
 * [Sly](https://flathub.org/apps/page.kramo.Sly)
 * [Table Habit](https://flathub.org/apps/io.github.friesi23.mhabit)
 * [TowDow](https://flathub.org/en/apps/app.towdow.TowDow)
+* [UnifiedPush Troubleshooter](https://flathub.org/en/apps/org.unifiedpush.Troubleshooter)
 * [wger](https://flathub.org/apps/de.wger.flutter)
 * Your app here?
 
