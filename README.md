@@ -108,13 +108,13 @@ $ ./flatpak-flutter.py --help
 usage: flatpak-flutter.py [-h] [-V] [--app-module NAME] [--app-pubspec PATH]
                           [--extra-pubspecs PATHS] [--cargo-locks PATHS]
                           [--from-git URL] [--from-git-branch BRANCH]
-                          [--keep-build-dirs]
+                          [--no-shallow-clone] [--keep-build-dirs]
                           MANIFEST
 
 positional arguments:
   MANIFEST              Path to the manifest
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -V, --version         show program's version number and exit
   --app-module NAME     Name of the app module in the manifest
@@ -125,6 +125,7 @@ optional arguments:
   --from-git URL        Get input files from git repo
   --from-git-branch BRANCH
                         Branch to use in --from-git
+  --no-shallow-clone    Don't use shallow clones when mirroring git repos
   --keep-build-dirs     Don't remove build directories after processing
 ```
 
