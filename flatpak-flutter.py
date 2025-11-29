@@ -20,7 +20,7 @@ from cargo_generator.cargo_generator import generate_sources as generate_cargo_s
 from pubspec_generator.pubspec_generator import generate_sources as generate_pubspec_sources
 from packaging.version import Version
 
-RUST_VERSION = '1.83.0'
+RUST_VERSION = '1.91.1'
 
 __version__ = '0.8.0'
 build_path = '.flatpak-builder/build'
