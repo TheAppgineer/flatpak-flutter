@@ -22,7 +22,7 @@ from packaging.version import Version
 
 RUST_VERSION = '1.83.0'
 
-__version__ = '0.7.5'
+__version__ = '0.8.0'
 build_path = '.flatpak-builder/build'
 sandbox_root = '/run/build'
 
@@ -68,6 +68,7 @@ def _fetch_flutter_app(
     app_module: str,
     releases_path: str,
     app_pubspec: str,
+    no_shallow: bool,
 ):
     with open(manifest_path, 'r') as input_stream:
         suffix = manifest_path.suffix
@@ -78,7 +79,14 @@ def _fetch_flutter_app(
             manifest = json.load(input_stream)
 
         releases_path += '/flutter'
-        app_id, app_module, tag, build_id = fetch_flutter_app(manifest, app_module, build_path, releases_path, app_pubspec)
+        app_id, app_module, tag, build_id = fetch_flutter_app(
+            manifest,
+            app_module,
+            build_path,
+            releases_path,
+            app_pubspec,
+            no_shallow,
+        )
 
         return manifest, app_id, app_module, tag, build_id
 
@@ -230,6 +238,7 @@ def main():
     parser.add_argument('--cargo-locks', metavar='PATHS', help='Comma separated list of Cargo.lock paths')
     parser.add_argument('--from-git', metavar='URL', required=False, help='Get input files from git repo')
     parser.add_argument('--from-git-branch', metavar='BRANCH', required=False, help='Branch to use in --from-git')
+    parser.add_argument('--no-shallow-clone', action='store_true', help="Don't use shallow clones when mirroring git repos")
     parser.add_argument('--keep-build-dirs', action='store_true', help="Don't remove build directories after processing")
 
     args = parser.parse_args()
@@ -255,7 +264,14 @@ def main():
             _get_manifest_from_git(args.MANIFEST, args.from_git, args.from_git_branch)
 
     app_pubspec = '.' if args.app_pubspec is None else str(args.app_pubspec)
-    manifest, app_id, app_module, tag, build_id = _fetch_flutter_app(manifest_path, args.app_module, releases_path, app_pubspec)
+    no_shallow = True if args.no_shallow_clone else False
+    manifest, app_id, app_module, tag, build_id = _fetch_flutter_app(
+        manifest_path,
+        args.app_module,
+        releases_path,
+        app_pubspec,
+        no_shallow,
+    )
 
     if tag is not None:
         build_path_app = f'{build_path}/{app_module}'

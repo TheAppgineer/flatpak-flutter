@@ -23,31 +23,28 @@ def _fetch_repos(repos: list):
 
     repos.sort(key=by_path_depth)
 
-    for url, ref, path in repos:
-        options = [
-            'git',
-            'clone',
-            '--branch',
-            f"{ref}",
-            '--depth',
-            '1',
-            url,
-            path,
-        ]
+    for url, ref, path, shallow, recursive in repos:
+        options = ['git', 'clone']
+        if shallow:
+            options += ['--depth', '1']
+        if recursive:
+            options += ['--recursive']
+        options += ['--branch', f"{ref}", url, path]
 
         try:
             subprocess.run(options, stdout=subprocess.PIPE, check=True)
         except subprocess.CalledProcessError:
-            command = [f'git clone {url} {path} && cd {path} && git reset --hard {ref}']
+            clone = 'git clone --recursive' if recursive else 'git clone'
+            command = [f'{clone} {url} {path} && cd {path} && git reset --hard {ref}']
             subprocess.run(command, stdout=subprocess.PIPE, shell=True, check=True)
 
 
-def _add_submodule(module, submodule):
+def _add_child_module(module, child_module):
     if 'modules' in module:
-        if submodule not in module['modules']:
-            module['modules'] += [submodule]
+        if child_module not in module['modules']:
+            module['modules'] += [child_module]
     else:
-        module['modules'] = [submodule]
+        module['modules'] = [child_module]
 
 
 def _process_build_options(module):
@@ -92,7 +89,7 @@ def _process_build_commands(module, app_pubspec: str):
         module['build-commands'] = build_commands
 
 
-def _process_sources(module, fetch_path: str, releases_path: str) -> Optional[str]:
+def _process_sources(module, fetch_path: str, releases_path: str, no_shallow: bool) -> Optional[str]:
     if not 'sources' in module:
         return None
 
@@ -113,16 +110,19 @@ def _process_sources(module, fetch_path: str, releases_path: str) -> Optional[st
                 else:
                     continue
 
+                shallow = False if no_shallow or 'disable-shallow-clone' in source else True
+                recursive = False if 'disable-submodules' in source else True
+
                 if 'dest' in source:
                     dest = str(source['dest'])
-                    repos.append((source['url'], ref, f'{fetch_path}/{dest}'))
+                    repos.append((source['url'], ref, f'{fetch_path}/{dest}', shallow, recursive))
                 else:
-                    repos.append((source['url'], ref, fetch_path))
+                    repos.append((source['url'], ref, fetch_path, shallow, recursive))
 
                 if str(source['url']).startswith(FLUTTER_URL) and 'tag' in source:
                     idxs.append(idx)
 
-                    _add_submodule(module, f"flutter-sdk-{source['tag']}.json")
+                    _add_child_module(module, f"flutter-sdk-{source['tag']}.json")
 
                     tag = source['tag']
 
@@ -172,6 +172,7 @@ def fetch_flutter_app(
     build_path: str,
     releases_path: str,
     app_pubspec: str,
+    no_shallow: bool,
 ) -> Tuple[str, str, Optional[str], int]:
     if 'app-id' in manifest:
         app_id = 'app-id'
@@ -199,7 +200,7 @@ def fetch_flutter_app(
         app_module = app_module if app_module is not None else str(module['name'])
         build_path_app = f'{build_path}/{app_module}'
         build_id = len(glob.glob(f'{build_path_app}-*')) + 1
-        tag = _process_sources(module, f'{build_path_app}-{build_id}', releases_path)
+        tag = _process_sources(module, f'{build_path_app}-{build_id}', releases_path, no_shallow)
 
         options = [f'cd {build_path} && ln -snf {app_module}-{build_id} {app_module}']
         subprocess.run(options, stdout=subprocess.PIPE, shell=True, check=True)
