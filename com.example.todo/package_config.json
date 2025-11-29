@@ -615,6 +615,6 @@
     }
   ],
   "generator": "pub",
-  "generatorVersion": "3.10.0-290.4.beta",
+  "generatorVersion": "3.10.1",
   "pubCache": "file:///run/build/todo/.pub-cache"
 }
