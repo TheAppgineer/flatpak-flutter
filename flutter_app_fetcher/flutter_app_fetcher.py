@@ -134,6 +134,7 @@ def _process_sources(module, fetch_path: str, releases_path: str, no_shallow: bo
     for patch in glob.glob(f'{releases_path}/{tag}/*.flutter.patch'):
         shutil.copyfile(patch, Path(patch).name)
 
+    # With the repos fetched, any patches can be applied
     for source in sources:
         if 'type' in source:
             if source['type'] == 'patch':
@@ -143,12 +144,12 @@ def _process_sources(module, fetch_path: str, releases_path: str, no_shallow: bo
                 dest = source['dest'] if 'dest' in source else '.'
                 path = str(source['path'])
 
-                if os.path.isdir(dest):
+                if os.path.isdir(f'{fetch_path}/{dest}'):
                     print(f'Apply patch: {path}')
                     command = f'(cd {fetch_path}/{dest} && patch -p1) < {path}'
                     subprocess.run([command], stdout=subprocess.PIPE, shell=True, check=True)
                 else:
-                    print(f'Warning: Skipping patch {path}, directory {dest} does not exist')
+                    print(f'Warning: Skipping patch {path}, directory {fetch_path}/{dest} does not exist')
 
     for idx in reversed(idxs):
         del sources[idx]
