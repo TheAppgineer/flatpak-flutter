@@ -166,6 +166,35 @@
                     }
                 ]
             }
+        },
+        "0.5.41": {
+            "manifest": {
+                "sources": [
+                    {
+                        "type": "file",
+                        "only-arches": [
+                            "x86_64"
+                        ],
+                        "url": "https://sqlite.org/2025/sqlite-autoconf-3510100.tar.gz",
+                        "sha256": "4f2445cd70479724d32ad015ec7fd37fbb6f6130013bd4bfbc80c32beb42b7e0",
+                        "dest": "$APP/build/linux/x64/release/_deps/sqlite3-subbuild/sqlite3-populate-prefix/src"
+                    },
+                    {
+                        "type": "file",
+                        "only-arches": [
+                            "aarch64"
+                        ],
+                        "url": "https://sqlite.org/2025/sqlite-autoconf-3510100.tar.gz",
+                        "sha256": "4f2445cd70479724d32ad015ec7fd37fbb6f6130013bd4bfbc80c32beb42b7e0",
+                        "dest": "$APP/build/linux/arm64/release/_deps/sqlite3-subbuild/sqlite3-populate-prefix/src"
+                    },
+                    {
+                        "type": "patch",
+                        "path": "sqlite3_flutter_libs/0.5.41-CMakeLists.txt.patch",
+                        "dest": "$PUB_DEV"
+                    }
+                ]
+            }
         }
     },
     "super_native_extensions": {
