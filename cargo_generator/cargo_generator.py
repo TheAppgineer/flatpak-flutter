@@ -68,7 +68,7 @@ def _git_repo_name(git_url: str, commit: str) -> str:
 
 
 def _fetch_git_repo(git_url: str, commit: str) -> str:
-    repo_dir = f'{git_url.replace('://', '_').replace('/', '_')}_{commit[:7]}'
+    repo_dir = f'{git_url.replace("://", "_").replace("/", "_")}_{commit[:7]}'
     cache_dir = os.environ.get('XDG_CACHE_HOME', os.path.expanduser('~/.cache'))
     clone_dir = os.path.join(cache_dir, 'flatpak-cargo', repo_dir)
     if not os.path.isdir(clone_dir):

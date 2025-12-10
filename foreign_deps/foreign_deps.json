@@ -198,7 +198,7 @@
         }
     },
     "super_native_extensions": {
-        "0.8.24": {
+        "0.9.1": {
             "cargo_locks": [
                 "$PUB_DEV/rust"
             ],
