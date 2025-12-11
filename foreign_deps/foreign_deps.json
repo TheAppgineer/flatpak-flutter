@@ -60,6 +60,67 @@
             }
         }
     },
+    "pdfium_flutter": {
+        "0.1.7": {
+            "manifest": {
+                "sources": [
+                    {
+                        "type": "archive",
+                        "only-arches": [
+                            "x86_64"
+                        ],
+                        "url": "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F7520/pdfium-linux-x64.tgz",
+                        "sha256": "e737634cca16ba28b760077b915b469bea076b71f208769c56fb96ee138e876f",
+                        "dest": "$APP/build/linux/x64/release/pdfium/chromium%2F7520/",
+                        "strip-components": 0
+                    },
+                    {
+                        "type": "archive",
+                        "only-arches": [
+                            "aarch64"
+                        ],
+                        "url": "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F7520/pdfium-linux-arm64.tgz",
+                        "sha256": "ee3998f311195bf9cecb3936b2ce3dd621e873277c36f1ca05de36f2646c07d4",
+                        "dest": "$APP/build/linux/arm64/release/pdfium/chromium%2F7520/",
+                        "strip-components": 0
+                    }
+                ]
+            }
+        }
+    },
+    "printing": {
+        "5.14.2": {
+            "manifest": {
+                "sources": [
+                    {
+                        "type": "archive",
+                        "only-arches": [
+                            "x86_64"
+                        ],
+                        "url": "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F7520/pdfium-linux-x64.tgz",
+                        "sha256": "e737634cca16ba28b760077b915b469bea076b71f208769c56fb96ee138e876f",
+                        "dest": "$APP/build/linux/x64/release/pdfium-src/",
+                        "strip-components": 0
+                    },
+                    {
+                        "type": "archive",
+                        "only-arches": [
+                            "aarch64"
+                        ],
+                        "url": "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F7520/pdfium-linux-arm64.tgz",
+                        "sha256": "ee3998f311195bf9cecb3936b2ce3dd621e873277c36f1ca05de36f2646c07d4",
+                        "dest": "$APP/build/linux/arm64/release/pdfium-src/",
+                        "strip-components": 0
+                    },
+                    {
+                        "type": "patch",
+                        "path": "printing/5.14.2-CMakeLists.txt.patch",
+                        "dest": "$PUB_DEV"
+                    }
+                ]
+            }
+        }
+    },
     "rhttp": {
         "0.12.0": {
             "cargo_locks": [
