@@ -258,6 +258,7 @@ described in the README file within the module subdirectory:
 * [Gopeed](https://flathub.org/apps/com.gopeed.Gopeed)
 * [Mapiah](https://flathub.org/apps/io.github.rsevero.mapiah)
 * [Passy](https://flathub.org/apps/io.github.glitterware.Passy)
+* [Saber](https://flathub.org/en/apps/com.adilhanney.saber)
 * [Sly](https://flathub.org/apps/page.kramo.Sly)
 * [Table Habit](https://flathub.org/apps/io.github.friesi23.mhabit)
 * [TowDow](https://flathub.org/en/apps/app.towdow.TowDow)
