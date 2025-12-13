@@ -68,10 +68,10 @@ def _git_repo_name(git_url: str, commit: str) -> str:
 
 
 def _fetch_git_repo(git_url: str, commit: str) -> str:
-    repo_dir = git_url.replace('://', '_').replace('/', '_')
+    repo_dir = f'{git_url.replace('://', '_').replace('/', '_')}_{commit[:7]}'
     cache_dir = os.environ.get('XDG_CACHE_HOME', os.path.expanduser('~/.cache'))
     clone_dir = os.path.join(cache_dir, 'flatpak-cargo', repo_dir)
-    if not os.path.isdir(os.path.join(clone_dir, '.git')):
+    if not os.path.isdir(clone_dir):
         subprocess.run(['git', 'clone', '--depth=1', git_url, clone_dir], check=True)
     rev_parse_proc = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=clone_dir, check=True,
                                     stdout=subprocess.PIPE)
@@ -90,20 +90,20 @@ def _update_workspace_keys(pkg, workspace):
     for key, item in pkg.items():
         # There cannot be a 'workspace' key if the item is not a dict.
         if not isinstance(item, dict):
-            continue;
+            continue
 
         # Recurse for keys under target.cfg(..)
         if key == 'target':
             for target in item.values():
                 _update_workspace_keys(target, workspace)
-            continue;
+            continue
         # dev-dependencies and build-dependencies should reference root dependencies table from workspace
         elif key == 'dev-dependencies' or key == 'build-dependencies':
             _update_workspace_keys(item, workspace.get('dependencies', None))
-            continue;
+            continue
 
         if not workspace or not key in workspace:
-            continue;
+            continue
 
         workspace_item = workspace[key]
 
@@ -221,28 +221,34 @@ async def _get_git_package_sources(
         if commit not in git_repo['commits']:
             git_repo['commits'][commit] = await _get_git_repo_packages(repo_url, commit)
 
-    cargo_vendored_entry: _VendorEntryType = {
-        repo_url: {
-            'git': repo_url,
-            'replace-with': VENDORED_SOURCES,
-        }
-    }
     rev = parse_qs(urlparse(source).query).get('rev')
     tag = parse_qs(urlparse(source).query).get('tag')
     branch = parse_qs(urlparse(source).query).get('branch')
     if rev:
         assert len(rev) == 1
-        cargo_vendored_entry[repo_url]['rev'] = rev[0]
+        entry = ('rev', rev[0])
+        query = f'rev={rev[0]}'
     elif tag:
         assert len(tag) == 1
-        cargo_vendored_entry[repo_url]['tag'] = tag[0]
+        entry = ('tag', tag[0])
+        query = f'tag={tag[0]}#{commit[:7]}'
     elif branch:
         assert len(branch) == 1
-        cargo_vendored_entry[repo_url]['branch'] = branch[0]
+        entry = ('branch', branch[0])
+        query = f'branch={branch[0]}#{commit[:7]}'
+
+    cargo_vendored_entry: _VendorEntryType = {
+        f'{repo_url}?{query}': {
+            'git': repo_url,
+            'replace-with': VENDORED_SOURCES,
+            entry[0]: entry[1],
+        }
+    }
 
     logging.info("Adding package %s from %s", name, repo_url)
     git_pkg = git_repo['commits'][commit][name]
     pkg_repo_dir = os.path.join(GIT_CACHE, _git_repo_name(repo_url, commit), git_pkg.path)
+    name = f'{name}-{commit[:7]}'
     git_sources: List[_FlatpakSourceType] = [
         {
             'type': 'shell',
@@ -253,13 +259,13 @@ async def _get_git_package_sources(
         {
             'type': 'inline',
             'contents': toml.dumps(git_pkg.normalized),
-            'dest': f'{CARGO_CRATES}/{name}', #-{version}',
+            'dest': f'{CARGO_CRATES}/{name}',
             'dest-filename': 'Cargo.toml',
         },
         {
             'type': 'inline',
             'contents': json.dumps({'package': None, 'files': {}}),
-            'dest': f'{CARGO_CRATES}/{name}', #-{version}',
+            'dest': f'{CARGO_CRATES}/{name}',
             'dest-filename': '.cargo-checksum.json',
         }
     ]
