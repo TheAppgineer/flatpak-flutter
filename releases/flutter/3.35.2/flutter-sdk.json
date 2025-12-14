@@ -163,8 +163,6 @@
             "dest": "flutter/bin",
             "dest-filename": "setup-flutter.sh",
             "commands": [
-                "mkdir -p /var/lib/flutter/packages/flutter_tools/.dart_tool",
-                "mv flutter/packages/flutter_tools/.dart_tool/package_config.json /var/lib/flutter/packages/flutter_tools/.dart_tool",
                 "flutter pub get --offline $@"
             ]
         },

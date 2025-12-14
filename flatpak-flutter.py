@@ -22,9 +22,8 @@ from packaging.version import Version
 
 RUST_VERSION = '1.91.1'
 
-__version__ = '0.8.0'
+__version__ = '0.9.0'
 build_path = '.flatpak-builder/build'
-sandbox_root = '/run/build'
 
 
 class Dumper(yaml.Dumper):
@@ -176,25 +175,10 @@ def _generate_pubspec_sources(app: str, app_pubspec:str, extra_pubspecs: list, b
             pubspec_paths.append(f'{build_path}/{app}/{path}/pubspec.lock')
 
     pubspec_sources = generate_pubspec_sources(pubspec_paths)
-    pubspec_sources.append({
-        'type': 'file',
-        'path': 'package_config.json',
-        'dest': f'{flutter_tools}/.dart_tool',
-    })
 
     with open('pubspec-sources.json', 'w') as out:
         json.dump(pubspec_sources, out, indent=4, sort_keys=False)
         out.write('\n')
-
-    abs_path = str(Path(f'{build_path}/{app}').absolute())
-    package_config = ''
-
-    with open(f'{build_path}/{app}/{flutter_tools}/.dart_tool/package_config.json', 'r') as input:
-        for line in input.readlines():
-            package_config += line.replace(f'{app}-{build_id}', app).replace(abs_path, f'{sandbox_root}/{app}')
-
-    with open('package_config.json', 'w') as out:
-        out.write(package_config)
 
 
 def _generate_cargo_sources(app: str, cargo_locks: list, releases: str):

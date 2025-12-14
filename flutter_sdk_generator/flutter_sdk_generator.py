@@ -208,8 +208,6 @@ def generate_sdk(sdk_path: str, tag: str) -> _FlatpakSourceType:
             'dest': 'flutter/bin',
             'dest-filename': 'setup-flutter.sh',
             'commands': [
-                "mkdir -p /var/lib/flutter/packages/flutter_tools/.dart_tool",
-                "mv flutter/packages/flutter_tools/.dart_tool/package_config.json /var/lib/flutter/packages/flutter_tools/.dart_tool",
                 'flutter pub get --offline $@'
             ]
         }
