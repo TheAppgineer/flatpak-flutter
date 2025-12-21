@@ -264,6 +264,7 @@ described in the README file within the module subdirectory:
 * [Community Remote](https://flathub.org/apps/com.theappgineer.community_remote)
 * [Gopeed](https://flathub.org/apps/com.gopeed.Gopeed)
 * [Mapiah](https://flathub.org/apps/io.github.rsevero.mapiah)
+* [NoMoreBackground](https://flathub.org/en/apps/com.adilhanney.no_more_background)
 * [Passy](https://flathub.org/apps/io.github.glitterware.Passy)
 * [Saber](https://flathub.org/en/apps/com.adilhanney.saber)
 * [Sly](https://flathub.org/apps/page.kramo.Sly)
