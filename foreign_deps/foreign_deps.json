@@ -1,4 +1,18 @@
 {
+    "audiotags": {
+        "1.4.5": {
+            "manifest": {
+                "sources": [
+                    {
+                        "type": "file",
+                        "url": "https://github.com/erikas-taroza/audiotags/releases/download/v1.4.5/linux.tar.gz",
+                        "sha256": "7a3863d55abb696a10d9d23e8b8fe060b56479a619c283d07bf17b35b05d33b3",
+                        "dest": "$PUB_DEV/linux"
+                    }
+                ]
+            }
+        }
+    },
     "flutter_discord_rpc": {
         "1.0.0": {
             "cargo_locks": [
