@@ -77,12 +77,12 @@ As is the case for every Flatpak, it all starts with the manifest file, but flat
   ```yml
         - type: git
           url: https://github.com/flutter/flutter.git
-          tag: 3.32.0
+          tag: 3.38.5
           dest: flutter
   ```
 * Add any other dependencies
 
-> Note: The Flutter source entry should have `flutter` as destination directory.
+If the app repository itself has the flutter repository as a submodule, then the `flutter` source is not needed. The `.gitmodules` file will be searched for the location of the Flutter SDK, the branch has to be set to `stable`.
 
 ### Pre-process With flatpak-flutter
 By passing the manifest to flatpak-flutter it will collect all the dependency sources and generate the manifest for the offline build, to be performed by flatpak-builder. This process pins each dependency to a specific revision, ensuring a reproducible build.
@@ -179,6 +179,13 @@ A first step in fixing build issues is to verify the build with online access. F
       build-options:
         build-args:
           - --share=network
+```
+
+Additionally, the online build has to be done without the `--no-pub` option.
+
+```yml
+      build-commands:
+        - flutter build linux --release
 ```
 
 The build has to be performed without the `--sandbox` option of `flatpak-builder`.

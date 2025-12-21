@@ -25,10 +25,12 @@ def _fetch_repos(repos: list):
 
     for url, ref, path, shallow, recursive in repos:
         options = ['git', 'clone']
+        if shallow and recursive:
+            options += ['--shallow-submodules']
         if shallow:
             options += ['--depth', '1']
         if recursive:
-            options += ['--recursive']
+            options += ['--recurse-submodules']
         options += ['--branch', f"{ref}", url, path]
 
         try:
@@ -39,6 +41,34 @@ def _fetch_repos(repos: list):
             subprocess.run(command, stdout=subprocess.PIPE, shell=True, check=True)
 
 
+def _search_submodules(gitmodules):
+    def get_flutter_path():
+        if ('url' in submodule and 'path' in submodule and 'branch' in submodule and
+                submodule['url'] == f'{FLUTTER_URL}.git' and
+                submodule['branch'] == 'stable'):
+            return submodule['path']
+
+    with open(gitmodules, 'r') as input:
+        lines = input.readlines()
+        submodule = {}
+
+        for line in lines:
+            line = line.strip()
+            key_value = line.split(' = ')
+
+            if line.startswith('[') and line.endswith(']'):
+                path = get_flutter_path()
+                submodule.clear()
+
+            if path is not None:
+                return path
+
+            if len(key_value) == 2:
+                submodule[key_value[0]] = key_value[1]
+
+    return get_flutter_path()
+
+
 def _add_child_module(module, child_module):
     if 'modules' in module:
         if child_module not in module['modules']:
@@ -47,7 +77,7 @@ def _add_child_module(module, child_module):
         module['modules'] = [child_module]
 
 
-def _process_build_options(module):
+def _process_build_options(module, sdk_path: str):
     if 'build-options' in module:
         build_options = module['build-options']
 
@@ -64,7 +94,7 @@ def _process_build_options(module):
         if 'append-path' in build_options:
             paths = str(build_options['append-path']).split(':')
             for (idx, path) in enumerate(paths):
-                if path.endswith('flutter/bin'):
+                if path.endswith(f'{sdk_path}/bin'):
                     del paths[idx]
                     paths.insert(idx, '/var/lib/flutter/bin')
                     build_options['append-path'] = ':'.join(paths)
@@ -96,6 +126,7 @@ def _process_sources(module, fetch_path: str, releases_path: str, no_shallow: bo
     sources = module['sources']
     idxs = []
     repos = []
+    tag = None
 
     for idx, source in enumerate(sources):
         if 'type' in source:
@@ -121,15 +152,27 @@ def _process_sources(module, fetch_path: str, releases_path: str, no_shallow: bo
 
                 if str(source['url']).startswith(FLUTTER_URL) and 'tag' in source:
                     idxs.append(idx)
-
-                    _add_child_module(module, f"flutter-sdk-{source['tag']}.json")
-
-                    tag = source['tag']
+                    tag = ref
+                    sdk_path = dest
 
             if source['type'] == 'patch' and '.flutter.patch' in str(source['path']):
                 idxs.append(idx)
 
     _fetch_repos(repos)
+
+    gitmodules = f'{fetch_path}/.gitmodules'
+
+    if tag is None and os.path.isfile(gitmodules):
+        sdk_path = _search_submodules(gitmodules)
+
+        if sdk_path:
+            command = [f'cd {fetch_path}/{sdk_path} && git fetch && git tag --points-at HEAD']
+            result = subprocess.run(command, stdout=subprocess.PIPE, shell=True, check=True)
+
+            if not result.returncode:
+                tag = result.stdout.decode('utf-8').strip()
+
+    _add_child_module(module, f"flutter-sdk-{tag}.json")
 
     for patch in glob.glob(f'{releases_path}/{tag}/*.flutter.patch'):
         shutil.copyfile(patch, Path(patch).name)
@@ -164,7 +207,7 @@ def _process_sources(module, fetch_path: str, releases_path: str, no_shallow: bo
 
     module['sources'] = ["pubspec-sources.json"] + sources
 
-    return tag
+    return tag, sdk_path
 
 
 def fetch_flutter_app(
@@ -195,18 +238,18 @@ def fetch_flutter_app(
             print('Error: Only the simple build system is supported')
             exit(1)
 
-        _process_build_options(module)
         _process_build_commands(module, app_pubspec)
 
         app_module = app_module if app_module is not None else str(module['name'])
         build_path_app = f'{build_path}/{app_module}'
         build_id = len(glob.glob(f'{build_path_app}-*')) + 1
-        tag = _process_sources(module, f'{build_path_app}-{build_id}', releases_path, no_shallow)
+        tag, sdk_path = _process_sources(module, f'{build_path_app}-{build_id}', releases_path, no_shallow)
+        _process_build_options(module, sdk_path)
 
         options = [f'cd {build_path} && ln -snf {app_module}-{build_id} {app_module}']
         subprocess.run(options, stdout=subprocess.PIPE, shell=True, check=True)
 
-        return str(manifest[app_id]), app_module, tag, build_id
+        return str(manifest[app_id]), app_module, tag, sdk_path, build_id
     else:
         print(f'Error: No module named {app} found!')
         exit(1)

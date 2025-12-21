@@ -22,9 +22,8 @@ from packaging.version import Version
 
 RUST_VERSION = '1.91.1'
 
-__version__ = '0.8.0'
+__version__ = '0.9.0'
 build_path = '.flatpak-builder/build'
-sandbox_root = '/run/build'
 
 
 class Dumper(yaml.Dumper):
@@ -79,7 +78,7 @@ def _fetch_flutter_app(
             manifest = json.load(input_stream)
 
         releases_path += '/flutter'
-        app_id, app_module, tag, build_id = fetch_flutter_app(
+        app_id, app_module, tag, sdk_path, build_id = fetch_flutter_app(
             manifest,
             app_module,
             build_path,
@@ -88,13 +87,13 @@ def _fetch_flutter_app(
             no_shallow,
         )
 
-        return manifest, app_id, app_module, tag, build_id
+        return manifest, app_id, app_module, tag, sdk_path, build_id
 
 
-def _create_pub_cache(build_path_app: str, pubspec_path = None):
+def _create_pub_cache(build_path_app: str, sdk_path: str, pubspec_path: str = None):
     full_pubspec_path = build_path_app if pubspec_path is None else f'{build_path_app}/{pubspec_path}'
     pub_cache = f'{os.getcwd()}/{build_path_app}/.{PUB_CACHE}'
-    flutter = 'flutter/bin/flutter'
+    flutter = f'{sdk_path}/bin/flutter'
     options = f'PUB_CACHE={pub_cache} {build_path_app}/{flutter} pub get -C {full_pubspec_path}'
 
     subprocess.run([options], stdout=subprocess.PIPE, shell=True, check=True)
@@ -164,8 +163,8 @@ def _handle_foreign_dependencies(app: str, build_path_app: str, foreign_deps_pat
     return extra_pubspecs, cargo_locks, sources
 
 
-def _generate_pubspec_sources(app: str, app_pubspec:str, extra_pubspecs: list, build_id: int):
-    flutter_tools = 'flutter/packages/flutter_tools'
+def _generate_pubspec_sources(app: str, app_pubspec:str, extra_pubspecs: list, sdk_path: str, build_id: int):
+    flutter_tools = f'{sdk_path}/packages/flutter_tools'
     pubspec_paths = [
         f'{build_path}/{app}/{app_pubspec}/pubspec.lock',
         f'{build_path}/{app}/{flutter_tools}/pubspec.lock',
@@ -176,25 +175,10 @@ def _generate_pubspec_sources(app: str, app_pubspec:str, extra_pubspecs: list, b
             pubspec_paths.append(f'{build_path}/{app}/{path}/pubspec.lock')
 
     pubspec_sources = generate_pubspec_sources(pubspec_paths)
-    pubspec_sources.append({
-        'type': 'file',
-        'path': 'package_config.json',
-        'dest': f'{flutter_tools}/.dart_tool',
-    })
 
     with open('pubspec-sources.json', 'w') as out:
         json.dump(pubspec_sources, out, indent=4, sort_keys=False)
         out.write('\n')
-
-    abs_path = str(Path(f'{build_path}/{app}').absolute())
-    package_config = ''
-
-    with open(f'{build_path}/{app}/{flutter_tools}/.dart_tool/package_config.json', 'r') as input:
-        for line in input.readlines():
-            package_config += line.replace(f'{app}-{build_id}', app).replace(abs_path, f'{sandbox_root}/{app}')
-
-    with open('package_config.json', 'w') as out:
-        out.write(package_config)
 
 
 def _generate_cargo_sources(app: str, cargo_locks: list, releases: str):
@@ -213,7 +197,7 @@ def _generate_cargo_sources(app: str, cargo_locks: list, releases: str):
         shutil.copyfile(f'{releases}/rust/{RUST_VERSION}/rustup.json', f'rustup-{RUST_VERSION}.json')
 
 
-def _get_sdk_module(app: str, tag: str, releases: str):
+def _get_sdk_module(app: str, sdk_path: str, tag: str, releases: str):
     if Version(tag) < Version('3.35.0'):
         shutil.copyfile(f'{releases}/flutter/flutter-pre-3_35-shared.sh.patch', 'flutter-shared.sh.patch')
     else:
@@ -222,7 +206,7 @@ def _get_sdk_module(app: str, tag: str, releases: str):
     if os.path.isfile(f'{releases}/flutter/{tag}/flutter-sdk.json'):
         shutil.copyfile(f'{releases}/flutter/{tag}/flutter-sdk.json', f'flutter-sdk-{tag}.json')
     else:
-        generated_sdk = generate_sdk(f'{build_path}/{app}/flutter', tag)
+        generated_sdk = generate_sdk(f'{build_path}/{app}/{sdk_path}', tag)
 
         with open(f'flutter-sdk-{tag}.json', 'w') as out:
             json.dump(generated_sdk, out, indent=4, sort_keys=False)
@@ -265,17 +249,18 @@ def main():
 
     app_pubspec = '.' if args.app_pubspec is None else str(args.app_pubspec)
     no_shallow = True if args.no_shallow_clone else False
-    manifest, app_id, app_module, tag, build_id = _fetch_flutter_app(
+    manifest, app_id, app_module, tag, sdk_path, build_id = _fetch_flutter_app(
         manifest_path,
         args.app_module,
         releases_path,
         app_pubspec,
         no_shallow,
     )
+    print(f'SDK path: {sdk_path}, tag: {tag}')
 
     if tag is not None:
         build_path_app = f'{build_path}/{app_module}'
-        _create_pub_cache(build_path_app, args.app_pubspec)
+        _create_pub_cache(build_path_app, sdk_path, args.app_pubspec)
 
         full_pubspec_path = build_path_app if args.app_pubspec is None else f'{build_path_app}/{args.app_pubspec}'
         extra_pubspecs, cargo_locks, sources = _handle_foreign_dependencies(app_pubspec, full_pubspec_path, foreign_deps_path)
@@ -285,9 +270,9 @@ def main():
         if args.cargo_locks is not None:
             cargo_locks += str(args.cargo_locks).split(',')
 
-        _generate_pubspec_sources(app_module, app_pubspec, extra_pubspecs, build_id)
+        _generate_pubspec_sources(app_module, app_pubspec, extra_pubspecs, sdk_path, build_id)
         _generate_cargo_sources(app_module, cargo_locks, releases_path)
-        _get_sdk_module(app_module, tag, releases_path)
+        _get_sdk_module(app_module, sdk_path, tag, releases_path)
 
         # Write converted manifest to file
         suffix = manifest_path.suffix
