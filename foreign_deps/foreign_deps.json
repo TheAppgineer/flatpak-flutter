@@ -140,6 +140,42 @@
             }
         }
     },
+    "sqlite3": {
+        "3.1.1": {
+            "manifest": {
+                "sources": [
+                    {
+                        "type": "file",
+                        "only-arches": [
+                            "x86_64"
+                        ],
+                        "url": "https://github.com/simolus3/sqlite3.dart/releases/download/sqlite3-3.1.1/libsqlite3.x64.linux.so",
+                        "sha256": "c8a46dcdd4f59cb43aa2502311cfd2ad75a50d9b3a91812a3f634ff5fb3486be",
+                        "dest": "$APP/.dart_tool/hooks_runner/shared/sqlite3/build/download-static"
+                    },
+                    {
+                        "type": "file",
+                        "only-arches": [
+                            "aarch64"
+                        ],
+                        "url": "https://github.com/simolus3/sqlite3.dart/releases/download/sqlite3-3.1.1/libsqlite3.arm64.linux.so",
+                        "sha256": "d581eb8af67a006cdfa5c634af773652df18aa586a02514f8da09129045c4ebb",
+                        "dest": "$APP/.dart_tool/hooks_runner/shared/sqlite3/build/download-static"
+                    },
+                    {
+                        "type": "patch",
+                        "path": "sqlite3/assets.dart.patch",
+                        "dest": "$PUB_DEV"
+                    },
+                    {
+                        "type": "patch",
+                        "path": "sqlite3/build.dart.patch",
+                        "dest": "$PUB_DEV"
+                    }
+                ]
+            }
+        }
+    },
     "sqlite3_flutter_libs": {
         "0.5.32": {
             "manifest": {
