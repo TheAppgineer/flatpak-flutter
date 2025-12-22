@@ -163,7 +163,7 @@ def _handle_foreign_dependencies(app: str, build_path_app: str, foreign_deps_pat
     return extra_pubspecs, cargo_locks, sources
 
 
-def _generate_pubspec_sources(app: str, app_pubspec:str, extra_pubspecs: list, sdk_path: str, build_id: int):
+def _generate_pubspec_sources(app: str, app_pubspec:str, extra_pubspecs: list, foreign: list, sdk_path: str):
     flutter_tools = f'{sdk_path}/packages/flutter_tools'
     pubspec_paths = [
         f'{build_path}/{app}/{app_pubspec}/pubspec.lock',
@@ -175,6 +175,7 @@ def _generate_pubspec_sources(app: str, app_pubspec:str, extra_pubspecs: list, s
             pubspec_paths.append(f'{build_path}/{app}/{path}/pubspec.lock')
 
     pubspec_sources = generate_pubspec_sources(pubspec_paths)
+    pubspec_sources += foreign
 
     with open('pubspec-sources.json', 'w') as out:
         json.dump(pubspec_sources, out, indent=4, sort_keys=False)
@@ -263,14 +264,14 @@ def main():
         _create_pub_cache(build_path_app, sdk_path, args.app_pubspec)
 
         full_pubspec_path = build_path_app if args.app_pubspec is None else f'{build_path_app}/{args.app_pubspec}'
-        extra_pubspecs, cargo_locks, sources = _handle_foreign_dependencies(app_pubspec, full_pubspec_path, foreign_deps_path)
+        extra_pubspecs, cargo_locks, foreign = _handle_foreign_dependencies(app_pubspec, full_pubspec_path, foreign_deps_path)
 
         if args.extra_pubspecs is not None:
             extra_pubspecs += str(args.extra_pubspecs).split(',')
         if args.cargo_locks is not None:
             cargo_locks += str(args.cargo_locks).split(',')
 
-        _generate_pubspec_sources(app_module, app_pubspec, extra_pubspecs, sdk_path, build_id)
+        _generate_pubspec_sources(app_module, app_pubspec, extra_pubspecs, foreign, sdk_path)
         _generate_cargo_sources(app_module, cargo_locks, releases_path)
         _get_sdk_module(app_module, sdk_path, tag, releases_path)
 
@@ -279,8 +280,6 @@ def main():
         with open(f'{app_id}{suffix}', 'w') as output_stream:
             for module in manifest['modules']:
                 if 'name' in module and module['name'] == app_module:
-                    if len(sources):
-                        module['sources'] += sources
                     if len(cargo_locks):
                         module['sources'] += ['cargo-sources.json']
                     break

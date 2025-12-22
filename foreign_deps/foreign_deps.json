@@ -1,4 +1,18 @@
 {
+    "audiotags": {
+        "1.4.5": {
+            "manifest": {
+                "sources": [
+                    {
+                        "type": "file",
+                        "url": "https://github.com/erikas-taroza/audiotags/releases/download/v1.4.5/linux.tar.gz",
+                        "sha256": "7a3863d55abb696a10d9d23e8b8fe060b56479a619c283d07bf17b35b05d33b3",
+                        "dest": "$PUB_DEV/linux"
+                    }
+                ]
+            }
+        }
+    },
     "flutter_discord_rpc": {
         "1.0.0": {
             "cargo_locks": [
@@ -135,6 +149,43 @@
                         "type": "patch",
                         "path": "cargokit/run_build_tool.sh.patch",
                         "dest": "$PUB_DEV/cargokit"
+                    }
+                ]
+            }
+        }
+    },
+    "sqlite3": {
+        "2.9.4": {},
+        "3.0.0": {
+            "manifest": {
+                "sources": [
+                    {
+                        "type": "file",
+                        "only-arches": [
+                            "x86_64"
+                        ],
+                        "url": "https://github.com/simolus3/sqlite3.dart/releases/download/sqlite3-3.1.1/libsqlite3.x64.linux.so",
+                        "sha256": "c8a46dcdd4f59cb43aa2502311cfd2ad75a50d9b3a91812a3f634ff5fb3486be",
+                        "dest": "$APP/.dart_tool/hooks_runner/shared/sqlite3/build/download-static"
+                    },
+                    {
+                        "type": "file",
+                        "only-arches": [
+                            "aarch64"
+                        ],
+                        "url": "https://github.com/simolus3/sqlite3.dart/releases/download/sqlite3-3.1.1/libsqlite3.arm64.linux.so",
+                        "sha256": "d581eb8af67a006cdfa5c634af773652df18aa586a02514f8da09129045c4ebb",
+                        "dest": "$APP/.dart_tool/hooks_runner/shared/sqlite3/build/download-static"
+                    },
+                    {
+                        "type": "patch",
+                        "path": "sqlite3/assets.dart.patch",
+                        "dest": "$PUB_DEV"
+                    },
+                    {
+                        "type": "patch",
+                        "path": "sqlite3/build.dart.patch",
+                        "dest": "$PUB_DEV"
                     }
                 ]
             }
