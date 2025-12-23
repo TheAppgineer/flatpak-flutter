@@ -22,7 +22,7 @@ from packaging.version import Version
 
 RUST_VERSION = '1.91.1'
 
-__version__ = '0.9.0'
+__version__ = '0.9.1'
 build_path = '.flatpak-builder/build'
 
 
@@ -104,6 +104,7 @@ def _handle_foreign_dependencies(app: str, build_path_app: str, foreign_deps_pat
     extra_pubspecs = []
     cargo_locks = []
     sources = []
+    local_deps = []
 
     def append_dependency(foreign_dep, pub_dev: str= ""):
         if 'extra_pubspecs' in foreign_dep:
@@ -133,15 +134,18 @@ def _handle_foreign_dependencies(app: str, build_path_app: str, foreign_deps_pat
 
     if os.path.isfile('foreign.json'):
         with open('foreign.json') as foreign:
-            for foreign in json.load(foreign).values():
-                append_dependency(foreign)
+            foreign = json.load(foreign)
+            local_deps = foreign.keys()
+
+            for dependency in foreign.values():
+                append_dependency(dependency)
 
     with open(f'{foreign_deps_path}/foreign_deps.json', 'r') as foreign_deps, open(f'{abs_path}/pubspec.lock') as deps:
         foreign_deps = json.load(foreign_deps)
         deps = yaml.full_load(deps)
 
         for name in foreign_deps.keys():
-            if name in deps['packages']:
+            if name not in local_deps and name in deps['packages']:
                 foreign_dep = foreign_deps[name]
                 foreign_dep_versions = list(foreign_dep.keys())
                 dep = deps['packages'][name]
