@@ -1,0 +1,16 @@
+--- a/linux/CMakeLists.txt	2025-04-21 11:15:14.000000000 +0200
++++ b/linux/CMakeLists.txt	2025-12-23 09:46:30.298664035 +0100
+@@ -48,7 +48,12 @@
+ 
+ include(FetchContent)
+ 
+-FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz DOWNLOAD_EXTRACT_TIMESTAMP 1)
++FetchContent_Declare(
++  json
++  URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz
++  URL_HASH SHA256=42f6e95cad6ec532fd372391373363b62a14af6d771056dbfc86160e6dfff7aa
++  DOWNLOAD_EXTRACT_TIMESTAMP 1
++)
+ FetchContent_MakeAvailable(json)
+ target_link_libraries(${PLUGIN_NAME} PRIVATE nlohmann_json::nlohmann_json)
+ 
