@@ -43,9 +43,8 @@ def _fetch_repos(repos: list):
 
 def _search_submodules(gitmodules):
     def get_flutter_path():
-        if ('url' in submodule and 'path' in submodule and 'branch' in submodule and
-                submodule['url'] == f'{FLUTTER_URL}.git' and
-                submodule['branch'] == 'stable'):
+        if ('url' in submodule and 'path' in submodule and
+                submodule['url'] == f'{FLUTTER_URL}.git'):
             return submodule['path']
 
     with open(gitmodules, 'r') as input:
@@ -102,8 +101,17 @@ def _process_build_options(module, sdk_path: str):
 
 
 def _process_build_commands(module, app_pubspec: str):
-    if 'build-commands' in module:
+    if not app_pubspec:
+        insert_command = 'setup-flutter.sh'
+
+        if 'subdir' in module:
+            app_pubspec = module['subdir']
+        else:
+            app_pubspec = '.'
+    else:
         insert_command = f'setup-flutter.sh -C {app_pubspec}'
+
+    if 'build-commands' in module:
         build_commands = list(module['build-commands'])
 
         for idx, command in enumerate(build_commands):
@@ -117,6 +125,8 @@ def _process_build_commands(module, app_pubspec: str):
                 break
 
         module['build-commands'] = build_commands
+
+    return app_pubspec
 
 
 def _process_sources(module, fetch_path: str, releases_path: str, no_shallow: bool) -> Optional[str]:
@@ -238,7 +248,7 @@ def fetch_flutter_app(
             print('Error: Only the simple build system is supported')
             exit(1)
 
-        _process_build_commands(module, app_pubspec)
+        app_pubspec = _process_build_commands(module, app_pubspec)
 
         app_module = app_module if app_module is not None else str(module['name'])
         build_path_app = f'{build_path}/{app_module}'
@@ -249,7 +259,7 @@ def fetch_flutter_app(
         options = [f'cd {build_path} && ln -snf {app_module}-{build_id} {app_module}']
         subprocess.run(options, stdout=subprocess.PIPE, shell=True, check=True)
 
-        return str(manifest[app_id]), app_module, tag, sdk_path, build_id
+        return str(manifest[app_id]), app_module, app_pubspec, tag, sdk_path, build_id
     else:
         print(f'Error: No module named {app} found!')
         exit(1)
