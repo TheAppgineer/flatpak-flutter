@@ -20,8 +20,6 @@ from cargo_generator.cargo_generator import generate_sources as generate_cargo_s
 from pubspec_generator.pubspec_generator import generate_sources as generate_pubspec_sources
 from packaging.version import Version
 
-RUST_VERSION = '1.91.1'
-
 __version__ = '0.9.1'
 build_path = '.flatpak-builder/build'
 
@@ -78,7 +76,7 @@ def _fetch_flutter_app(
             manifest = json.load(input_stream)
 
         releases_path += '/flutter'
-        app_id, app_module, app_pubspec, tag, sdk_path, build_id = fetch_flutter_app(
+        app_id, app_module, app_pubspec, tag, sdk_path, build_id, rust_version = fetch_flutter_app(
             manifest,
             app_module,
             build_path,
@@ -87,7 +85,7 @@ def _fetch_flutter_app(
             no_shallow,
         )
 
-        return manifest, app_id, app_module, app_pubspec, tag, sdk_path, build_id
+        return manifest, app_id, app_module, app_pubspec, tag, sdk_path, build_id, rust_version
 
 
 def _create_pub_cache(build_path_app: str, sdk_path: str, pubspec_path: str):
@@ -192,7 +190,7 @@ def _generate_pubspec_sources(app: str, app_pubspec:str, extra_pubspecs: list, f
         out.write('\n')
 
 
-def _generate_cargo_sources(app: str, cargo_locks: list, releases: str):
+def _generate_cargo_sources(app: str, cargo_locks: list, releases: str, rust_version: str):
     if cargo_locks:
         cargo_paths = []
 
@@ -205,7 +203,7 @@ def _generate_cargo_sources(app: str, cargo_locks: list, releases: str):
             json.dump(cargo_sources, out, indent=4, sort_keys=False)
             out.write('\n')
 
-        shutil.copyfile(f'{releases}/rust/{RUST_VERSION}/rustup.json', f'rustup-{RUST_VERSION}.json')
+        shutil.copyfile(f'{releases}/rust/{rust_version}/rustup.json', f'rustup-{rust_version}.json')
 
 
 def _get_sdk_module(app: str, sdk_path: str, tag: str, releases: str):
@@ -259,7 +257,7 @@ def main():
             _get_manifest_from_git(args.MANIFEST, args.from_git, args.from_git_branch)
 
     no_shallow = True if args.no_shallow_clone else False
-    manifest, app_id, app_module, app_pubspec, tag, sdk_path, build_id = _fetch_flutter_app(
+    manifest, app_id, app_module, app_pubspec, tag, sdk_path, build_id, rust_version = _fetch_flutter_app(
         manifest_path,
         args.app_module,
         releases_path,
@@ -281,7 +279,7 @@ def main():
             cargo_locks += str(args.cargo_locks).split(',')
 
         _generate_pubspec_sources(app_module, app_pubspec, extra_pubspecs, foreign, sdk_path)
-        _generate_cargo_sources(app_module, cargo_locks, releases_path)
+        _generate_cargo_sources(app_module, cargo_locks, releases_path, rust_version)
         _get_sdk_module(app_module, sdk_path, tag, releases_path)
 
         # Write converted manifest to file

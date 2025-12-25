@@ -10,6 +10,7 @@ from typing import Optional, Tuple
 
 
 FLUTTER_URL = 'https://github.com/flutter/flutter'
+DEFAULT_RUST_VERSION = '1.91.1'
 
 
 class Dumper(yaml.Dumper):
@@ -248,6 +249,14 @@ def fetch_flutter_app(
             print('Error: Only the simple build system is supported')
             exit(1)
 
+        rust_version = DEFAULT_RUST_VERSION
+
+        if 'modules' in module:
+            for child_module in module['modules']:
+                if isinstance(child_module, str) and child_module.startswith('rustup-'):
+                    rust_version = child_module.split('rustup-')[1].split('.json')[0]
+                    break
+
         app_pubspec = _process_build_commands(module, app_pubspec)
 
         app_module = app_module if app_module is not None else str(module['name'])
@@ -259,7 +268,7 @@ def fetch_flutter_app(
         options = [f'cd {build_path} && ln -snf {app_module}-{build_id} {app_module}']
         subprocess.run(options, stdout=subprocess.PIPE, shell=True, check=True)
 
-        return str(manifest[app_id]), app_module, app_pubspec, tag, sdk_path, build_id
+        return str(manifest[app_id]), app_module, app_pubspec, tag, sdk_path, build_id, rust_version
     else:
         print(f'Error: No module named {app} found!')
         exit(1)
