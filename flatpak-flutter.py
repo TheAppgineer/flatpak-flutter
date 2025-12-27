@@ -14,7 +14,7 @@ import asyncio
 
 from pathlib import Path
 from flutter_sdk_generator.flutter_sdk_generator import generate_sdk
-from flutter_app_fetcher.flutter_app_fetcher import fetch_flutter_app
+from flutter_app_fetcher.flutter_app_fetcher import fetch_flutter_app, add_child_module
 from pubspec_generator.pubspec_generator import PUB_CACHE
 from cargo_generator.cargo_generator import generate_sources as generate_cargo_sources
 from pubspec_generator.pubspec_generator import generate_sources as generate_pubspec_sources
@@ -68,6 +68,10 @@ def _fetch_flutter_app(
     app_pubspec: str,
     no_shallow: bool,
 ):
+    if not os.path.isfile(manifest_path):
+        print(f'Error: manifest file {manifest_path} not found')
+        exit(1)
+
     with open(manifest_path, 'r') as input_stream:
         suffix = manifest_path.suffix
 
@@ -291,6 +295,7 @@ def main():
                 if 'name' in module and module['name'] == app_module:
                     if len(cargo_locks):
                         module['sources'] += ['cargo-sources.json']
+                        add_child_module(module, f'rustup-{rust_version}.json')
                     break
 
             if suffix == '.json':
