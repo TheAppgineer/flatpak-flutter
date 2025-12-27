@@ -12,6 +12,7 @@ COPY cargo_generator/cargo_generator.py ./cargo_generator/
 COPY flutter_app_fetcher/flutter_app_fetcher.py ./flutter_app_fetcher/
 COPY flutter_sdk_generator/flutter_sdk_generator.py ./flutter_sdk_generator/
 COPY pubspec_generator/pubspec_generator.py ./pubspec_generator/
+COPY rustup_generator/rustup_generator.py ./rustup_generator/
 COPY foreign_deps ./foreign_deps
 COPY releases ./releases/
 

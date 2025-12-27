@@ -18,9 +18,10 @@ from flutter_app_fetcher.flutter_app_fetcher import fetch_flutter_app
 from pubspec_generator.pubspec_generator import PUB_CACHE
 from cargo_generator.cargo_generator import generate_sources as generate_cargo_sources
 from pubspec_generator.pubspec_generator import generate_sources as generate_pubspec_sources
+from rustup_generator.rustup_generator import generate_rustup
 from packaging.version import Version
 
-__version__ = '0.9.1'
+__version__ = '0.10.0'
 build_path = '.flatpak-builder/build'
 
 
@@ -190,7 +191,7 @@ def _generate_pubspec_sources(app: str, app_pubspec:str, extra_pubspecs: list, f
         out.write('\n')
 
 
-def _generate_cargo_sources(app: str, cargo_locks: list, releases: str, rust_version: str):
+def _generate_cargo_sources(app: str, cargo_locks: list, rust_version: str):
     if cargo_locks:
         cargo_paths = []
 
@@ -203,7 +204,8 @@ def _generate_cargo_sources(app: str, cargo_locks: list, releases: str, rust_ver
             json.dump(cargo_sources, out, indent=4, sort_keys=False)
             out.write('\n')
 
-        shutil.copyfile(f'{releases}/rust/{rust_version}/rustup.json', f'rustup-{rust_version}.json')
+        with open(f'rustup-{rust_version}.json', 'w') as out:
+            json.dump(generate_rustup(rust_version), out, indent=4, sort_keys=False)
 
 
 def _get_sdk_module(app: str, sdk_path: str, tag: str, releases: str):
@@ -279,7 +281,7 @@ def main():
             cargo_locks += str(args.cargo_locks).split(',')
 
         _generate_pubspec_sources(app_module, app_pubspec, extra_pubspecs, foreign, sdk_path)
-        _generate_cargo_sources(app_module, cargo_locks, releases_path, rust_version)
+        _generate_cargo_sources(app_module, cargo_locks, rust_version)
         _get_sdk_module(app_module, sdk_path, tag, releases_path)
 
         # Write converted manifest to file
