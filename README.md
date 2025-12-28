@@ -95,12 +95,18 @@ cd com.example.todo
 > Note: The above generation process only has to be repeated if app dependencies change, or have updates.
 
 #### Conversion steps taken
-The conversion steps taken on the manifest to come to the offline manifest are:
+The conversion steps taken on the manifest, to come to the offline manifest, are:
 
 * The `git` entry for flutter is replaced with the matching SDK module, based on the specified tag
 * The PATH is adjusted to include the Flutter SDK for the offline build
 * The command to activate the SDK (`setup-flutter.sh`) is inserted in the `build-commands`
 * The `pubspec-sources.json` manifest is appended to the `sources`
+
+For Rust dependencies some additional steps are taken:
+
+* The `cargo-sources.json` manifest is appended to the `sources`
+* The `rustup-<version>.json` module is appended to the `modules`
+
 
 #### Command line options
 ```
@@ -188,7 +194,7 @@ Additionally, the online build has to be done without the `--no-pub` option.
         - flutter build linux --release
 ```
 
-The build has to be performed without the `--sandbox` option of `flatpak-builder`.
+The build has to be performed on the `flatpak-flutter.yml` manifest, without the `--sandbox` option of `flatpak-builder`.
 
 ### Build Verbose
 Perform a verbose build to further investigate the failure.
@@ -201,7 +207,7 @@ Perform a verbose build to further investigate the failure.
 ### Deal with Foreign Dependencies
 Some Dart packages, coming from pub.dev, are wrappers around C/C++ or Rust code. The build process of such a dependency can still try to download a resource. This behavior cannot be known upfront based on the `pubspec.lock` file. If the verbose build log shows a download attempt, then this download has to be added to the `sources` in the manifest. For Rust dependencies, that make use of cargo, the `Cargo.lock` file can be specified with the `--cargo-locks` command line option, or with a [foreign.json](#foreign-code) file.
 
-Known foreign dependencies are described in the `foreign-deps/foreign-deps.json` file, these are automatically handled by flatpak-flutter.
+Known foreign dependencies are described in the `foreign-deps/foreign-deps.json` file, these are automatically handled by flatpak-flutter. In the case of Rust dependencies a `rustup-<version>.json` module is generated, providing a recent toolchain. If a specific version is required then this can be done by specifying the module in the `flatpak-flutter.yml` file.
 
 ### Report an Issue
 If build issues remain then [an issues](https://github.com/TheAppgineer/flatpak-flutter/issues) can be opened.
