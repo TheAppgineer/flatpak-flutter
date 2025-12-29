@@ -227,23 +227,28 @@ async def _get_git_package_sources(
     if rev:
         assert len(rev) == 1
         entry = ('rev', rev[0])
-        query = f'rev={rev[0]}'
+        query = f'?rev={rev[0]}'
     elif tag:
         assert len(tag) == 1
         entry = ('tag', tag[0])
-        query = f'tag={tag[0]}#{commit[:7]}'
+        query = f'?tag={tag[0]}#{commit[:7]}'
     elif branch:
         assert len(branch) == 1
         entry = ('branch', branch[0])
-        query = f'branch={branch[0]}#{commit[:7]}'
+        query = f'?branch={branch[0]}#{commit[:7]}'
+    else:
+        entry = None
+        query = ''
 
     cargo_vendored_entry: _VendorEntryType = {
-        f'{repo_url}?{query}': {
+        f'{repo_url}{query}': {
             'git': repo_url,
             'replace-with': VENDORED_SOURCES,
-            entry[0]: entry[1],
         }
     }
+
+    if entry:
+        cargo_vendored_entry[f'{repo_url}{query}'][entry[0]] = entry[1]
 
     logging.info("Adding package %s from %s", name, repo_url)
     git_pkg = git_repo['commits'][commit][name]

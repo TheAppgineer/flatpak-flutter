@@ -21,7 +21,7 @@ from pubspec_generator.pubspec_generator import generate_sources as generate_pub
 from rustup_generator.rustup_generator import generate_rustup
 from packaging.version import Version
 
-__version__ = '0.10.0'
+__version__ = '0.10.1'
 build_path = '.flatpak-builder/build'
 
 

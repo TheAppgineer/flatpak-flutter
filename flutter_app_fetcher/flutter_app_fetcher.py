@@ -113,7 +113,7 @@ def _process_build_commands(module, app_pubspec: str):
                 build_commands.insert(idx, insert_command)
                 break
 
-            if 'flutter ' in str(command):
+            if 'flutter ' in str(command) or 'dart ' in str(command):
                 build_commands.insert(idx, insert_command)
                 break
 
