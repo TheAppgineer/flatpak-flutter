@@ -32,6 +32,32 @@
             }
         }
     },
+    "flutter_new_pipe_extractor": {
+        "0.1.0": {
+            "manifest": {
+                "sources": [
+                    {
+                        "type": "file",
+                        "only-arches": [
+                            "x86_64"
+                        ],
+                        "url": "https://github.com/KRTirtho/NewPipeCLI/releases/download/v0.1.0/NewPipeCLI-linux-x64.zip",
+                        "sha256": "af77591ed3b210db20ba88c7f2f47bf5f2ef3c85d1fab7d318108f32ff665654",
+                        "dest": "$PUB_DEV/assets"
+                    },
+                    {
+                        "type": "file",
+                        "only-arches": [
+                            "aarch64"
+                        ],
+                        "url": "https://github.com/KRTirtho/NewPipeCLI/releases/download/v0.1.0/NewPipeCLI-linux-arm64.zip",
+                        "sha256": "bec554ba6c3e32684b5a632d82b9360929d7c4e3284c8bf53809be0d9c4918da",
+                        "dest": "$PUB_DEV/assets"
+                    }
+                ]
+            }
+        }
+    },
     "fvp": {
         "0.35.0": {
             "manifest": {
@@ -69,6 +95,25 @@
                         "sha256": "2b1bff6f717f9725c70bf8d79e4786da13de8a270059e4ba0bdd262ae7be46eb",
                         "dest": "$APP/build/linux/arm64/release",
                         "dest-filename": "mimalloc-2.1.2.tar.gz"
+                    }
+                ]
+            }
+        }
+    },
+    "metadata_god": {
+        "1.1.0": {
+            "cargo_locks": [
+                "$PUB_DEV"
+            ],
+            "extra_pubspecs": [
+                "$PUB_DEV/cargokit/build_tool"
+            ],
+            "manifest": {
+                "sources": [
+                    {
+                        "type": "patch",
+                        "path": "cargokit/run_build_tool.sh.patch",
+                        "dest": "$PUB_DEV/cargokit"
                     }
                 ]
             }
