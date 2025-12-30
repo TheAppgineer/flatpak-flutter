@@ -5,7 +5,7 @@ WORKDIR /usr/src/app
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends curl git unzip
 
-RUN pip install --no-cache-dir packaging pyyaml toml
+RUN pip install --no-cache-dir packaging pyyaml tomlkit
 
 COPY flatpak-flutter.py ./flatpak-flutter
 COPY cargo_generator/cargo_generator.py ./cargo_generator/

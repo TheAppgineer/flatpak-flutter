@@ -247,7 +247,7 @@ run `poetry install` to setup, activate your virtual env by running `poetry shel
 
 Otherwise install Python 3.8+ and the dependency packages:
 
-    pip install packaging pyyaml toml
+    pip install packaging pyyaml tomlkit
 
 Or, using the requirements file:
 

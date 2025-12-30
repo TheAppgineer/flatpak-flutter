@@ -9,7 +9,7 @@ import subprocess
 import argparse
 import logging
 import asyncio
-import toml
+import tomlkit
 
 from pathlib import Path
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple, TypedDict
@@ -57,8 +57,8 @@ _TomlType = Dict[str, Any]
 
 
 def _load_toml(tomlfile: str = 'Cargo.lock') -> _TomlType:
-    with open(tomlfile, 'r') as f:
-        toml_data = toml.load(f)
+    with open(tomlfile, 'r', encoding="utf-8") as f:
+        toml_data = tomlkit.parse(f.read()).unwrap()
     return toml_data
 
 
@@ -87,7 +87,7 @@ def _fetch_git_repo(git_url: str, commit: str) -> str:
     return clone_dir
 
 def _update_workspace_keys(pkg, workspace):
-    for key, item in pkg.items():
+    for key, item in list(pkg.items()):
         # There cannot be a 'workspace' key if the item is not a dict.
         if not isinstance(item, dict):
             continue
@@ -258,12 +258,12 @@ async def _get_git_package_sources(
         {
             'type': 'shell',
             'commands': [
-                f'cp -rf --reflink=auto "{pkg_repo_dir}" "{CARGO_CRATES}/{name}"'
+                f'cp -rfL --reflink=auto "{pkg_repo_dir}" "{CARGO_CRATES}/{name}"'
             ],
         },
         {
             'type': 'inline',
-            'contents': toml.dumps(git_pkg.normalized),
+            'contents': tomlkit.dumps(git_pkg.normalized),
             'dest': f'{CARGO_CRATES}/{name}',
             'dest-filename': 'Cargo.toml',
         },
@@ -371,7 +371,7 @@ async def generate_sources(cargo_lock_paths: List[str]) -> List[_FlatpakSourceTy
     logging.debug('Vendored sources:\n%s', json.dumps(cargo_vendored_sources, indent=4))
     sources.append({
         'type': 'inline',
-        'contents': toml.dumps({
+        'contents': tomlkit.dumps({
             'source': cargo_vendored_sources,
         }),
         'dest': CARGO_HOME,
@@ -402,7 +402,7 @@ def main():
     cargo_lock_paths = str(args.cargo_lock_paths).split(',')
     generated_sources = asyncio.run(generate_sources(cargo_lock_paths))
 
-    with open(outfile, 'w') as out:
+    with open(outfile, 'w', encoding="utf-8") as out:
         json.dump(generated_sources, out, indent=4, sort_keys=False)
 
 
