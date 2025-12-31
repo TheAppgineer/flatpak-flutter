@@ -208,8 +208,6 @@ def _process_sources(module, fetch_path: str, releases_path: str, no_shallow: bo
             }
         ]
 
-    module['sources'] = sources + ["pubspec-sources.json"]
-
     return tag, sdk_path
 
 

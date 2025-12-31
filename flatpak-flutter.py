@@ -296,6 +296,8 @@ def main():
                     if len(cargo_locks):
                         module['sources'] += ['cargo-sources.json']
                         add_child_module(module, f'rustup-{rust_version}.json')
+
+                    module['sources'] += ["pubspec-sources.json"]
                     break
 
             if suffix == '.json':
