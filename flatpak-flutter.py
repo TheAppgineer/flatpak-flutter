@@ -202,7 +202,7 @@ def _generate_cargo_sources(app: str, cargo_locks: list, rust_version: str):
         for path in cargo_locks:
             cargo_paths.append(f'{build_path}/{app}/{path}/Cargo.lock')
 
-        cargo_sources = asyncio.run(generate_cargo_sources(cargo_paths))
+        cargo_sources = asyncio.run(generate_cargo_sources(cargo_paths, rust_version))
 
         with open('cargo-sources.json', 'w') as out:
             json.dump(cargo_sources, out, indent=4, sort_keys=False)
