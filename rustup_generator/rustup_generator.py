@@ -4,7 +4,7 @@ __license__ = 'MIT'
 import hashlib
 import json
 import sys
-import toml
+import tomlkit
 import urllib.request
 
 
@@ -58,7 +58,7 @@ def _generate_sources(version: str):
 
     with urllib.request.urlopen(url) as response:
         data = response.read().decode('utf-8')
-        stable = toml.loads(data)
+        stable = tomlkit.loads(data)
         date = stable['date']
         pkgs = stable['pkg']
         sources = _get_rustup_channel_entries(url)

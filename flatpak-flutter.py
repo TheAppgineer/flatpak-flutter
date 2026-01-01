@@ -21,7 +21,7 @@ from pubspec_generator.pubspec_generator import generate_sources as generate_pub
 from rustup_generator.rustup_generator import generate_rustup
 from packaging.version import Version
 
-__version__ = '0.10.1'
+__version__ = '0.11.0'
 build_path = '.flatpak-builder/build'
 
 
@@ -202,7 +202,7 @@ def _generate_cargo_sources(app: str, cargo_locks: list, rust_version: str):
         for path in cargo_locks:
             cargo_paths.append(f'{build_path}/{app}/{path}/Cargo.lock')
 
-        cargo_sources = asyncio.run(generate_cargo_sources(cargo_paths))
+        cargo_sources = asyncio.run(generate_cargo_sources(cargo_paths, rust_version))
 
         with open('cargo-sources.json', 'w') as out:
             json.dump(cargo_sources, out, indent=4, sort_keys=False)
@@ -296,6 +296,8 @@ def main():
                     if len(cargo_locks):
                         module['sources'] += ['cargo-sources.json']
                         add_child_module(module, f'rustup-{rust_version}.json')
+
+                    module['sources'] += ["pubspec-sources.json"]
                     break
 
             if suffix == '.json':
