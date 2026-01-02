@@ -241,8 +241,8 @@ def fetch_flutter_app(
 
         if 'modules' in module:
             for child_module in module['modules']:
-                if isinstance(child_module, str) and child_module.startswith('rustup-'):
-                    rust_version = child_module.split('rustup-')[1].split('.json')[0]
+                if isinstance(child_module, str) and 'rustup-' in child_module:
+                    rust_version = child_module.split('/')[-1].split('rustup-')[1].split('.json')[0]
                     break
 
         app_pubspec = _process_build_commands(module, app_pubspec)
