@@ -31,7 +31,7 @@ def _get_commit(sdk_path: str) -> str:
     return stdout.decode('utf-8').strip()
 
 
-def generate_sdk(sdk_path: str, tag: str) -> _FlatpakSourceType:
+def generate_sdk(sdk_path: str, tag: str, patch_path: str) -> _FlatpakSourceType:
     sdk_commit = _get_commit(sdk_path)
     engine = open(f'{sdk_path}/bin/internal/engine.version', 'r').readline().strip()
     gradle_wrapper = open(f'{sdk_path}/bin/internal/gradle_wrapper.version', 'r').readline().strip()
@@ -201,7 +201,7 @@ def generate_sdk(sdk_path: str, tag: str) -> _FlatpakSourceType:
         },
         {
             'type': 'patch',
-            'path': 'flutter-shared.sh.patch'
+            'path': f'{patch_path}/shared.sh.patch'
         },
         {
             'type': 'script',

@@ -155,11 +155,11 @@
         },
         {
             "type": "patch",
-            "path": "flutter-shared.sh.patch"
+            "path": "../patches/flutter/shared.sh.patch"
         },
         {
             "type": "patch",
-            "path": "update_engine_version.sh.flutter.patch"
+            "path": "../../update_engine_version.sh.flutter.patch"
         },
         {
             "type": "script",

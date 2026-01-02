@@ -175,8 +175,6 @@ def _process_sources(module, fetch_path: str, releases_path: str, no_shallow: bo
             if not result.returncode:
                 tag = result.stdout.decode('utf-8').strip()
 
-    add_child_module(module, f"flutter-sdk-{tag}.json")
-
     for patch in glob.glob(f'{releases_path}/{tag}/*.flutter.patch'):
         shutil.copyfile(patch, Path(patch).name)
 
@@ -209,14 +207,6 @@ def _process_sources(module, fetch_path: str, releases_path: str, no_shallow: bo
         ]
 
     return tag, sdk_path
-
-
-def add_child_module(module, child_module):
-    if 'modules' in module:
-        if child_module not in module['modules']:
-            module['modules'] += [child_module]
-    else:
-        module['modules'] = [child_module]
 
 
 def fetch_flutter_app(
@@ -269,4 +259,5 @@ def fetch_flutter_app(
         return str(manifest[app_id]), app_module, app_pubspec, tag, sdk_path, build_id, rust_version
     else:
         print(f'Error: No module named {app} found!')
+        print('       Specify the app module using the --app-module command line parameter')
         exit(1)
