@@ -18,7 +18,7 @@ class Dumper(yaml.Dumper):
         return super().increase_indent(flow=flow, indentless=False)
 
 
-def _fetch_repos(repos: list):
+def fetch_repos(repos: list):
     def by_path_depth(fetch_repo):
         return len(str(fetch_repo[2]).split('/'))
 
@@ -32,14 +32,21 @@ def _fetch_repos(repos: list):
             options += ['--depth', '1']
         if recursive:
             options += ['--recurse-submodules']
-        options += ['--branch', f"{ref}", url, path]
+        if ref:
+            options += ['--branch', ref]
+        options += [url, path]
 
-        try:
-            subprocess.run(options, stdout=subprocess.PIPE, check=True)
-        except subprocess.CalledProcessError:
-            clone = 'git clone --recursive' if recursive else 'git clone'
-            command = [f'{clone} {url} {path} && cd {path} && git reset --hard {ref}']
-            subprocess.run(command, stdout=subprocess.PIPE, shell=True, check=True)
+        return_code = subprocess.run(options).returncode
+
+        if return_code != 0 and ref:
+            # ref is probably a commit hash
+            options[options.index('--branch')] = '--revision'
+            return_code = subprocess.run(options).returncode
+
+        if return_code != 0:
+            return return_code
+
+    return 0
 
 
 def _search_submodules(gitmodules):
@@ -161,7 +168,7 @@ def _process_sources(module, fetch_path: str, releases_path: str, no_shallow: bo
             if source['type'] == 'patch' and '.flutter.patch' in str(source['path']):
                 idxs.append(idx)
 
-    _fetch_repos(repos)
+    fetch_repos(repos)
 
     gitmodules = f'{fetch_path}/.gitmodules'
 

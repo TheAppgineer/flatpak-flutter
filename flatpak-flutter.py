@@ -8,13 +8,11 @@ import os
 import sys
 import yaml
 import json
-import urllib.parse
-import urllib.request
 import asyncio
 
 from pathlib import Path
 from flutter_sdk_generator.flutter_sdk_generator import generate_sdk
-from flutter_app_fetcher.flutter_app_fetcher import fetch_flutter_app
+from flutter_app_fetcher.flutter_app_fetcher import fetch_flutter_app, fetch_repos
 from pubspec_generator.pubspec_generator import PUB_CACHE
 from cargo_generator.cargo_generator import generate_sources as generate_cargo_sources
 from pubspec_generator.pubspec_generator import generate_sources as generate_pubspec_sources
@@ -35,33 +33,15 @@ class Dumper(yaml.Dumper):
 
 
 def _get_manifest_from_git(manifest: str, from_git: str, from_git_branch: str):
-    manifest_name = Path(manifest).name
-    options = [
-        'git',
-        'clone',
-        '--depth',
-        '1',
-        from_git,
-        f'{build_path}/{manifest_name}',
-    ] if from_git_branch is None else [
-        'git',
-        'clone',
-        '--branch',
-        from_git_branch,
-        '--depth',
-        '1',
-        from_git,
-        f'{build_path}/{manifest_name}',
-    ]
-    manifest_path = f'{build_path}/{manifest_name}/{manifest}'
-
-    if os.path.isfile(manifest_path):
-        return_code = 0
-    else:
-        return_code = subprocess.run(options, stdout=subprocess.PIPE, check=True).returncode
+    manifest_name = Path(manifest).stem
+    path = f'{build_path}/{manifest_name}'
+    return_code = fetch_repos([(from_git, from_git_branch, path, True, True)])
 
     if return_code == 0:
-        shutil.copyfile(manifest_path, manifest_name)
+        def ignore(_: str, subdirs: list[str]):
+            return ['.git'] if '.git' in subdirs else []
+
+        shutil.copytree(path, '.', ignore=ignore, dirs_exist_ok=True)
         shutil.rmtree(f'{build_path}/{manifest_name}')
 
 
@@ -271,14 +251,7 @@ def main():
     foreign_deps_path = f'{parent}/foreign_deps'
 
     if args.from_git:
-        url = urllib.parse.urlparse(args.from_git)
-
-        if url.hostname == 'github.com' and args.from_git_branch is not None:
-            path = str(url.path).split('.git')[0]
-            raw_url = f'https://raw.githubusercontent.com{path}/{args.from_git_branch}/{args.MANIFEST}'
-            urllib.request.urlretrieve(raw_url, manifest_path.name)
-        else:
-            _get_manifest_from_git(args.MANIFEST, args.from_git, args.from_git_branch)
+        _get_manifest_from_git(args.MANIFEST, args.from_git, args.from_git_branch)
 
     no_shallow = True if args.no_shallow_clone else False
     manifest, app_id, app_module, app_pubspec, tag, sdk_path, build_id, rust_version = _fetch_flutter_app(
