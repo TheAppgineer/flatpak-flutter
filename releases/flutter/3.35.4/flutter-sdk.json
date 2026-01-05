@@ -156,7 +156,7 @@
         },
         {
             "type": "patch",
-            "path": "flutter-shared.sh.patch"
+            "path": "../patches/flutter/shared.sh.patch"
         },
         {
             "type": "script",

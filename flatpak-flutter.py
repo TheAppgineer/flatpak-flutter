@@ -14,12 +14,16 @@ import asyncio
 
 from pathlib import Path
 from flutter_sdk_generator.flutter_sdk_generator import generate_sdk
-from flutter_app_fetcher.flutter_app_fetcher import fetch_flutter_app, add_child_module
+from flutter_app_fetcher.flutter_app_fetcher import fetch_flutter_app
 from pubspec_generator.pubspec_generator import PUB_CACHE
 from cargo_generator.cargo_generator import generate_sources as generate_cargo_sources
 from pubspec_generator.pubspec_generator import generate_sources as generate_pubspec_sources
 from rustup_generator.rustup_generator import generate_rustup
 from packaging.version import Version
+
+MODULES = 'generated/modules'
+SOURCES = 'generated/sources'
+PATCHES = 'generated/patches'
 
 __version__ = '0.11.0'
 build_path = '.flatpak-builder/build'
@@ -131,6 +135,8 @@ def _handle_foreign_dependencies(app: str, build_path_app: str, foreign_deps_pat
                     src_path = f'{foreign_deps_path}/{dst_path}'
 
                     if os.path.isfile(src_path):
+                        dst_path = f'{PATCHES}/{dst_path}'
+                        source['path'] = dst_path
                         os.makedirs(Path(dst_path).parent, exist_ok=True)
                         shutil.copyfile(src_path, dst_path)
 
@@ -190,7 +196,7 @@ def _generate_pubspec_sources(app: str, app_pubspec:str, extra_pubspecs: list, f
     pubspec_sources = generate_pubspec_sources(pubspec_paths)
     pubspec_sources += foreign
 
-    with open('pubspec-sources.json', 'w') as out:
+    with open(f'{SOURCES}/pubspec.json', 'w') as out:
         json.dump(pubspec_sources, out, indent=4, sort_keys=False)
         out.write('\n')
 
@@ -204,27 +210,39 @@ def _generate_cargo_sources(app: str, cargo_locks: list, rust_version: str):
 
         cargo_sources = asyncio.run(generate_cargo_sources(cargo_paths, rust_version))
 
-        with open('cargo-sources.json', 'w') as out:
+        with open(f'{SOURCES}/cargo.json', 'w') as out:
             json.dump(cargo_sources, out, indent=4, sort_keys=False)
             out.write('\n')
 
-        with open(f'rustup-{rust_version}.json', 'w') as out:
+        rustup_json = f'rustup-{rust_version}.json'
+
+        with open(f'{MODULES}/{rustup_json}', 'w') as out:
+            print(f'Generating {rustup_json}...')
             json.dump(generate_rustup(rust_version), out, indent=4, sort_keys=False)
 
 
 def _get_sdk_module(app: str, sdk_path: str, tag: str, releases: str):
     if Version(tag) < Version('3.35.0'):
-        shutil.copyfile(f'{releases}/flutter/flutter-pre-3_35-shared.sh.patch', 'flutter-shared.sh.patch')
+        shutil.copyfile(f'{releases}/flutter/flutter-pre-3_35-shared.sh.patch', f'{PATCHES}/flutter/shared.sh.patch')
     else:
-        shutil.copyfile(f'{releases}/flutter/flutter-shared.sh.patch', 'flutter-shared.sh.patch')
+        shutil.copyfile(f'{releases}/flutter/flutter-shared.sh.patch', f'{PATCHES}/flutter/shared.sh.patch')
 
     if os.path.isfile(f'{releases}/flutter/{tag}/flutter-sdk.json'):
-        shutil.copyfile(f'{releases}/flutter/{tag}/flutter-sdk.json', f'flutter-sdk-{tag}.json')
+        shutil.copyfile(f'{releases}/flutter/{tag}/flutter-sdk.json', f'{MODULES}/flutter-sdk-{tag}.json')
     else:
-        generated_sdk = generate_sdk(f'{build_path}/{app}/{sdk_path}', tag)
+        patches_relative_path = f'{Path(PATCHES).relative_to(MODULES, walk_up=True)}/flutter'
+        generated_sdk = generate_sdk(f'{build_path}/{app}/{sdk_path}', tag, patches_relative_path)
 
-        with open(f'flutter-sdk-{tag}.json', 'w') as out:
+        with open(f'{MODULES}/flutter-sdk-{tag}.json', 'w') as out:
             json.dump(generated_sdk, out, indent=4, sort_keys=False)
+
+
+def _add_child_module(module, child_module):
+    if 'modules' in module:
+        if child_module not in module['modules']:
+            module['modules'] += [child_module]
+    else:
+        module['modules'] = [child_module]
 
 
 def main():
@@ -270,9 +288,10 @@ def main():
         args.app_pubspec,
         no_shallow,
     )
-    print(f'SDK path: {sdk_path}, tag: {tag}')
 
     if tag is not None:
+        print(f'SDK path: {sdk_path}, tag: {tag}')
+    
         build_path_app = f'{build_path}/{app_module}'
         _create_pub_cache(build_path_app, sdk_path, app_pubspec)
 
@@ -284,6 +303,10 @@ def main():
         if args.cargo_locks is not None:
             cargo_locks += str(args.cargo_locks).split(',')
 
+        os.makedirs(MODULES, exist_ok=True)
+        os.makedirs(SOURCES, exist_ok=True)
+        os.makedirs(f'{PATCHES}/flutter', exist_ok=True)
+
         _generate_pubspec_sources(app_module, app_pubspec, extra_pubspecs, foreign, sdk_path)
         _generate_cargo_sources(app_module, cargo_locks, rust_version)
         _get_sdk_module(app_module, sdk_path, tag, releases_path)
@@ -294,19 +317,23 @@ def main():
             for module in manifest['modules']:
                 if 'name' in module and module['name'] == app_module:
                     if len(cargo_locks):
-                        module['sources'] += ['cargo-sources.json']
-                        add_child_module(module, f'rustup-{rust_version}.json')
+                        module['sources'] += [f'{SOURCES}/cargo.json']
+                        _add_child_module(module, f'{MODULES}/rustup-{rust_version}.json')
 
-                    module['sources'] += ["pubspec-sources.json"]
+                    module['sources'] += [f'{SOURCES}/pubspec.json']
+                    _add_child_module(module, f'{MODULES}/flutter-sdk-{tag}.json')
                     break
 
-            if suffix == '.json':
-                json.dump(manifest, output_stream, indent=4, sort_keys=False)
-            else:
-                source = raw_url if raw_url is not None else manifest_path
-                prepend = f'''# Generated by flatpak-flutter v{__version__} from {source}, do not edit
+            source = raw_url if raw_url is not None else manifest_path
+            prepend = f'''# Generated by flatpak-flutter v{__version__} from {source}, do not edit
 # Visit the project at https://github.com/TheAppgineer/flatpak-flutter
 '''
+
+            if suffix == '.json':
+                prepend = { '//': prepend.replace('\n', '.')}
+                prepend.update(manifest)
+                json.dump(prepend, output_stream, indent=4, sort_keys=False)
+            else:
                 output_stream.write(prepend)
                 yaml.dump(data=manifest, stream=output_stream, indent=2, sort_keys=False, Dumper=Dumper)
 
