@@ -212,19 +212,6 @@ Known foreign dependencies are described in the `foreign-deps/foreign-deps.json`
 ### Report an Issue
 If build issues remain then [an issues](https://github.com/TheAppgineer/flatpak-flutter/issues) can be opened.
 
-## The flatpak-flutter Shell Script
-The `flatpak-flutter.sh` script, as known from previous releases, is still available as a convenience wrapper around flatpak-flutter and flatpak-builder. Any options given will be passed on to flatpak-flutter.
-
-
-    ./flatpak-flutter.sh </path/to/app_id> [options]
-
-> Note: The app manifest repo should be named equal to the app ID, as is also required for publishing.
-
-### flatpak.Builder
-`flatpak-flutter.sh` uses org.flatpak.Builder, per Flathub's recommendation, install with:
-
-    flatpak install -y flathub org.flatpak.Builder
-
 ## Setup
 ### Docker
 The recommended setup is to use the Docker image.
