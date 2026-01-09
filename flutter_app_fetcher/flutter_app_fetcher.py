@@ -40,8 +40,15 @@ def fetch_repos(repos: list):
 
         if return_code != 0 and ref:
             # ref is probably a commit hash
+            # Try the revision option first (requires git >= 2.49.0)
             options[options.index('--branch')] = '--revision'
-            return_code = subprocess.run(options).returncode
+            return_code = subprocess.run(options, stderr=subprocess.PIPE).returncode
+
+            if return_code != 0:
+                # Use a full clone as a last resort
+                clone = 'git clone --recursive' if recursive else 'git clone'
+                command = [f'{clone} {url} {path} && cd {path} && git reset --hard {ref}']
+                return_code = subprocess.run(command, shell=True).returncode
 
         if return_code != 0:
             return return_code
