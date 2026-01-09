@@ -251,11 +251,14 @@ described in the README file within the module subdirectory:
 
 ## Apps Published Using flatpak-flutter
 
+* [Al-Quran - Simple](https://flathub.org/en/apps/io.github.meypod.al-quran)
+* [AstroGods](https://flathub.org/en/apps/it.astrogods.AstroGods)
 * [Brisk](https://flathub.org/apps/io.github.BrisklyDev.Brisk)
 * [Chameleon Ultra GUI](https://flathub.org/apps/run.chameleon.chameleonultragui)
 * [CloudOTP](https://flathub.org/apps/com.cloudchewie.cloudotp)
 * [Community Remote](https://flathub.org/apps/com.theappgineer.community_remote)
 * [Gopeed](https://flathub.org/apps/com.gopeed.Gopeed)
+* [Lotti](https://flathub.org/en/apps/com.matthiasn.lotti)
 * [Mapiah](https://flathub.org/apps/io.github.rsevero.mapiah)
 * [NoMoreBackground](https://flathub.org/en/apps/com.adilhanney.no_more_background)
 * [Passy](https://flathub.org/apps/io.github.glitterware.Passy)
