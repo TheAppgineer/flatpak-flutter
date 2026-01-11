@@ -4,6 +4,17 @@ The Flatpak pre-processor for Flutter apps
 ## Project Goal
 The goal of the flatpak-flutter project is to simplify the publishing of Flutter based Linux apps on Flathub.
 
+## Project Achievements
+The project is now running for a year, and the flatpak-flutter achievements so far are:
+
+* Referenced in both the [Flatpak](https://github.com/flatpak/flatpak-builder-tools?tab=readme-ov-file#flutter) and [Flutter](https://docs.flutter.dev/deployment/linux#additional-deployment-resources) documentation.
+* Has become the de facto standard for FOSS Flutter apps, as Flathub is enforcing the [building from source](https://docs.flathub.org/docs/for-app-authors/requirements#building-from-source) and [no network access during build](https://docs.flathub.org/docs/for-app-authors/requirements#no-network-access-during-build) requirements for new submissions.
+* Used by a [growing list](#apps-published-using-flatpak-flutter) of apps.
+* Gets found by developers, as it is know by Search and AI Chatbots.
+
+<br>
+<img src="images/gemini.png" alt="flatpak-flutter on Google Gemini" width="600"/>
+
 ## The Flathub vs Flutter Status Quo
 When a Flutter app is ready for publishing on Flathub then, as part of the PR, the manifest gets build on Flathub infra. At the time the build reaches the first use of the `flutter` tool, it tries to download the Dart SDK and fails in the sandboxed build environment for [lack of online access](https://docs.flathub.org/docs/for-app-authors/requirements#no-network-access-during-build).
 
@@ -13,8 +24,6 @@ https://docs.flutter.dev/deployment/linux
 
 Let's get to a more equal playing field!
 
-> Note: The progress already made is that flatpak-flutter is referenced in both the [Flutter](https://docs.flutter.dev/deployment/linux#additional-deployment-resources) and [Flatpak](https://github.com/flatpak/flatpak-builder-tools?tab=readme-ov-file#flutter) documentation!
-
 ### The Common Approach
 The approach often taken by Flutter app developers to get their apps published on Flathub, is to create an archive with pre-built binaries and download that within the app manifest. This can lead to the recurring question during the PR review process of "Why not build from source?", but when the reviewer gets aware of the Fluter nature of the app it used to get accepted.
 
@@ -23,7 +32,7 @@ The approach often taken by Flutter app developers to get their apps published o
 ### The flatpak-flutter Approach
 flatpak-flutter performs a pre-processing run on the app manifest to collect all the required sources for an offline build and stores their origins in the form of flatpak-builder `modules` and `sources`. The output of this pre-processing step is a manifest that can be built in a sandboxed environment, which can be verified locally by running `flatpak-builder` with the `--sandbox` option.
 
-### Why build from source?
+### Why Build From Source?
 With the approach of pre-built binaries it is not certain that the local build used the same library versions as included in the Flatpak Runtime, this can cause compatibility issues.
 
 An added benefit of the source build is that both the x86_64 and aarch64 architecture will be built on the Flathub infra. No longer the need to skip aarch64 support in the `flathub.json` file.
