@@ -271,6 +271,7 @@ described in the README file within the module subdirectory:
 * [Mapiah](https://flathub.org/apps/io.github.rsevero.mapiah)
 * [NoMoreBackground](https://flathub.org/en/apps/com.adilhanney.no_more_background)
 * [Passy](https://flathub.org/apps/io.github.glitterware.Passy)
+* [Ricochlime](https://flathub.org/en/apps/com.adilhanney.ricochlime)
 * [Saber](https://flathub.org/en/apps/com.adilhanney.saber)
 * [Sly](https://flathub.org/apps/page.kramo.Sly)
 * [Table Habit](https://flathub.org/apps/io.github.friesi23.mhabit)
