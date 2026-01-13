@@ -59,7 +59,7 @@ def fetch_repos(repos: list):
 def _search_submodules(gitmodules):
     def get_flutter_path():
         if ('url' in submodule and 'path' in submodule and
-                submodule['url'] == f'{FLUTTER_URL}.git'):
+                (submodule['url'] == FLUTTER_URL or submodule['url'] == f'{FLUTTER_URL}.git')):
             return submodule['path']
 
     with open(gitmodules, 'r') as input:
