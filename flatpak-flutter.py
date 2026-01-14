@@ -23,7 +23,7 @@ MODULES = 'generated/modules'
 SOURCES = 'generated/sources'
 PATCHES = 'generated/patches'
 
-__version__ = '0.11.0'
+__version__ = '0.11.1'
 build_path = '.flatpak-builder/build'
 
 
