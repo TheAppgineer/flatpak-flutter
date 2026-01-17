@@ -210,8 +210,7 @@ def _get_sdk_module(app: str, sdk_path: str, tag: str, releases: str):
     if os.path.isfile(f'{releases}/flutter/{tag}/flutter-sdk.json'):
         shutil.copyfile(f'{releases}/flutter/{tag}/flutter-sdk.json', f'{MODULES}/flutter-sdk-{tag}.json')
     else:
-        patches_relative_path = f'{Path(PATCHES).relative_to(MODULES, walk_up=True)}/flutter'
-        generated_sdk = generate_sdk(f'{build_path}/{app}/{sdk_path}', tag, patches_relative_path)
+        generated_sdk = generate_sdk(f'{build_path}/{app}/{sdk_path}', tag, '../patches/flutter')
 
         with open(f'{MODULES}/flutter-sdk-{tag}.json', 'w') as out:
             json.dump(generated_sdk, out, indent=4, sort_keys=False)
