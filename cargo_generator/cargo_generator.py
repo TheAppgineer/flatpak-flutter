@@ -337,7 +337,7 @@ def _dedupe(current: list, new: list):
     return deduped
 
 
-async def generate_sources(cargo_lock_paths: List[str], rust_version: str) -> List[_FlatpakSourceType]:
+async def generate_sources(cargo_lock_paths: List[str], config_filename: str) -> List[_FlatpakSourceType]:
     sources: List[_FlatpakSourceType] = []
     cargo_vendored_sources = {
         VENDORED_SOURCES: {'directory': f'{CARGO_CRATES}'},
@@ -376,7 +376,7 @@ async def generate_sources(cargo_lock_paths: List[str], rust_version: str) -> Li
             'source': cargo_vendored_sources,
         }),
         'dest': CARGO_HOME,
-        'dest-filename': 'config' if Version(rust_version) < Version('1.38.0') else 'config.toml'
+        'dest-filename': config_filename
     })
 
     print(f'Deduped {deduped} cargo source entries')
@@ -385,8 +385,6 @@ async def generate_sources(cargo_lock_paths: List[str], rust_version: str) -> Li
 
 
 def main():
-    from flutter_app_fetcher.flutter_app_fetcher import DEFAULT_RUST_VERSION
-
     parser = argparse.ArgumentParser()
     parser.add_argument('cargo_lock_paths', help='Comma separated list of paths to Cargo.lock files')
     parser.add_argument('-o', '--output', required=False, help='Where to write generated sources')
@@ -403,7 +401,7 @@ def main():
     logging.basicConfig(level=loglevel)
 
     cargo_lock_paths = str(args.cargo_lock_paths).split(',')
-    generated_sources = asyncio.run(generate_sources(cargo_lock_paths, DEFAULT_RUST_VERSION))
+    generated_sources = asyncio.run(generate_sources(cargo_lock_paths, 'config'))
 
     with open(outfile, 'w', encoding="utf-8") as out:
         json.dump(generated_sources, out, indent=4, sort_keys=False)

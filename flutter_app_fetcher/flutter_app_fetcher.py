@@ -10,7 +10,6 @@ from typing import Optional, Tuple
 
 
 FLUTTER_URL = 'https://github.com/flutter/flutter'
-DEFAULT_RUST_VERSION = '1.91.1'
 
 
 class Dumper(yaml.Dumper):
@@ -251,7 +250,7 @@ def fetch_flutter_app(
             print('Error: Only the simple build system is supported')
             exit(1)
 
-        rust_version = DEFAULT_RUST_VERSION
+        rust_version = None
 
         if 'modules' in module:
             for child_module in module['modules']:

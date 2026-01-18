@@ -23,6 +23,8 @@ MODULES = 'generated/modules'
 SOURCES = 'generated/sources'
 PATCHES = 'generated/patches'
 
+DEFAULT_RUST_VERSION = '1.91.1'
+
 __version__ = '0.11.1'
 build_path = '.flatpak-builder/build'
 
@@ -188,7 +190,8 @@ def _generate_cargo_sources(app: str, cargo_locks: list, rust_version: str):
         for path in cargo_locks:
             cargo_paths.append(f'{build_path}/{app}/{path}/Cargo.lock')
 
-        cargo_sources = asyncio.run(generate_cargo_sources(cargo_paths, rust_version))
+        config_filename = 'config' if Version(rust_version) < Version('1.38.0') else 'config.toml'
+        cargo_sources = asyncio.run(generate_cargo_sources(cargo_paths, config_filename))
 
         with open(f'{SOURCES}/cargo.json', 'w') as out:
             json.dump(cargo_sources, out, indent=4, sort_keys=False)
@@ -278,6 +281,9 @@ def main():
         os.makedirs(MODULES, exist_ok=True)
         os.makedirs(SOURCES, exist_ok=True)
         os.makedirs(f'{PATCHES}/flutter', exist_ok=True)
+
+        if rust_version is None:
+            rust_version = DEFAULT_RUST_VERSION
 
         _generate_pubspec_sources(app_module, app_pubspec, extra_pubspecs, foreign, sdk_path)
         _generate_cargo_sources(app_module, cargo_locks, rust_version)
