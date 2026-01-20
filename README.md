@@ -270,6 +270,7 @@ described in the README file within the module subdirectory:
 * [Lotti](https://flathub.org/en/apps/com.matthiasn.lotti)
 * [Mapiah](https://flathub.org/apps/io.github.rsevero.mapiah)
 * [NoMoreBackground](https://flathub.org/en/apps/com.adilhanney.no_more_background)
+* [Outlet](https://flathub.org/apps/io.github.jardon.Outlet)
 * [Passy](https://flathub.org/apps/io.github.glitterware.Passy)
 * [Ricochlime](https://flathub.org/en/apps/com.adilhanney.ricochlime)
 * [Saber](https://flathub.org/en/apps/com.adilhanney.saber)
