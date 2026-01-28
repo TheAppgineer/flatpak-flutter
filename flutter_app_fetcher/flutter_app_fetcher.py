@@ -250,14 +250,6 @@ def fetch_flutter_app(
             print('Error: Only the simple build system is supported')
             exit(1)
 
-        rust_version = None
-
-        if 'modules' in module:
-            for child_module in module['modules']:
-                if isinstance(child_module, str) and 'rustup-' in child_module:
-                    rust_version = child_module.split('/')[-1].split('rustup-')[1].split('.json')[0]
-                    break
-
         app_pubspec = _process_build_commands(module, app_pubspec)
 
         app_module = app_module if app_module is not None else str(module['name'])
@@ -269,7 +261,7 @@ def fetch_flutter_app(
         options = [f'cd {build_path} && ln -snf {app_module}-{build_id} {app_module}']
         subprocess.run(options, stdout=subprocess.PIPE, shell=True, check=True)
 
-        return str(manifest[app_id]), app_module, app_pubspec, tag, sdk_path, build_id, rust_version
+        return str(manifest[app_id]), app_module, app_pubspec, tag, sdk_path, build_id
     else:
         print(f'Error: No module named {app} found!')
         print('       Specify the app module using the --app-module command line parameter')
