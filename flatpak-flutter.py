@@ -219,9 +219,10 @@ def _generate_rustup_module(module) -> str:
             build_options['append-path'] += f':{RUSTUP_PATH}/bin'
 
         env = build_options['env'] if 'env' in build_options else {}
-        if 'CARGO_HOME' not in env:
-            build_options['env']['CARGO_HOME'] = f'/run/build/{app}/cargo'
-        if 'RUSTUP_HOME' not in env:
+        cargo_path = f'/run/build/{app}/cargo'
+        if 'CARGO_HOME' not in env or env['CARGO_HOME'] != cargo_path:
+            build_options['env']['CARGO_HOME'] = cargo_path
+        if 'RUSTUP_HOME' not in env or env['RUSTUP_HOME'] != RUSTUP_PATH:
             build_options['env']['RUSTUP_HOME'] = RUSTUP_PATH
 
         module['build-options'] = build_options
