@@ -15,8 +15,8 @@
         {
             "type": "git",
             "url": "https://github.com/flutter/flutter.git",
-            "tag": "3.38.8",
-            "commit": "bd7a4a6b5576630823ca344e3e684c53aa1a0f46",
+            "tag": "3.38.9",
+            "commit": "67323de285b00232883f53b84095eb72be97d35c",
             "dest": "flutter"
         },
         {
@@ -24,8 +24,8 @@
             "only-arches": [
                 "x86_64"
             ],
-            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/db373eb85a06eb3d706af362a45d42d0972f4b46/dart-sdk-linux-x64.zip",
-            "sha256": "2e6bd6ec0101129f5ad12c1004cd2ddcad102039c772060920e42bf37f61d1fd",
+            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/587c18f873b8ab57330422bce09047420d9c7f42/dart-sdk-linux-x64.zip",
+            "sha256": "ac5476d6b4b235375e3fdce83ff501e121629ab9053dd9a2a5019af1947af462",
             "strip-components": 0,
             "dest": "flutter/bin/cache"
         },
@@ -34,8 +34,8 @@
             "only-arches": [
                 "aarch64"
             ],
-            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/db373eb85a06eb3d706af362a45d42d0972f4b46/dart-sdk-linux-arm64.zip",
-            "sha256": "bc1d2d5c8aa66fcad533ce80e54b85e7be0ffe77665ae1f211553a82b9ae44d4",
+            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/587c18f873b8ab57330422bce09047420d9c7f42/dart-sdk-linux-arm64.zip",
+            "sha256": "9d0846bd206d440ddd4408e1dcfe3ccdd6e875dfb96ccaa82358f32172785647",
             "strip-components": 0,
             "dest": "flutter/bin/cache"
         },
@@ -54,26 +54,26 @@
         },
         {
             "type": "archive",
-            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/db373eb85a06eb3d706af362a45d42d0972f4b46/sky_engine.zip",
-            "sha256": "f6177cfb40d287fed550a5a6440cb59bcaa4b5cd373f754557f3d9c31b580d45",
+            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/587c18f873b8ab57330422bce09047420d9c7f42/sky_engine.zip",
+            "sha256": "e0cee975a38bdaeaf46cc5347aceb9839b5ec928a4eb971e0742778f39fd4e97",
             "dest": "flutter/bin/cache/pkg/sky_engine"
         },
         {
             "type": "archive",
-            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/db373eb85a06eb3d706af362a45d42d0972f4b46/flutter_gpu.zip",
-            "sha256": "748d3a6df5f5fe6db36080168751b0708a905e125116707362cea6874cf3c6da",
+            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/587c18f873b8ab57330422bce09047420d9c7f42/flutter_gpu.zip",
+            "sha256": "becb5716b58b40d350a4e130d94be46706478248ec853b6691b963282f0284f4",
             "dest": "flutter/bin/cache/pkg/flutter_gpu"
         },
         {
             "type": "archive",
-            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/db373eb85a06eb3d706af362a45d42d0972f4b46/flutter_patched_sdk.zip",
-            "sha256": "1927450b14ab8a2b7e025f6557860eba420fc4d696311d90772953351bc83cda",
+            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/587c18f873b8ab57330422bce09047420d9c7f42/flutter_patched_sdk.zip",
+            "sha256": "1c22a78c166941f2308dae6019050d3a70a000d3094ae4e7e70a6568c9c77d53",
             "dest": "flutter/bin/cache/artifacts/engine/common/flutter_patched_sdk"
         },
         {
             "type": "archive",
-            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/db373eb85a06eb3d706af362a45d42d0972f4b46/flutter_patched_sdk_product.zip",
-            "sha256": "d908366bf48c29bc0235238910790de7a1a1e87bd4ac1828f201b4bb22fe1bee",
+            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/587c18f873b8ab57330422bce09047420d9c7f42/flutter_patched_sdk_product.zip",
+            "sha256": "263bf6901b0b5c78e916364046588458f22373ad2c986a9261631f8b33321969",
             "dest": "flutter/bin/cache/artifacts/engine/common/flutter_patched_sdk_product"
         },
         {
@@ -81,8 +81,8 @@
             "only-arches": [
                 "x86_64"
             ],
-            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/db373eb85a06eb3d706af362a45d42d0972f4b46/linux-x64/artifacts.zip",
-            "sha256": "6f91086e4709d5ae5c88645eead34f5ca0082035e0a3eff4985b26a16a5ec897",
+            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/587c18f873b8ab57330422bce09047420d9c7f42/linux-x64/artifacts.zip",
+            "sha256": "fa37682eb238fa51e05b60a0aec3ad453a38695bc45439d9a4a389cf192a2341",
             "strip-components": 0,
             "dest": "flutter/bin/cache/artifacts/engine/linux-x64"
         },
@@ -91,8 +91,8 @@
             "only-arches": [
                 "x86_64"
             ],
-            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/db373eb85a06eb3d706af362a45d42d0972f4b46/linux-x64/font-subset.zip",
-            "sha256": "96180d605bccbc09f311c433bcc6a7e05f0e342498807343bc413911b175d26a",
+            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/587c18f873b8ab57330422bce09047420d9c7f42/linux-x64/font-subset.zip",
+            "sha256": "75f5fe94a3399c7ca2d54dcb1f8e8f5470fa336e1ed34418206a0d2158ffd953",
             "dest": "flutter/bin/cache/artifacts/engine/linux-x64"
         },
         {
@@ -100,8 +100,8 @@
             "only-arches": [
                 "x86_64"
             ],
-            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/db373eb85a06eb3d706af362a45d42d0972f4b46/linux-x64-profile/linux-x64-flutter-gtk.zip",
-            "sha256": "8a31840adbb5e68e7b3074035abcb89e026440856f88c90b44a766ab4ead662e",
+            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/587c18f873b8ab57330422bce09047420d9c7f42/linux-x64-profile/linux-x64-flutter-gtk.zip",
+            "sha256": "0819a1f4a1ce6a3bb0471f3ff1f75082dfa797478a128a30e7de2ffbbb242453",
             "strip-components": 0,
             "dest": "flutter/bin/cache/artifacts/engine/linux-x64-profile"
         },
@@ -110,8 +110,8 @@
             "only-arches": [
                 "x86_64"
             ],
-            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/db373eb85a06eb3d706af362a45d42d0972f4b46/linux-x64-release/linux-x64-flutter-gtk.zip",
-            "sha256": "a91c39033e78d9e48251db546cd0755f234b0f26eb781144f35d27463f2f39d2",
+            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/587c18f873b8ab57330422bce09047420d9c7f42/linux-x64-release/linux-x64-flutter-gtk.zip",
+            "sha256": "8dcfa58602a7f5156402e3f660b0e111458a15bf8c702926237dee66afd91100",
             "strip-components": 0,
             "dest": "flutter/bin/cache/artifacts/engine/linux-x64-release"
         },
@@ -120,8 +120,8 @@
             "only-arches": [
                 "aarch64"
             ],
-            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/db373eb85a06eb3d706af362a45d42d0972f4b46/linux-arm64/artifacts.zip",
-            "sha256": "ef33f7b3faf7401d5fde6389af45e328db3d6afe1841cf1ebf8952ce4505951f",
+            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/587c18f873b8ab57330422bce09047420d9c7f42/linux-arm64/artifacts.zip",
+            "sha256": "7e77c678c10bc789145aa55ba21750641fe0c56a3d663b96f067056ba5aff72c",
             "strip-components": 0,
             "dest": "flutter/bin/cache/artifacts/engine/linux-arm64"
         },
@@ -130,8 +130,8 @@
             "only-arches": [
                 "aarch64"
             ],
-            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/db373eb85a06eb3d706af362a45d42d0972f4b46/linux-arm64/font-subset.zip",
-            "sha256": "e16da60f7281f20878b023143cff8a863452de76d14116f77dc84244d6587ba7",
+            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/587c18f873b8ab57330422bce09047420d9c7f42/linux-arm64/font-subset.zip",
+            "sha256": "dbcb7f504f8aa22a1b948ff3cff599c73ffd0904c5705c69a58bcc02e2bd699c",
             "dest": "flutter/bin/cache/artifacts/engine/linux-arm64"
         },
         {
@@ -139,8 +139,8 @@
             "only-arches": [
                 "aarch64"
             ],
-            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/db373eb85a06eb3d706af362a45d42d0972f4b46/linux-arm64-profile/linux-arm64-flutter-gtk.zip",
-            "sha256": "432a3db197016226da14a974e188789b37478a00d3b3d3b6c7c01c972ca003b2",
+            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/587c18f873b8ab57330422bce09047420d9c7f42/linux-arm64-profile/linux-arm64-flutter-gtk.zip",
+            "sha256": "994555e5f2f8360991e50240baf54efc88f1eed971296425b93a9f5e4aa96f06",
             "strip-components": 0,
             "dest": "flutter/bin/cache/artifacts/engine/linux-arm64-profile"
         },
@@ -149,8 +149,8 @@
             "only-arches": [
                 "aarch64"
             ],
-            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/db373eb85a06eb3d706af362a45d42d0972f4b46/linux-arm64-release/linux-arm64-flutter-gtk.zip",
-            "sha256": "6c3c8f94ab00137cb5508ab44ab33bb175d0dccf1e79981f1c8ce763c5cd0370",
+            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/587c18f873b8ab57330422bce09047420d9c7f42/linux-arm64-release/linux-arm64-flutter-gtk.zip",
+            "sha256": "7cebab5b5418cf06af49e2b0ec29befd0b4ea247a057ca2cc21c3d8ea2201153",
             "strip-components": 0,
             "dest": "flutter/bin/cache/artifacts/engine/linux-arm64-release"
         },
@@ -168,8 +168,8 @@
         },
         {
             "type": "file",
-            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/db373eb85a06eb3d706af362a45d42d0972f4b46/engine_stamp.json",
-            "sha256": "a1d88cc8c052eee126bf441cb56fb56f638a2d85e65ff3a9e378382f382a0284",
+            "url": "https://storage.googleapis.com/flutter_infra_release/flutter/587c18f873b8ab57330422bce09047420d9c7f42/engine_stamp.json",
+            "sha256": "eb970e7ed0d5750ff452d845f4e415330aaa80e7247602bac4259563bd531ab6",
             "dest": "flutter/bin/cache"
         }
     ]

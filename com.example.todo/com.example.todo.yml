@@ -39,4 +39,4 @@ modules:
         commit: 2a98e745969dd657efe2eccd964253cd20d13e25
       - generated/sources/pubspec.json
     modules:
-      - generated/modules/flutter-sdk-3.38.8.json
+      - generated/modules/flutter-sdk-3.38.9.json
