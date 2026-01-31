@@ -24,8 +24,9 @@ SOURCES = 'generated/sources'
 PATCHES = 'generated/patches'
 
 DEFAULT_RUST_VERSION = '1.91.1'
+RUSTUP_PATH = '/var/lib/rustup'
 
-__version__ = '0.11.1'
+__version__ = '0.12.0'
 build_path = '.flatpak-builder/build'
 
 
@@ -67,7 +68,7 @@ def _fetch_flutter_app(
             manifest = json.load(input_stream)
 
         releases_path += '/flutter'
-        app_id, app_module, app_pubspec, tag, sdk_path, build_id, rust_version = fetch_flutter_app(
+        app_id, app_module, app_pubspec, tag, sdk_path, build_id = fetch_flutter_app(
             manifest,
             app_module,
             build_path,
@@ -76,7 +77,7 @@ def _fetch_flutter_app(
             no_shallow,
         )
 
-        return manifest, app_id, app_module, app_pubspec, tag, sdk_path, build_id, rust_version
+        return manifest, app_id, app_module, app_pubspec, tag, sdk_path, build_id
 
 
 def _create_pub_cache(build_path_app: str, sdk_path: str, pubspec_path: str):
@@ -164,7 +165,8 @@ def _handle_foreign_dependencies(app: str, build_path_app: str, foreign_deps_pat
     return extra_pubspecs, cargo_locks, sources
 
 
-def _generate_pubspec_sources(app: str, app_pubspec:str, extra_pubspecs: list, foreign: list, sdk_path: str):
+def _generate_pubspec_sources(module, app_pubspec:str, extra_pubspecs: list, foreign: list, sdk_path: str):
+    app = module['name']
     flutter_tools = f'{sdk_path}/packages/flutter_tools'
     pubspec_paths = [
         f'{build_path}/{app}/{app_pubspec}/pubspec.lock',
@@ -175,6 +177,18 @@ def _generate_pubspec_sources(app: str, app_pubspec:str, extra_pubspecs: list, f
         for path in extra_pubspecs:
             pubspec_paths.append(f'{build_path}/{app}/{path}/pubspec.lock')
 
+    if 'build-options' in module:
+        build_options = module['build-options']
+
+        if 'env' not in build_options:
+            build_options['env'] = {}
+
+        env = build_options['env']
+        pub_cache_path = f'/run/build/{app}/.pub-cache'
+        if 'PUB_CACHE' not in env or env['PUB_CACHE'] != pub_cache_path:
+            build_options['env']['PUB_CACHE'] = pub_cache_path
+            module['build-options'] = build_options
+
     pubspec_sources = generate_pubspec_sources(pubspec_paths)
     pubspec_sources += foreign
 
@@ -183,25 +197,59 @@ def _generate_pubspec_sources(app: str, app_pubspec:str, extra_pubspecs: list, f
         out.write('\n')
 
 
-def _generate_cargo_sources(app: str, cargo_locks: list, rust_version: str):
-    if cargo_locks:
-        cargo_paths = []
+def _generate_rustup_module(module) -> str:
+    app = module['name']
+    rust_version = None
 
-        for path in cargo_locks:
-            cargo_paths.append(f'{build_path}/{app}/{path}/Cargo.lock')
+    if 'modules' in module:
+        for child_module in module['modules']:
+            if isinstance(child_module, str) and 'rustup-' in child_module:
+                rust_version = child_module.split('/')[-1].split('rustup-')[1].split('.json')[0]
+                break
 
-        config_filename = 'config' if Version(rust_version) < Version('1.38.0') else 'config.toml'
-        cargo_sources = asyncio.run(generate_cargo_sources(cargo_paths, config_filename))
+    if rust_version is None:
+        rust_version = DEFAULT_RUST_VERSION
+        _add_child_module(module, f'{MODULES}/rustup-{rust_version}.json')
 
-        with open(f'{SOURCES}/cargo.json', 'w') as out:
-            json.dump(cargo_sources, out, indent=4, sort_keys=False)
-            out.write('\n')
+    if 'build-options' in module:
+        build_options = module['build-options']
 
-        rustup_json = f'rustup-{rust_version}.json'
+        append_path = build_options['append-path'] if 'append-path' in build_options else ''
+        if f'{RUSTUP_PATH}/bin' not in append_path:
+            build_options['append-path'] += f':{RUSTUP_PATH}/bin'
 
-        with open(f'{MODULES}/{rustup_json}', 'w') as out:
-            print(f'Generating {rustup_json}...')
-            json.dump(generate_rustup(rust_version), out, indent=4, sort_keys=False)
+        env = build_options['env'] if 'env' in build_options else {}
+        cargo_path = f'/run/build/{app}/cargo'
+        if 'CARGO_HOME' not in env or env['CARGO_HOME'] != cargo_path:
+            build_options['env']['CARGO_HOME'] = cargo_path
+        if 'RUSTUP_HOME' not in env or env['RUSTUP_HOME'] != RUSTUP_PATH:
+            build_options['env']['RUSTUP_HOME'] = RUSTUP_PATH
+
+        module['build-options'] = build_options
+
+    rustup_json = f'rustup-{rust_version}.json'
+
+    with open(f'{MODULES}/{rustup_json}', 'w') as out:
+        print(f'Generating {rustup_json}...')
+        json.dump(generate_rustup(rust_version, RUSTUP_PATH), out, indent=4, sort_keys=False)
+
+    return rust_version
+
+
+def _generate_cargo_sources(module, cargo_locks: list, rust_version: str):
+    app = module['name']
+    cargo_paths = []
+
+    for path in cargo_locks:
+        cargo_paths.append(f'{build_path}/{app}/{path}/Cargo.lock')
+
+    module['sources'] += [f'{SOURCES}/cargo.json']
+    config_filename = 'config' if Version(rust_version) < Version('1.38.0') else 'config.toml'
+    cargo_sources = asyncio.run(generate_cargo_sources(cargo_paths, config_filename))
+
+    with open(f'{SOURCES}/cargo.json', 'w') as out:
+        json.dump(cargo_sources, out, indent=4, sort_keys=False)
+        out.write('\n')
 
 
 def _get_sdk_module(app: str, sdk_path: str, tag: str, releases: str):
@@ -256,7 +304,7 @@ def main():
         _get_manifest_from_git(args.MANIFEST, args.from_git, args.from_git_branch)
 
     no_shallow = True if args.no_shallow_clone else False
-    manifest, app_id, app_module, app_pubspec, tag, sdk_path, build_id, rust_version = _fetch_flutter_app(
+    manifest, app_id, app_module, app_pubspec, tag, sdk_path, build_id = _fetch_flutter_app(
         manifest_path,
         args.app_module,
         releases_path,
@@ -282,26 +330,22 @@ def main():
         os.makedirs(SOURCES, exist_ok=True)
         os.makedirs(f'{PATCHES}/flutter', exist_ok=True)
 
-        if rust_version is None:
-            rust_version = DEFAULT_RUST_VERSION
+        for module in manifest['modules']:
+            if 'name' in module and module['name'] == app_module:
+                _generate_pubspec_sources(module, app_pubspec, extra_pubspecs, foreign, sdk_path)
+                _get_sdk_module(app_module, sdk_path, tag, releases_path)
 
-        _generate_pubspec_sources(app_module, app_pubspec, extra_pubspecs, foreign, sdk_path)
-        _generate_cargo_sources(app_module, cargo_locks, rust_version)
-        _get_sdk_module(app_module, sdk_path, tag, releases_path)
+                if len(cargo_locks):
+                    rust_version = _generate_rustup_module(module)
+                    _generate_cargo_sources(module, cargo_locks, rust_version)
+
+                module['sources'] += [f'{SOURCES}/pubspec.json']
+                _add_child_module(module, f'{MODULES}/flutter-sdk-{tag}.json')
+                break
 
         # Write converted manifest to file
         suffix = manifest_path.suffix
         with open(f'{app_id}{suffix}', 'w') as output_stream:
-            for module in manifest['modules']:
-                if 'name' in module and module['name'] == app_module:
-                    if len(cargo_locks):
-                        module['sources'] += [f'{SOURCES}/cargo.json']
-                        _add_child_module(module, f'{MODULES}/rustup-{rust_version}.json')
-
-                    module['sources'] += [f'{SOURCES}/pubspec.json']
-                    _add_child_module(module, f'{MODULES}/flutter-sdk-{tag}.json')
-                    break
-
             source = raw_url if raw_url is not None else manifest_path
             prepend = f'''# Generated by flatpak-flutter v{__version__} from {source}, do not edit
 # Visit the project at https://github.com/TheAppgineer/flatpak-flutter

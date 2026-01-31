@@ -94,34 +94,35 @@ def _generate_sources(version: str):
         return sources
 
 
-def generate_rustup(version: str):
+def generate_rustup(version: str, rustup_path: str):
     return {
         'name': 'rustup',
         'buildsystem': 'simple',
         'build-options': {
             'env': {
-                'CARGO_HOME': '/var/lib/rustup',
-                'RUSTUP_HOME': '/var/lib/rustup',
+                'CARGO_HOME': rustup_path,
+                'RUSTUP_HOME': rustup_path,
                 'RUSTUP_DIST_SERVER': 'file:///run/build/rustup/static.rust-lang.org'
             }
         },
         'build-commands': [
             f'chmod +x rustup-init && ./rustup-init -y --default-toolchain {version} --profile minimal --no-modify-path',
-            f'ln -s /var/lib/rustup/toolchains/{version}-${{FLATPAK_ARCH}}-unknown-linux-gnu /var/lib/rustup/toolchains/stable-${{FLATPAK_ARCH}}-unknown-linux-gnu'
+            f'ln -s {rustup_path}/toolchains/{version}-${{FLATPAK_ARCH}}-unknown-linux-gnu {rustup_path}/toolchains/stable-${{FLATPAK_ARCH}}-unknown-linux-gnu'
         ],
         'sources': _generate_sources(version)
     }
 
 
 def main():
-    if len(sys.argv) < 2:
-        print(f'Usage: {sys.argv[0]} <Rust version>')
+    if len(sys.argv) < 3:
+        print(f'Usage: {sys.argv[0]} <Rust version> <rustup path>')
         exit(1)
 
     version = sys.argv[1]
+    rustup_path = sys.argv[2]
 
     with open(f'rustup-{version}.json', 'w') as out:
-        json.dump(generate_rustup(version), out, indent=4, sort_keys=False)
+        json.dump(generate_rustup(version, rustup_path), out, indent=4, sort_keys=False)
 
 
 if __name__ == '__main__':
