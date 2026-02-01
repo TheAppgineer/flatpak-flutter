@@ -1,0 +1,17 @@
+--- a/linux/CMakeLists.txt	2025-02-07 23:55:39.000000000 +0100
++++ b/linux/CMakeLists.txt	2026-01-31 17:23:50.806480707 +0100
+@@ -14,12 +14,14 @@
+   FetchContent_Declare(
+     sqlite3
+     URL https://sqlite.org/2025/sqlite-autoconf-3490000.tar.gz
++    URL_HASH SHA256=4d8bfa0b55e36951f6e5a9fb8c99f3b58990ab785c57b4f84f37d163a0672759
+     DOWNLOAD_EXTRACT_TIMESTAMP NEW
+   )
+ else()
+   FetchContent_Declare(
+     sqlite3
+     URL https://sqlite.org/2025/sqlite-autoconf-3490000.tar.gz
++    URL_HASH SHA256=4d8bfa0b55e36951f6e5a9fb8c99f3b58990ab785c57b4f84f37d163a0672759
+   )
+ endif()
+ FetchContent_MakeAvailable(sqlite3)
