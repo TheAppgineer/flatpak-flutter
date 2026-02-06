@@ -253,7 +253,7 @@ def _generate_cargo_sources(module, cargo_locks: list, rust_version: str):
 
 
 def _get_sdk_module(app: str, sdk_path: str, tag: str, releases: str):
-    if Version(tag) < Version('3.35.0'):
+    if Version(tag.split('-')[0]) < Version('3.35.0'):
         shutil.copyfile(f'{releases}/flutter/flutter-pre-3_35-shared.sh.patch', f'{PATCHES}/flutter/shared.sh.patch')
     else:
         shutil.copyfile(f'{releases}/flutter/flutter-shared.sh.patch', f'{PATCHES}/flutter/shared.sh.patch')

@@ -213,7 +213,7 @@ def generate_sdk(sdk_path: str, tag: str, patch_path: str) -> _FlatpakSourceType
         }
     ]
 
-    if Version(tag) >= Version('3.35.0'):
+    if Version(tag.split('-')[0]) >= Version('3.35.0'):
         engine_stamp = f'{engine}/engine_stamp.json'
         sources += [
             {
