@@ -12,21 +12,24 @@ import asyncio
 
 from pathlib import Path
 from flutter_sdk_generator.flutter_sdk_generator import generate_sdk
-from flutter_app_fetcher.flutter_app_fetcher import fetch_flutter_app, fetch_repos
+from flutter_app_fetcher.flutter_app_fetcher import fetch_flutter_app
+from git_actions.git_actions import fetch_repos
 from pubspec_generator.pubspec_generator import PUB_CACHE
 from cargo_generator.cargo_generator import generate_sources as generate_cargo_sources
 from pubspec_generator.pubspec_generator import generate_sources as generate_pubspec_sources
 from rustup_generator.rustup_generator import generate_rustup
 from packaging.version import Version
+from urllib.parse import urlsplit
 
 MODULES = 'generated/modules'
 SOURCES = 'generated/sources'
 PATCHES = 'generated/patches'
 
-DEFAULT_RUST_VERSION = '1.91.1'
+TEMPLATE_FLUTTER_VERSION = '3.38.9'
+DEFAULT_RUST_VERSION = '1.93.0'
 RUSTUP_PATH = '/var/lib/rustup'
 
-__version__ = '0.12.1'
+__version__ = '0.13.0'
 build_path = '.flatpak-builder/build'
 
 
@@ -48,36 +51,123 @@ def _get_manifest_from_git(manifest: str, from_git: str, from_git_branch: str):
         shutil.rmtree(f'{build_path}/{manifest_name}')
 
 
-def _fetch_flutter_app(
-    manifest_path: Path,
-    app_module: str,
-    releases_path: str,
-    app_pubspec: str,
-    no_shallow: bool,
-):
-    if not os.path.isfile(manifest_path):
+def _get_app_id(url: str):
+    parts = urlsplit(url)
+    id = '.'.join(parts.netloc.split('.')[::-1])
+    path = parts.path.split('/')[1:]
+    mappings = {
+        'com.github': 'io.github',
+        'com.gitlab': 'io.gitlab',
+        'org.codeberg': 'page.codeberg',
+        'org.framagit': 'io.frama',
+    }
+
+    for idx, segment in enumerate(path):
+        if segment[0].isdigit():
+            path[idx] = '_' + segment
+
+    module = path[-1]
+    path = '.'.join(path[:-1]).replace('-', '_')
+
+    if id in mappings:
+        id = mappings[id]
+
+    return f'{id}.{path}.{module}'
+
+
+def _generate_template_for_url(url: str, id: str, command: str):
+    if not id:
+        id = _get_app_id(url)
+
+    module = id.split('.')[-1]
+
+    if not command:
+        command = module.lower()
+
+    template = {
+        'id': id,
+        'runtime': 'org.freedesktop.Platform',
+        'runtime-version': '25.08',
+        'sdk': 'org.freedesktop.Sdk',
+        'sdk-extensions': [
+            'org.freedesktop.Sdk.Extension.llvm20',
+        ],
+        'command': command,
+        'finish-args': [
+            '--share=ipc',
+            '--socket=fallback-x11',
+            '--socket=wayland',
+            '--device=dri',
+        ],
+        'modules': [
+            {
+                'name': module,
+                'buildsystem': 'simple',
+                'build-options': {
+                    'arch': {
+                        'x86_64': {
+                            'env': {
+                                'BUNDLE_PATH': 'build/linux/x64/release/bundle',
+                            }
+                        },
+                        'aarch64': {
+                            'env': {
+                                'BUNDLE_PATH': 'build/linux/arm64/release/bundle',
+                            }
+                        }
+                    },
+                    'append-path': f'/usr/lib/sdk/llvm20/bin:/run/build/{module}/flutter/bin',
+                    'prepend-ld-library-path': '/usr/lib/sdk/llvm20/lib',
+                    'env': {
+                        'PUB_CACHE': f'/run/build/{module}/.pub-cache',
+                    }
+                },
+                'build-commands': [
+                    'flutter build linux --release --no-pub',
+                    f'install -D $BUNDLE_PATH/{command} /app/bin/{command}',
+                    'cp -r $BUNDLE_PATH/lib /app/bin/lib',
+                    'cp -r $BUNDLE_PATH/data /app/bin/data',
+                ],
+                'sources': [
+                    {
+                        'type': 'git',
+                        'url': f'{url}.git',
+                    },
+                    {
+                        'type': 'git',
+                        'url': 'https://github.com/flutter/flutter.git',
+                        'tag': TEMPLATE_FLUTTER_VERSION,
+                        'dest': 'flutter',
+                    }
+                ]
+            }
+        ]
+    }
+
+    return template
+
+def _get_manifest(args):
+    manifest_path = Path(args.MANIFEST)
+    suffix = manifest_path.suffix
+
+    if os.path.isfile(manifest_path):
+        with open(manifest_path, 'r') as input_stream:
+            if suffix == '.yml' or  suffix == '.yaml':
+                manifest = yaml.full_load(input_stream)
+            else:
+                manifest = json.load(input_stream)
+    elif args.template:
+        manifest = _generate_template_for_url(args.template, args.id, args.command)
+        with open(manifest_path, 'w') as output_stream:
+            if suffix == '.yml' or  suffix == '.yaml':
+                yaml.dump(data=manifest, stream=output_stream, indent=2, sort_keys=False, Dumper=Dumper)
+            else:
+                json.dump(manifest, output_stream, indent=4, sort_keys=False)
+    else:
         print(f'Error: manifest file {manifest_path} not found')
         exit(1)
 
-    with open(manifest_path, 'r') as input_stream:
-        suffix = manifest_path.suffix
-
-        if suffix == '.yml' or  suffix == '.yaml':
-            manifest = yaml.full_load(input_stream)
-        else:
-            manifest = json.load(input_stream)
-
-        releases_path += '/flutter'
-        app_id, app_module, app_pubspec, tag, sdk_path, build_id = fetch_flutter_app(
-            manifest,
-            app_module,
-            build_path,
-            releases_path,
-            app_pubspec,
-            no_shallow,
-        )
-
-        return manifest, app_id, app_module, app_pubspec, tag, sdk_path, build_id
+    return manifest, suffix
 
 
 def _create_pub_cache(build_path_app: str, sdk_path: str, pubspec_path: str):
@@ -287,9 +377,11 @@ def main():
     parser.add_argument('--from-git-branch', metavar='BRANCH', required=False, help='Branch to use in --from-git')
     parser.add_argument('--no-shallow-clone', action='store_true', help="Don't use shallow clones when mirroring git repos")
     parser.add_argument('--keep-build-dirs', action='store_true', help="Don't remove build directories after processing")
+    parser.add_argument('--template', metavar='URL', required=False, help="Generate a template manifest for the given URL")
+    parser.add_argument('--id', metavar='ID', help='App ID to use in the generated template')
+    parser.add_argument('--command', metavar='CMD', help='Command to use in the generated template')
 
     args = parser.parse_args()
-    manifest_path = Path(args.MANIFEST)
     raw_url = None
 
     if 'FLATPAK_FLUTTER_ROOT' in os.environ:
@@ -303,10 +395,13 @@ def main():
     if args.from_git:
         _get_manifest_from_git(args.MANIFEST, args.from_git, args.from_git_branch)
 
+    manifest, suffix = _get_manifest(args)
     no_shallow = True if args.no_shallow_clone else False
-    manifest, app_id, app_module, app_pubspec, tag, sdk_path, build_id = _fetch_flutter_app(
-        manifest_path,
+
+    app_id, app_module, app_pubspec, tag, sdk_path, build_id = fetch_flutter_app(
+        manifest,
         args.app_module,
+        build_path,
         releases_path,
         args.app_pubspec,
         no_shallow,
@@ -344,9 +439,8 @@ def main():
                 break
 
         # Write converted manifest to file
-        suffix = manifest_path.suffix
         with open(f'{app_id}{suffix}', 'w') as output_stream:
-            source = raw_url if raw_url is not None else manifest_path
+            source = raw_url if raw_url is not None else args.MANIFEST
             prepend = f'''# Generated by flatpak-flutter v{__version__} from {source}, do not edit
 # Visit the project at https://github.com/TheAppgineer/flatpak-flutter
 '''

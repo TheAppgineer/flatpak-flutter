@@ -5,6 +5,7 @@ import glob
 import os
 import shutil
 
+from git_actions.git_actions import fetch_repos, get_commit
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -15,44 +16,6 @@ FLUTTER_URL = 'https://github.com/flutter/flutter'
 class Dumper(yaml.Dumper):
     def increase_indent(self, flow=False, *args, **kwargs):
         return super().increase_indent(flow=flow, indentless=False)
-
-
-def fetch_repos(repos: list):
-    def by_path_depth(fetch_repo):
-        return len(str(fetch_repo[2]).split('/'))
-
-    repos.sort(key=by_path_depth)
-
-    for url, ref, path, shallow, recursive in repos:
-        options = ['git', 'clone']
-        if shallow and recursive:
-            options += ['--shallow-submodules']
-        if shallow:
-            options += ['--depth', '1']
-        if recursive:
-            options += ['--recurse-submodules']
-        if ref:
-            options += ['--branch', ref]
-        options += [url, path]
-
-        return_code = subprocess.run(options).returncode
-
-        if return_code != 0 and ref:
-            # ref is probably a commit hash
-            # Try the revision option first (requires git >= 2.49.0)
-            options[options.index('--branch')] = '--revision'
-            return_code = subprocess.run(options, stderr=subprocess.PIPE).returncode
-
-            if return_code != 0:
-                # Use a full clone as a last resort
-                clone = 'git clone --recursive' if recursive else 'git clone'
-                command = [f'{clone} {url} {path} && cd {path} && git reset --hard {ref}']
-                return_code = subprocess.run(command, shell=True).returncode
-
-        if return_code != 0:
-            return return_code
-
-    return 0
 
 
 def _search_submodules(gitmodules):
@@ -155,7 +118,7 @@ def _process_sources(module, fetch_path: str, releases_path: str, no_shallow: bo
                 elif 'commit' in source:
                     ref = source['commit']
                 else:
-                    continue
+                    ref = None
 
                 shallow = False if no_shallow or 'disable-shallow-clone' in source else True
                 recursive = False if 'disable-submodules' in source else True
@@ -191,22 +154,25 @@ def _process_sources(module, fetch_path: str, releases_path: str, no_shallow: bo
     for patch in glob.glob(f'{releases_path}/{tag}/*.flutter.patch'):
         shutil.copyfile(patch, Path(patch).name)
 
-    # With the repos fetched, any patches can be applied
+    # With the repos fetched, any file access can be performed
     for source in sources:
         if 'type' in source:
+            dest = f'{fetch_path}/{source['dest']}' if 'dest' in source else fetch_path
+
             if source['type'] == 'patch':
                 if not 'path' in source:
                     continue
 
-                dest = source['dest'] if 'dest' in source else '.'
                 path = str(source['path'])
 
-                if os.path.isdir(f'{fetch_path}/{dest}'):
+                if os.path.isdir(dest):
                     print(f'Apply patch: {path}')
-                    command = f'(cd {fetch_path}/{dest} && patch -p1) < {path}'
+                    command = f'(cd {dest} && patch -p1) < {path}'
                     subprocess.run([command], stdout=subprocess.PIPE, shell=True, check=True)
                 else:
-                    print(f'Warning: Skipping patch {path}, directory {fetch_path}/{dest} does not exist')
+                    print(f'Warning: Skipping patch {path}, directory {dest} does not exist')
+            elif source['type'] == 'git' and 'commit' not in source:
+                source['commit'] = get_commit(dest)
 
     for idx in reversed(idxs):
         del sources[idx]
