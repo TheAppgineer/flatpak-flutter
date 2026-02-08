@@ -26,7 +26,7 @@ PATCHES = 'generated/patches'
 DEFAULT_RUST_VERSION = '1.91.1'
 RUSTUP_PATH = '/var/lib/rustup'
 
-__version__ = '0.12.0'
+__version__ = '0.12.1'
 build_path = '.flatpak-builder/build'
 
 

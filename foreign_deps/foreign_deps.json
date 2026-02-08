@@ -58,6 +58,39 @@
             }
         }
     },
+    "flutter_vodozemac": {
+        "0.5.0": {
+            "cargo_locks": [
+                "$PUB_DEV/rust"
+            ],
+            "extra_pubspecs": [
+                "$PUB_DEV/cargokit/build_tool"
+            ],
+            "manifest": {
+                "sources": [
+                    {
+                        "type": "patch",
+                        "path": "cargokit/run_build_tool.sh.patch",
+                        "dest": "$PUB_DEV/cargokit"
+                    }
+                ]
+            }
+        }
+    },
+    "flutter_webrtc" : {
+        "1.3.0" : {
+            "manifest": {
+                "sources": [
+                    {
+                        "type": "file",
+                        "url": "https://github.com/flutter-webrtc/flutter-webrtc/releases/download/v1.3.0/libwebrtc.zip",
+                        "sha256": "ea4de360aac95188b8fb1bb7dcbab86904f5d009446506647f599deb488da137",
+                        "dest": "$PUB_DEV/third_party/downloads"
+                    }
+                ]
+            }
+        }
+    },
     "fvp": {
         "0.35.0": {
             "manifest": {
@@ -205,15 +238,55 @@
                 "sources": [
                     {
                         "type": "file",
+                        "only-arches": [
+                            "x86_64"
+                        ],
                         "url": "https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz",
                         "sha256": "42f6e95cad6ec532fd372391373363b62a14af6d771056dbfc86160e6dfff7aa",
-                        "dest": "build/linux/x64/release/_deps/json-subbuild/json-populate-prefix/src"
+                        "dest": "$APP/build/linux/x64/release/_deps/json-subbuild/json-populate-prefix/src"
+                    },
+                    {
+                        "type": "file",
+                        "only-arches": [
+                            "aarch64"
+                        ],
+                        "url": "https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz",
+                        "sha256": "42f6e95cad6ec532fd372391373363b62a14af6d771056dbfc86160e6dfff7aa",
+                        "dest": "$APP/build/linux/arm64/release/_deps/json-subbuild/json-populate-prefix/src"
                     },
                     {
                         "type": "patch",
                         "path": "simple_secure_storage_linux/CMakeLists.txt.patch",
                         "use-git": true,
                         "dest": "$PUB_DEV"
+                    }
+                ]
+            }
+        }
+    },
+    "sqlcipher_flutter_libs": {
+        "0.6.8": {
+            "manifest": {
+                "sources": [
+                    {
+                        "type": "file",
+                        "only-arches": [
+                            "x86_64"
+                        ],
+                        "url": "https://fsn1.your-objectstorage.com/simon-public/assets/sqlcipher/v4_10_0.c",
+                        "sha512": "ea4ad61eb636a3b6b0a4d8a1b57b51af187ac8724fe853bd9ce58c7ee4054bd62c4e6d7d11788c8af9ff8e95c6a52eb36a41062172022bc1cbc0567de0aec8c1",
+                        "dest": "$APP/build/linux/x64/release/plugins/sqlcipher_flutter_libs",
+                        "dest-filename": "sqlcipher.c"
+                    },
+                    {
+                        "type": "file",
+                        "only-arches": [
+                            "aarch64"
+                        ],
+                        "url": "https://fsn1.your-objectstorage.com/simon-public/assets/sqlcipher/v4_10_0.c",
+                        "sha512": "ea4ad61eb636a3b6b0a4d8a1b57b51af187ac8724fe853bd9ce58c7ee4054bd62c4e6d7d11788c8af9ff8e95c6a52eb36a41062172022bc1cbc0567de0aec8c1",
+                        "dest": "$APP/build/linux/arm64/release/plugins/sqlcipher_flutter_libs",
+                        "dest-filename": "sqlcipher.c"
                     }
                 ]
             }
