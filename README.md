@@ -44,14 +44,26 @@ What better way to demonstrate the tool then by building a TODO app :)
 
 <img src="images/flatpak-flutter-todo.png" alt="flatpak-flutter TODO Example" width="600"/>
 
-This workflow chapter uses the `com.example.todo` directory included in the git repository. The `flatpak-flutter.yml` file can be used as an example.
+This workflow chapter creates the `com.example.todo` app as an example.
 
 > Note: The TODO app is an unmodified [3th party app](https://github.com/5minslearn/Flutter-Todo-App).
 
-### Create the Manifest
+### Generate the Manifest Template
 As is the case for every Flatpak, it all starts with the manifest file, but flatpak-flutter eases some criteria to deal with Flutter apps.
 
+First step is to generate the app specific template, that covers most of the build process. In the second step any app specific libraries, build tools and metadata will be appended to this template.
+
+The manifest template is generated with the follow command:
+
+```sh
+mkdir com.example.todo
+cd com.example.todo
+../flatpak-flutter.py --template https://github.com/5minslearn/Flutter-Todo-App --id com.example.todo --command todo flatpak-flutter.yml
+```
+
 > Note: It is recommended to name the manifest `flatpak-flutter.{yml,yaml,json}`, to differentiate it from the generated manifest named after the app-id.
+
+### Verify and Adjust the Manifest
 
 #### Modules
 * Name the main module after the app name in the app id
@@ -80,21 +92,20 @@ As is the case for every Flatpak, it all starts with the manifest file, but flat
       sources:
         - type: git
           url: https://github.com/5minslearn/Flutter-Todo-App.git
-          commit: 2a98e745969dd657efe2eccd964253cd20d13e25
   ```
 * Add the git repository of Flutter, use the tag that the app needs
   ```yml
         - type: git
           url: https://github.com/flutter/flutter.git
-          tag: 3.38.5
+          tag: 3.38.9
           dest: flutter
   ```
 * Add any other dependencies
 
 If the app repository itself has the flutter repository as a submodule, then the `flutter` source is not needed. The `.gitmodules` file will be searched for the location of the Flutter SDK, the branch has to be set to `stable`.
 
-### Pre-process With flatpak-flutter
-By passing the manifest to flatpak-flutter it will collect all the dependency sources and generate the manifest for the offline build, to be performed by flatpak-builder. This process pins each dependency to a specific revision, ensuring a reproducible build.
+### Pre-process the Manifest
+By passing the appended manifest to flatpak-flutter it will collect all the dependency sources and generate the manifest for the offline build, to be performed by flatpak-builder. This process pins each dependency to a specific revision, ensuring a reproducible build.
 
 ```sh
 cd com.example.todo
@@ -124,6 +135,7 @@ usage: flatpak-flutter.py [-h] [-V] [--app-module NAME] [--app-pubspec PATH]
                           [--extra-pubspecs PATHS] [--cargo-locks PATHS]
                           [--from-git URL] [--from-git-branch BRANCH]
                           [--no-shallow-clone] [--keep-build-dirs]
+                          [--template URL] [--id ID] [--command CMD]
                           MANIFEST
 
 positional arguments:
@@ -142,6 +154,9 @@ options:
                         Branch to use in --from-git
   --no-shallow-clone    Don't use shallow clones when mirroring git repos
   --keep-build-dirs     Don't remove build directories after processing
+  --template URL        Generate a template manifest for the given URL
+  --id ID               App ID to use in the generated template
+  --command CMD         Command to use in the generated template
 ```
 
 #### Foreign code
