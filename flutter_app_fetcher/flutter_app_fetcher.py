@@ -157,7 +157,7 @@ def _process_sources(module, fetch_path: str, releases_path: str, no_shallow: bo
     # With the repos fetched, any file access can be performed
     for source in sources:
         if 'type' in source:
-            dest = f'{fetch_path}/{source['dest']}' if 'dest' in source else fetch_path
+            dest = f'{fetch_path}/{source["dest"]}' if 'dest' in source else fetch_path
 
             if source['type'] == 'patch':
                 if not 'path' in source:
