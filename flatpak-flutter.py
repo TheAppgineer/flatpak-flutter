@@ -148,6 +148,7 @@ def _generate_template_for_url(url: str, id: str, command: str):
 
 def _get_manifest(args):
     manifest_path = Path(args.MANIFEST)
+    manifest_root = manifest_path.parent
     suffix = manifest_path.suffix
 
     if os.path.isfile(manifest_path):
@@ -167,7 +168,7 @@ def _get_manifest(args):
         print(f'Error: manifest file {manifest_path} not found')
         exit(1)
 
-    return manifest, suffix
+    return manifest, manifest_root, suffix
 
 
 def _create_pub_cache(build_path_app: str, sdk_path: str, pubspec_path: str):
@@ -185,7 +186,7 @@ def _create_pub_cache(build_path_app: str, sdk_path: str, pubspec_path: str):
         exit(1)
 
 
-def _handle_foreign_dependencies(app: str, build_path_app: str, foreign_deps_path: str):
+def _handle_foreign_dependencies(app: str, build_path_app: str, foreign_deps_path: str, manifest_root: str):
     abs_path = f'{os.getcwd()}/{build_path_app}'
     extra_pubspecs = []
     cargo_locks = []
@@ -220,8 +221,8 @@ def _handle_foreign_dependencies(app: str, build_path_app: str, foreign_deps_pat
 
                 sources.append(source)
 
-    if os.path.isfile('foreign.json'):
-        with open('foreign.json') as foreign:
+    if os.path.isfile(f'{manifest_root}/foreign.json'):
+        with open(f'{manifest_root}/foreign.json') as foreign:
             foreign = json.load(foreign)
             local_deps = foreign.keys()
 
@@ -395,7 +396,7 @@ def main():
     if args.from_git:
         _get_manifest_from_git(args.MANIFEST, args.from_git, args.from_git_branch)
 
-    manifest, suffix = _get_manifest(args)
+    manifest, manifest_root, suffix = _get_manifest(args)
     no_shallow = True if args.no_shallow_clone else False
 
     app_id, app_module, app_pubspec, tag, sdk_path, build_id = fetch_flutter_app(
@@ -414,7 +415,12 @@ def main():
         _create_pub_cache(build_path_app, sdk_path, app_pubspec)
 
         full_pubspec_path = f'{build_path_app}/{app_pubspec}'
-        extra_pubspecs, cargo_locks, foreign = _handle_foreign_dependencies(app_pubspec, full_pubspec_path, foreign_deps_path)
+        extra_pubspecs, cargo_locks, foreign = _handle_foreign_dependencies(
+            app_pubspec,
+            full_pubspec_path,
+            foreign_deps_path,
+            manifest_root,
+        )
 
         if args.extra_pubspecs is not None:
             extra_pubspecs += str(args.extra_pubspecs).split(',')
