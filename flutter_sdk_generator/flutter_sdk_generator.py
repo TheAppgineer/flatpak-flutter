@@ -2,13 +2,13 @@
 
 __license__ = 'MIT'
 import json
-import subprocess
 import argparse
 import hashlib
 import urllib.request
 
-from typing import Any, Dict
+from git_actions.git_actions import get_commit
 from packaging.version import Version
+from typing import Any, Dict
 
 
 _FlatpakSourceType = Dict[str, Any]
@@ -25,14 +25,8 @@ def _get_remote_sha256(url: str) -> str:
     return sha256.hexdigest()
 
 
-def _get_commit(sdk_path: str) -> str:
-    stdout = subprocess.run([f'git -C {sdk_path} rev-parse HEAD'], stdout=subprocess.PIPE, shell=True, check=True).stdout
-
-    return stdout.decode('utf-8').strip()
-
-
 def generate_sdk(sdk_path: str, tag: str, patch_path: str) -> _FlatpakSourceType:
-    sdk_commit = _get_commit(sdk_path)
+    sdk_commit = get_commit(sdk_path)
     engine = open(f'{sdk_path}/bin/internal/engine.version', 'r').readline().strip()
     gradle_wrapper = open(f'{sdk_path}/bin/internal/gradle_wrapper.version', 'r').readline().strip()
     material_fonts = open(f'{sdk_path}/bin/internal/material_fonts.version', 'r').readline().strip()
