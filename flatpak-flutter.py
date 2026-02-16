@@ -29,7 +29,7 @@ TEMPLATE_FLUTTER_VERSION = '3.41.0'
 DEFAULT_RUST_VERSION = '1.93.0'
 RUSTUP_PATH = '/var/lib/rustup'
 
-__version__ = '0.13.0'
+__version__ = '0.13.1'
 build_path = '.flatpak-builder/build'
 
 
@@ -39,16 +39,16 @@ class Dumper(yaml.Dumper):
 
 
 def _get_manifest_from_git(manifest: str, from_git: str, from_git_branch: str):
+    def ignore(_: str, subdirs: list[str]):
+        return ['.git'] if '.git' in subdirs else []
+
     manifest_name = Path(manifest).stem
     path = f'{build_path}/{manifest_name}'
-    return_code = fetch_repos([(from_git, from_git_branch, path, True, True)])
 
-    if return_code == 0:
-        def ignore(_: str, subdirs: list[str]):
-            return ['.git'] if '.git' in subdirs else []
+    fetch_repos([(from_git, from_git_branch, path, True, True)])
 
-        shutil.copytree(path, '.', ignore=ignore, dirs_exist_ok=True)
-        shutil.rmtree(f'{build_path}/{manifest_name}')
+    shutil.copytree(path, '.', ignore=ignore, dirs_exist_ok=True)
+    shutil.rmtree(path)
 
 
 def _get_app_id(url: str):
@@ -165,7 +165,7 @@ def _get_manifest(args):
             else:
                 json.dump(manifest, output_stream, indent=4, sort_keys=False)
     else:
-        print(f'Error: manifest file {manifest_path} not found')
+        print(f'Error: Manifest file {manifest_path} not found', file=sys.stderr)
         exit(1)
 
     return manifest, manifest_root, suffix
@@ -181,8 +181,8 @@ def _create_pub_cache(build_path_app: str, sdk_path: str, pubspec_path: str):
 
         subprocess.run([options], stdout=subprocess.PIPE, shell=True, check=True)
     else:
-        print(f'Error: Expected to find pubspec.lock in: {pubspec_path}')
-        print('       Specify path using modules.subdir or use the --app-pubspec command line parameter')
+        print(f'Error: Expected to find pubspec.lock in: {pubspec_path}', file=sys.stderr)
+        print('Error: Specify path using modules.subdir or use the --app-pubspec command line parameter', file=sys.stderr)
         exit(1)
 
 
@@ -209,6 +209,7 @@ def _handle_foreign_dependencies(app: str, build_path_app: str, foreign_deps_pat
                     src_path = f'{foreign_deps_path}/{dst_path}'
 
                     if os.path.isfile(src_path):
+                        print(f'Generating patch: {dst_path}...')
                         dst_path = f'{PATCHES}/{dst_path}'
                         source['path'] = dst_path
                         os.makedirs(Path(dst_path).parent, exist_ok=True)
@@ -251,7 +252,7 @@ def _handle_foreign_dependencies(app: str, build_path_app: str, foreign_deps_pat
                     pub_dev = f".{PUB_CACHE}/hosted/pub.dev/{name}-{dep_version}"
                     append_dependency(foreign_dep, pub_dev)
                 else:
-                    print(f'Warning: Skipping foreign dependency {name}, not sourced from pub.dev')
+                    print(f'Warning: Skipping foreign dependency {name}, not sourced from pub.dev', file=sys.stderr)
 
     return extra_pubspecs, cargo_locks, sources
 
@@ -259,6 +260,7 @@ def _handle_foreign_dependencies(app: str, build_path_app: str, foreign_deps_pat
 def _generate_pubspec_sources(module, app_pubspec:str, extra_pubspecs: list, foreign: list, sdk_path: str):
     app = module['name']
     flutter_tools = f'{sdk_path}/packages/flutter_tools'
+    pubspec_json = 'pubspec.json'
     pubspec_paths = [
         f'{build_path}/{app}/{app_pubspec}/pubspec.lock',
         f'{build_path}/{app}/{flutter_tools}/pubspec.lock',
@@ -280,12 +282,18 @@ def _generate_pubspec_sources(module, app_pubspec:str, extra_pubspecs: list, for
             build_options['env']['PUB_CACHE'] = pub_cache_path
             module['build-options'] = build_options
 
-    pubspec_sources = generate_pubspec_sources(pubspec_paths)
+    print(f'Generating source: {pubspec_json}...', end='')
+
+    pubspec_sources, deduped = generate_pubspec_sources(pubspec_paths)
     pubspec_sources += foreign
 
-    with open(f'{SOURCES}/pubspec.json', 'w') as out:
+    with open(f'{SOURCES}/{pubspec_json}', 'w') as out:
         json.dump(pubspec_sources, out, indent=4, sort_keys=False)
         out.write('\n')
+        if deduped:
+            print(f' (deduped {deduped} entries)')
+        else:
+            print()
 
 
 def _generate_rustup_module(module) -> str:
@@ -321,7 +329,7 @@ def _generate_rustup_module(module) -> str:
     rustup_json = f'rustup-{rust_version}.json'
 
     with open(f'{MODULES}/{rustup_json}', 'w') as out:
-        print(f'Generating {rustup_json}...')
+        print(f'Generating module: {rustup_json}...')
         json.dump(generate_rustup(rust_version, RUSTUP_PATH), out, indent=4, sort_keys=False)
 
     return rust_version
@@ -334,27 +342,41 @@ def _generate_cargo_sources(module, cargo_locks: list, rust_version: str):
     for path in cargo_locks:
         cargo_paths.append(f'{build_path}/{app}/{path}/Cargo.lock')
 
-    module['sources'] += [f'{SOURCES}/cargo.json']
+    cargo_json = 'cargo.json'
+    module['sources'] += [f'{SOURCES}/{cargo_json}']
     config_filename = 'config' if Version(rust_version) < Version('1.38.0') else 'config.toml'
-    cargo_sources = asyncio.run(generate_cargo_sources(cargo_paths, config_filename))
 
-    with open(f'{SOURCES}/cargo.json', 'w') as out:
+    print(f'Generating source: {cargo_json}...', end='')
+
+    cargo_sources, deduped = asyncio.run(generate_cargo_sources(cargo_paths, config_filename))
+
+    with open(f'{SOURCES}/{cargo_json}', 'w') as out:
         json.dump(cargo_sources, out, indent=4, sort_keys=False)
         out.write('\n')
+        if deduped:
+            print(f' (deduped {deduped} entries)')
+        else:
+            print()
 
 
 def _get_sdk_module(app: str, sdk_path: str, tag: str, releases: str):
+    flutter_patch = 'flutter/shared.sh.patch'
+    print(f'Generating patch: {flutter_patch}...')
+
     if Version(tag.split('-')[0]) < Version('3.35.0'):
-        shutil.copyfile(f'{releases}/flutter/flutter-pre-3_35-shared.sh.patch', f'{PATCHES}/flutter/shared.sh.patch')
+        shutil.copyfile(f'{releases}/flutter/flutter-pre-3_35-shared.sh.patch', f'{PATCHES}/{flutter_patch}')
     else:
-        shutil.copyfile(f'{releases}/flutter/flutter-shared.sh.patch', f'{PATCHES}/flutter/shared.sh.patch')
+        shutil.copyfile(f'{releases}/flutter/flutter-shared.sh.patch', f'{PATCHES}/{flutter_patch}')
+
+    flutter_sdk_json = f'flutter-sdk-{tag}.json'
+    print(f'Generating module: {flutter_sdk_json}...')
 
     if os.path.isfile(f'{releases}/flutter/{tag}/flutter-sdk.json'):
-        shutil.copyfile(f'{releases}/flutter/{tag}/flutter-sdk.json', f'{MODULES}/flutter-sdk-{tag}.json')
+        shutil.copyfile(f'{releases}/flutter/{tag}/flutter-sdk.json', f'{MODULES}/{flutter_sdk_json}')
     else:
         generated_sdk = generate_sdk(f'{build_path}/{app}/{sdk_path}', tag, '../patches/flutter')
 
-        with open(f'{MODULES}/flutter-sdk-{tag}.json', 'w') as out:
+        with open(f'{MODULES}/{flutter_sdk_json}', 'w') as out:
             json.dump(generated_sdk, out, indent=4, sort_keys=False)
 
 
@@ -408,12 +430,12 @@ def main():
         no_shallow,
     )
 
-    if tag is not None:
-        print(f'SDK path: {sdk_path}, tag: {tag}')
-    
+    if tag and sdk_path:
         build_path_app = f'{build_path}/{app_module}'
         _create_pub_cache(build_path_app, sdk_path, app_pubspec)
 
+        print(f'SDK path: {sdk_path}, tag: {tag}')
+    
         full_pubspec_path = f'{build_path_app}/{app_pubspec}'
         extra_pubspecs, cargo_locks, foreign = _handle_foreign_dependencies(
             app_pubspec,
@@ -450,6 +472,7 @@ def main():
             prepend = f'''# Generated by flatpak-flutter v{__version__} from {source}, do not edit
 # Visit the project at https://github.com/TheAppgineer/flatpak-flutter
 '''
+            print(f'Generating manifest: {app_id}{suffix}...')
 
             if suffix == '.json':
                 prepend = { '//': prepend.replace('\n', '.')}
@@ -462,6 +485,8 @@ def main():
         if not args.keep_build_dirs:
             shutil.rmtree(f'{build_path}/{app_module}-{build_id}')
             os.remove(f'{build_path}/{app_module}')
+
+        print('Done!')
 
 
 if __name__ == '__main__':

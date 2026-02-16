@@ -1,5 +1,14 @@
 import subprocess
 
+from packaging.version import Version
+
+
+def _get_git_version() -> Version:
+    result = subprocess.run(['git', '--version'], stdout=subprocess.PIPE, check=True)
+
+    # output: git version <version>
+    return Version(result.stdout.decode('utf-8').strip().split(' ')[2])
+
 
 def fetch_repos(repos: list):
     def by_path_depth(fetch_repo):
@@ -8,7 +17,7 @@ def fetch_repos(repos: list):
     repos.sort(key=by_path_depth)
 
     for url, ref, path, shallow, recursive in repos:
-        options = ['git', 'clone']
+        options = ['git', 'clone', '-c', 'advice.detachedHead=false']
         if shallow and recursive:
             options += ['--shallow-submodules']
         if shallow:
@@ -19,27 +28,29 @@ def fetch_repos(repos: list):
             options += ['--branch', ref]
         options += [url, path]
 
-        return_code = subprocess.run(options).returncode
-
-        if return_code != 0 and ref:
+        try:
+            int(ref, base=16)
             # ref is probably a commit hash
-            # Try the revision option first (requires git >= 2.49.0)
-            options[options.index('--branch')] = '--revision'
-            return_code = subprocess.run(options).returncode
-
-            if return_code != 0:
+            if _get_git_version() >= Version('2.49.0'):
+                # Use the revision option
+                options[options.index('--branch')] = '--revision'
+                subprocess.run(options, check=True)
+            else:
                 # Use a full clone as a last resort
                 clone = 'git clone --recursive' if recursive else 'git clone'
-                command = [f'{clone} {url} {path} && cd {path} && git reset --hard {ref}']
-                return_code = subprocess.run(command, shell=True).returncode
-
-        if return_code != 0:
-            return return_code
-
-    return 0
+                command = [f'{clone} -c advice.detachedHead=false {url} {path} && cd {path} && git reset --hard {ref}']
+                subprocess.run(command, check=True, shell=True)
+        except TypeError, ValueError:
+            subprocess.run(options, check=True)
 
 
 def get_commit(path: str) -> str:
     stdout = subprocess.run([f'git -C {path} rev-parse HEAD'], stdout=subprocess.PIPE, shell=True, check=True).stdout
 
     return stdout.decode('utf-8').strip()
+
+def get_tag(path: str) -> str:
+    command = [f'cd {path} && git fetch && git tag --points-at HEAD']
+    result = subprocess.run(command, stdout=subprocess.PIPE, shell=True, check=True)
+
+    return result.stdout.decode('utf-8').strip()
