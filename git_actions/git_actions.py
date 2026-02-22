@@ -40,7 +40,7 @@ def fetch_repos(repos: list):
                 clone = 'git clone --recursive' if recursive else 'git clone'
                 command = [f'{clone} -c advice.detachedHead=false {url} {path} && cd {path} && git reset --hard {ref}']
                 subprocess.run(command, check=True, shell=True)
-        except TypeError, ValueError:
+        except (TypeError, ValueError):
             subprocess.run(options, check=True)
 
 

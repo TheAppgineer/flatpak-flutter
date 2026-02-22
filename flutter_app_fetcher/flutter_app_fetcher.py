@@ -8,6 +8,7 @@ import sys
 
 from git_actions.git_actions import fetch_repos, get_commit, get_tag
 from pathlib import Path
+from typing import Optional
 
 
 FLUTTER_URL = 'https://github.com/flutter/flutter'
@@ -18,8 +19,8 @@ class Dumper(yaml.Dumper):
         return super().increase_indent(flow=flow, indentless=False)
 
 
-def _search_submodules(gitmodules) -> str | None:
-    def get_flutter_path() -> str | None:
+def _search_submodules(gitmodules) -> Optional[str]:
+    def get_flutter_path() -> Optional[str]:
         if ('url' in submodule and 'path' in submodule and
                 (submodule['url'] == FLUTTER_URL or submodule['url'] == f'{FLUTTER_URL}.git')):
             return str(submodule['path'])
@@ -136,7 +137,7 @@ def _process_sources(module, fetch_path: str, releases_path: str, no_shallow: bo
                 idxs.append(idx)
 
             if source['type'] == 'dir' and 'path' in source:
-                print(f'Warning: Skipping dir: {source['path']}', file=sys.stderr)
+                print(f'Warning: Skipping dir: {source["path"]}', file=sys.stderr)
 
     fetch_repos(repos)
 
