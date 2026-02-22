@@ -11,7 +11,6 @@ import logging
 import asyncio
 import tomlkit
 
-from packaging.version import Version
 from pathlib import Path
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple, TypedDict
 from urllib.parse import urlparse, ParseResult, parse_qs
@@ -69,7 +68,7 @@ def _git_repo_name(git_url: str, commit: str) -> str:
 
 
 def _fetch_git_repo(git_url: str, commit: str) -> str:
-    repo_dir = f'{git_url.replace("://", "_").replace("/", "_")}_{commit[:7]}'
+    repo_dir = f'{git_url.replace("://", "_").replace("/", "_")}_{commit[:COMMIT_LEN]}'
     cache_dir = os.environ.get('XDG_CACHE_HOME', os.path.expanduser('~/.cache'))
     clone_dir = os.path.join(cache_dir, 'flatpak-cargo', repo_dir)
     if not os.path.isdir(clone_dir):
@@ -232,11 +231,11 @@ async def _get_git_package_sources(
     elif tag:
         assert len(tag) == 1
         entry = ('tag', tag[0])
-        query = f'?tag={tag[0]}#{commit[:7]}'
+        query = f'?tag={tag[0]}#{commit[:COMMIT_LEN]}'
     elif branch:
         assert len(branch) == 1
         entry = ('branch', branch[0])
-        query = f'?branch={branch[0]}#{commit[:7]}'
+        query = f'?branch={branch[0]}#{commit[:COMMIT_LEN]}'
     else:
         entry = None
         query = ''
@@ -254,7 +253,7 @@ async def _get_git_package_sources(
     logging.info("Adding package %s from %s", name, repo_url)
     git_pkg = git_repo['commits'][commit][name]
     pkg_repo_dir = os.path.join(GIT_CACHE, _git_repo_name(repo_url, commit), git_pkg.path)
-    name = f'{name}-{commit[:7]}'
+    name = f'{name}-{commit[:COMMIT_LEN]}'
     git_sources: List[_FlatpakSourceType] = [
         {
             'type': 'shell',
@@ -337,7 +336,7 @@ def _dedupe(current: list, new: list):
     return deduped
 
 
-async def generate_sources(cargo_lock_paths: List[str], config_filename: str) -> List[_FlatpakSourceType]:
+async def generate_sources(cargo_lock_paths: List[str], config_filename: str) -> Tuple[List[_FlatpakSourceType], int]:
     sources: List[_FlatpakSourceType] = []
     cargo_vendored_sources = {
         VENDORED_SOURCES: {'directory': f'{CARGO_CRATES}'},
@@ -379,9 +378,7 @@ async def generate_sources(cargo_lock_paths: List[str], config_filename: str) ->
         'dest-filename': config_filename
     })
 
-    print(f'Deduped {deduped} cargo source entries')
-
-    return sources
+    return sources, deduped
 
 
 def main():

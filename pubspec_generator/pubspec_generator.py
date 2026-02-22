@@ -8,7 +8,7 @@ import hashlib
 import json
 import yaml
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 PUB_DEV = 'https://pub.dev/api/archives'
 PUB_CACHE = 'pub-cache'
@@ -98,7 +98,7 @@ def _get_package_sources(
 
 def generate_sources(
     pubspec_paths: List[str],
-) -> List[_FlatpakSourceType]:
+) -> Tuple[List[_FlatpakSourceType], int]:
     pubspec_sources = []
     deduped = 0
 
@@ -116,9 +116,7 @@ def generate_sources(
                     else:
                         pubspec_sources.append(source)
 
-    print(f'Deduped {deduped} pubspec source entries')
-
-    return pubspec_sources
+    return pubspec_sources, deduped
 
 
 def main():

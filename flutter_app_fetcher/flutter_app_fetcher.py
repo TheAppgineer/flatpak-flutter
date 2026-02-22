@@ -4,10 +4,11 @@ import yaml
 import glob
 import os
 import shutil
+import sys
 
-from git_actions.git_actions import fetch_repos, get_commit
+from git_actions.git_actions import fetch_repos, get_commit, get_tag
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional
 
 
 FLUTTER_URL = 'https://github.com/flutter/flutter'
@@ -18,11 +19,11 @@ class Dumper(yaml.Dumper):
         return super().increase_indent(flow=flow, indentless=False)
 
 
-def _search_submodules(gitmodules):
-    def get_flutter_path():
+def _search_submodules(gitmodules) -> Optional[str]:
+    def get_flutter_path() -> Optional[str]:
         if ('url' in submodule and 'path' in submodule and
                 (submodule['url'] == FLUTTER_URL or submodule['url'] == f'{FLUTTER_URL}.git')):
-            return submodule['path']
+            return str(submodule['path'])
 
     with open(gitmodules, 'r') as input:
         lines = input.readlines()
@@ -69,12 +70,12 @@ def _process_build_options(module, sdk_path: str):
                     break
 
 
-def _process_build_commands(module, app_pubspec: str):
+def _process_build_commands(module, app_pubspec: str) -> str:
     if not app_pubspec:
         insert_command = 'setup-flutter.sh'
 
         if 'subdir' in module:
-            app_pubspec = module['subdir']
+            app_pubspec = str(module['subdir'])
         else:
             app_pubspec = '.'
     else:
@@ -98,14 +99,12 @@ def _process_build_commands(module, app_pubspec: str):
     return app_pubspec
 
 
-def _process_sources(module, fetch_path: str, releases_path: str, no_shallow: bool) -> Optional[str]:
-    if not 'sources' in module:
-        return None
-
-    sources = module['sources']
+def _process_sources(module, fetch_path: str, releases_path: str, no_shallow: bool):
     idxs = []
     repos = []
     tag = None
+    sdk_path = None
+    sources = module['sources'] if 'sources' in module else []
 
     for idx, source in enumerate(sources):
         if 'type' in source:
@@ -114,9 +113,9 @@ def _process_sources(module, fetch_path: str, releases_path: str, no_shallow: bo
                     continue
 
                 if 'tag' in source:
-                    ref = source['tag']
+                    ref = str(source['tag'])
                 elif 'commit' in source:
-                    ref = source['commit']
+                    ref = str(source['commit'])
                 else:
                     ref = None
 
@@ -137,6 +136,9 @@ def _process_sources(module, fetch_path: str, releases_path: str, no_shallow: bo
             if source['type'] == 'patch' and '.flutter.patch' in str(source['path']):
                 idxs.append(idx)
 
+            if source['type'] == 'dir' and 'path' in source:
+                print(f'Warning: Skipping dir: {source["path"]}', file=sys.stderr)
+
     fetch_repos(repos)
 
     gitmodules = f'{fetch_path}/.gitmodules'
@@ -145,11 +147,7 @@ def _process_sources(module, fetch_path: str, releases_path: str, no_shallow: bo
         sdk_path = _search_submodules(gitmodules)
 
         if sdk_path:
-            command = [f'cd {fetch_path}/{sdk_path} && git fetch && git tag --points-at HEAD']
-            result = subprocess.run(command, stdout=subprocess.PIPE, shell=True, check=True)
-
-            if not result.returncode:
-                tag = result.stdout.decode('utf-8').strip()
+            tag = get_tag(f'{fetch_path}/{sdk_path}')
 
     for patch in glob.glob(f'{releases_path}/{tag}/*.flutter.patch'):
         shutil.copyfile(patch, Path(patch).name)
@@ -170,7 +168,7 @@ def _process_sources(module, fetch_path: str, releases_path: str, no_shallow: bo
                     command = f'(cd {dest} && patch -p1) < {path}'
                     subprocess.run([command], stdout=subprocess.PIPE, shell=True, check=True)
                 else:
-                    print(f'Warning: Skipping patch {path}, directory {dest} does not exist')
+                    print(f'Warning: Skipping patch {path}, directory {dest} does not exist', file=sys.stderr)
             elif source['type'] == 'git' and 'commit' not in source:
                 source['commit'] = get_commit(dest)
 
@@ -195,7 +193,7 @@ def fetch_flutter_app(
     releases_path: str,
     app_pubspec: str,
     no_shallow: bool,
-) -> Tuple[str, str, Optional[str], int]:
+):
     if 'app-id' in manifest:
         app_id = 'app-id'
     elif 'id' in manifest:
@@ -213,7 +211,7 @@ def fetch_flutter_app(
             continue
 
         if not 'buildsystem' in module or module['buildsystem'] != 'simple':
-            print('Error: Only the simple build system is supported')
+            print('Error: Only the simple build system is supported', file=sys.stderr)
             exit(1)
 
         app_pubspec = _process_build_commands(module, app_pubspec)
@@ -229,6 +227,6 @@ def fetch_flutter_app(
 
         return str(manifest[app_id]), app_module, app_pubspec, tag, sdk_path, build_id
     else:
-        print(f'Error: No module named {app} found!')
-        print('       Specify the app module using the --app-module command line parameter')
+        print(f'Error: No module named {app} found!', file=sys.stderr)
+        print('Error: Specify the app module using the --app-module command line parameter', file=sys.stderr)
         exit(1)
