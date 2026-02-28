@@ -251,12 +251,12 @@ Basic usage:
     flatpak-flutter flatpak-flutter.yml
 
 ### Python
-flatpak-flutter requires Python 3.8 or later.
+flatpak-flutter requires Python 3.9 or later.
 
 Poetry users:
 run `poetry install` to setup, activate your virtual env by running `poetry shell`.
 
-Otherwise install Python 3.8+ and the dependency packages:
+Otherwise install Python 3.9+ and the dependency packages:
 
     pip install packaging pyyaml tomlkit
 

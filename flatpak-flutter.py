@@ -29,7 +29,7 @@ TEMPLATE_FLUTTER_VERSION = '3.41.2'
 DEFAULT_RUST_VERSION = '1.93.0'
 RUSTUP_PATH = '/var/lib/rustup'
 
-__version__ = '0.13.1'
+__version__ = '0.14.0'
 build_path = '.flatpak-builder/build'
 
 
