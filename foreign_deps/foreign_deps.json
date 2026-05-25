@@ -255,6 +255,30 @@
                     }
                 ]
             }
+        },
+        "0.2.3": {
+            "manifest": {
+                "sources": [
+                    {
+                        "type": "archive",
+                        "only-arches": [
+                            "x86_64"
+                        ],
+                        "url": "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F7811/pdfium-linux-x64.tgz",
+                        "sha256": "e76e0a37aefb843d56f04657475ce612157021b1ebc53d801f2fbfcc537ccf64",
+                        "dest": "$APP/.dart_tool/hooks_runner/shared/pdfium_dart/build/chromium_7811/linux-x64/"
+                    },
+                    {
+                        "type": "archive",
+                        "only-arches": [
+                            "aarch64"
+                        ],
+                        "url": "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F7811/pdfium-linux-arm64.tgz",
+                        "sha256": "1682079aae24d73fcfb4f1ae115dd7b661780ad31ad43c8804da2d518dc546e8",
+                        "dest": "$APP/.dart_tool/hooks_runner/shared/pdfium_dart/build/chromium_7811/linux-arm64/"
+                    }
+                ]
+            }
         }
     },
     "printing": {
