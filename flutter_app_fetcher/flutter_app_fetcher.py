@@ -151,27 +151,26 @@ def _process_sources(module, fetch_path: str, releases_path: str, no_shallow: bo
 
     # With the repos fetched, any file access can be performed
     for source in sources:
+        dest = f'{fetch_path}/{source["dest"]}' if 'dest' in source else fetch_path
+
         if 'type' in source:
-            dest = f'{fetch_path}/{source["dest"]}' if 'dest' in source else fetch_path
+            type = source['type']
 
-            if source['type'] == 'patch':
-                if not 'path' in source and not 'paths' in source:
-                    continue
+            if not os.path.isdir(dest):
+                print(f'Warning: Skipping source type {type}, directory {dest} does not exist', file=sys.stderr)
+            elif type == 'patch':
+                if 'path' in source or 'paths' in source:
+                    paths = list(source['paths']) if 'paths' in source else [source['path']]
+                    strip_components = source['strip-components'] if 'strip-components' in source else 1
 
-                paths = list(source['paths']) if 'paths' in source else [source['path']]
-
-                if os.path.isdir(dest):
                     for path in paths:
                         if '.flutter.patch' in str(path):
                             idxs.append(idx)
 
                         print(f'Apply patch: {path}')
-                        command = f'(cd {dest} && patch -p1) < {path}'
+                        command = f'(cd {dest} && patch -p{strip_components}) < {path}'
                         subprocess.run([command], shell=True, check=True)
-                else:
-                    print(f'Warning: Skipping patch file(s) {", ".join(paths)}, directory {dest} does not exist',
-                          file=sys.stderr)
-            elif source['type'] == 'git' and 'commit' not in source:
+            elif type == 'git' and 'commit' not in source:
                 source['commit'] = get_commit(dest)
 
     for idx in reversed(idxs):
