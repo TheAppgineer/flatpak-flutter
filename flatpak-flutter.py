@@ -29,7 +29,7 @@ TEMPLATE_FLUTTER_VERSION = '3.41.4'
 DEFAULT_RUST_VERSION = '1.94.0'
 RUSTUP_PATH = '/var/lib/rustup'
 
-__version__ = '0.14.1'
+__version__ = '0.14.2'
 build_path = '.flatpak-builder/build'
 
 
@@ -76,6 +76,8 @@ def _get_app_id(url: str):
 
 
 def _generate_template_for_url(url: str, id: str, command: str):
+    url = url.removesuffix('.git')
+
     if not id:
         id = _get_app_id(url)
 
