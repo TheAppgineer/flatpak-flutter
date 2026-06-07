@@ -649,5 +649,71 @@
                 ]
             }
         }
+    },
+    "objectbox_sync_flutter_libs": {
+        "5.3.1": {
+            "manifest": {
+                "sources": [
+                    {
+                        "type": "archive",
+                        "only-arches": [
+                            "x86_64"
+                        ],
+                        "url": "https://github.com/objectbox/objectbox-c/releases/download/v5.3.1/objectbox-sync-linux-x64.tar.gz",
+                        "sha256": "1d58e094b8cc5f08739748fa4113e983002c24784caa2674d3a0a51467831ea9",
+                        "dest": "$PUB_DEV/objectbox-sync-c",
+                        "strip-components": 0
+                    },
+                    {
+                        "type": "archive",
+                        "only-arches": [
+                            "aarch64"
+                        ],
+                        "url": "https://github.com/objectbox/objectbox-c/releases/download/v5.3.1/objectbox-sync-linux-aarch64.tar.gz",
+                        "sha256": "3f902002d93d0d26825e033212eeb3fdcbc6e15961b631a6f747b874b191f635",
+                        "dest": "$PUB_DEV/objectbox-sync-c",
+                        "strip-components": 0
+                    },
+                    {
+                        "type": "patch",
+                        "path": "objectbox_sync_flutter_libs/5.3.1-CMakeLists.txt.patch",
+                        "use-git": true,
+                        "dest": "$PUB_DEV"
+                    }
+                ]
+            }
+        },
+        "5.3.2": {
+            "manifest": {
+                "sources": [
+                    {
+                        "type": "archive",
+                        "only-arches": [
+                            "x86_64"
+                        ],
+                        "url": "https://github.com/objectbox/objectbox-c/releases/download/v5.3.2/objectbox-sync-linux-x64.tar.gz",
+                        "sha256": "dd18c0c8c809290a0dc052047971297202c60f4455e8d470749555e1da750fa8",
+                        "dest": "$PUB_DEV/objectbox-sync-c",
+                        "strip-components": 0
+                    },
+                    {
+                        "type": "archive",
+                        "only-arches": [
+                            "aarch64"
+                        ],
+                        "url": "https://github.com/objectbox/objectbox-c/releases/download/v5.3.2/objectbox-sync-linux-aarch64.tar.gz",
+                        "sha256": "bacd88e26fde7f5ab07bf62a0643d70bc1da53ee291c70207b2e4b996ac68934",
+                        "dest": "$PUB_DEV/objectbox-sync-c",
+                        "strip-components": 0
+                    },
+                    {
+                        "type": "patch",
+                        "path": "objectbox_sync_flutter_libs/5.3.2-CMakeLists.txt.patch",
+                        "use-git": true,
+                        "dest": "$PUB_DEV"
+                    }
+                ]
+            }
+        }
     }
 }
