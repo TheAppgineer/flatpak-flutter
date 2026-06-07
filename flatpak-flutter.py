@@ -29,7 +29,7 @@ TEMPLATE_FLUTTER_VERSION = '3.44.1'
 DEFAULT_RUST_VERSION = '1.94.0'
 RUSTUP_PATH = '/var/lib/rustup'
 
-__version__ = '0.14.2'
+__version__ = '0.15.0'
 build_path = '.flatpak-builder/build'
 
 
@@ -126,9 +126,8 @@ def _generate_template_for_url(url: str, id: str, command: str):
                 },
                 'build-commands': [
                     'flutter build linux --release --no-pub',
-                    f'install -D $BUNDLE_PATH/{command} /app/bin/{command}',
-                    'cp -r $BUNDLE_PATH/lib /app/bin/lib',
-                    'cp -r $BUNDLE_PATH/data /app/bin/data',
+                    f'cp -r $BUNDLE_PATH /app/{id}',
+                    f'mkdir -p /app/bin && ln -s /app/{id}/{command} /app/bin/{command}',
                 ],
                 'sources': [
                     {
