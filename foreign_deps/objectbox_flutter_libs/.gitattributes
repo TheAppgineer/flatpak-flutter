@@ -1,0 +1,7 @@
+# Default: normalise text files to LF in the repo.
+* text=auto eol=lf
+
+# Patch files must be stored and checked out byte-for-byte unchanged.
+# stripTrailingCr patches are converted to CRLF by `flutpak generate` and
+# written to generated/patches/; git must not re-normalise them.
+*.patch -text
