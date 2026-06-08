@@ -152,8 +152,8 @@
             }
         }
     },
-    "pdfium_flutter": {
-        "0.1.7": {
+    "pdfium_dart": {
+        "0.1.2": {
             "manifest": {
                 "sources": [
                     {
@@ -175,6 +175,107 @@
                         "sha256": "ee3998f311195bf9cecb3936b2ce3dd621e873277c36f1ca05de36f2646c07d4",
                         "dest": "$APP/build/linux/arm64/release/pdfium/chromium%2F7520/",
                         "strip-components": 0
+                    }
+                ]
+            }
+        },
+        "0.2.0": {
+            "manifest": {
+                "sources": [
+                    {
+                        "type": "archive",
+                        "only-arches": [
+                            "x86_64"
+                        ],
+                        "url": "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F7811/pdfium-linux-x64.tgz",
+                        "sha256": "e76e0a37aefb843d56f04657475ce612157021b1ebc53d801f2fbfcc537ccf64",
+                        "dest": "$APP/.dart_tool/hooks_runner/shared/pdfium_dart/build/chromium_7811/"
+                    },
+                    {
+                        "type": "archive",
+                        "only-arches": [
+                            "aarch64"
+                        ],
+                        "url": "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F7811/pdfium-linux-arm64.tgz",
+                        "sha256": "1682079aae24d73fcfb4f1ae115dd7b661780ad31ad43c8804da2d518dc546e8",
+                        "dest": "$APP/.dart_tool/hooks_runner/shared/pdfium_dart/build/chromium_7811/"
+                    },
+                    {
+                        "type": "patch",
+                        "path": "pdfium_dart/0.2.0-build.dart.patch",
+                        "dest": "$PUB_DEV"
+                    }
+                ]
+            }
+        },
+        "0.2.1": {
+            "manifest": {
+                "sources": [
+                    {
+                        "type": "archive",
+                        "only-arches": [
+                            "x86_64"
+                        ],
+                        "url": "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F7811/pdfium-linux-x64.tgz",
+                        "sha256": "e76e0a37aefb843d56f04657475ce612157021b1ebc53d801f2fbfcc537ccf64",
+                        "dest": "$APP/.dart_tool/hooks_runner/shared/pdfium_dart/build/chromium_7811/"
+                    },
+                    {
+                        "type": "archive",
+                        "only-arches": [
+                            "aarch64"
+                        ],
+                        "url": "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F7811/pdfium-linux-arm64.tgz",
+                        "sha256": "1682079aae24d73fcfb4f1ae115dd7b661780ad31ad43c8804da2d518dc546e8",
+                        "dest": "$APP/.dart_tool/hooks_runner/shared/pdfium_dart/build/chromium_7811/"
+                    }
+                ]
+            }
+        },
+        "0.2.2": {
+            "manifest": {
+                "sources": [
+                    {
+                        "type": "archive",
+                        "only-arches": [
+                            "x86_64"
+                        ],
+                        "url": "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F7811/pdfium-linux-x64.tgz",
+                        "sha256": "e76e0a37aefb843d56f04657475ce612157021b1ebc53d801f2fbfcc537ccf64",
+                        "dest": "$APP/.dart_tool/hooks_runner/shared/pdfium_dart/build/chromium_7811/x64/"
+                    },
+                    {
+                        "type": "archive",
+                        "only-arches": [
+                            "aarch64"
+                        ],
+                        "url": "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F7811/pdfium-linux-arm64.tgz",
+                        "sha256": "1682079aae24d73fcfb4f1ae115dd7b661780ad31ad43c8804da2d518dc546e8",
+                        "dest": "$APP/.dart_tool/hooks_runner/shared/pdfium_dart/build/chromium_7811/arm64/"
+                    }
+                ]
+            }
+        },
+        "0.2.3": {
+            "manifest": {
+                "sources": [
+                    {
+                        "type": "archive",
+                        "only-arches": [
+                            "x86_64"
+                        ],
+                        "url": "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F7811/pdfium-linux-x64.tgz",
+                        "sha256": "e76e0a37aefb843d56f04657475ce612157021b1ebc53d801f2fbfcc537ccf64",
+                        "dest": "$APP/.dart_tool/hooks_runner/shared/pdfium_dart/build/chromium_7811/linux-x64/"
+                    },
+                    {
+                        "type": "archive",
+                        "only-arches": [
+                            "aarch64"
+                        ],
+                        "url": "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F7811/pdfium-linux-arm64.tgz",
+                        "sha256": "1682079aae24d73fcfb4f1ae115dd7b661780ad31ad43c8804da2d518dc546e8",
+                        "dest": "$APP/.dart_tool/hooks_runner/shared/pdfium_dart/build/chromium_7811/linux-arm64/"
                     }
                 ]
             }
