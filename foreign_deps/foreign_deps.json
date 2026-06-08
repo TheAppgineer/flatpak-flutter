@@ -153,7 +153,7 @@
         }
     },
     "pdfium_dart": {
-        "0.1.7": {
+        "0.1.2": {
             "manifest": {
                 "sources": [
                     {
