@@ -134,13 +134,15 @@ def main():
 
     if args.script:
         print('#!/bin/bash')
-    elif not args.yes and input('Continue (y/N)? ') != 'y':
-        exit(1)
 
     count = len(apps)
 
     if count > 1:
-        print(f'\n# === A total of {count} applications will be built, this will take time and disk space!! ===')
+        install = ' and installed' if args.install else ''
+        print(f'\n# === A total of {count} applications will be built{install}, this will take time and disk space!! ===')
+
+    if not args.script and not args.yes and input('Continue (y/N)? ') != 'y':
+        exit(1)
 
     for app in apps:
         remote = prepare(root, app['name'], args.clean, args.script)
