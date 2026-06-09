@@ -131,7 +131,7 @@ def main():
         outfile = 'pubspec-sources.json'
 
     pubspec_paths = str(args.pubspec_paths).split(',')
-    pubspec_sources = generate_sources(pubspec_paths)
+    pubspec_sources, _ = generate_sources(pubspec_paths)
 
     with open(outfile, 'w') as out:
         json.dump(pubspec_sources, out, indent=4, sort_keys=False)
