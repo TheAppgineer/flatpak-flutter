@@ -38,10 +38,14 @@ the CRLF context lines in `5.3.2-CMakeLists.txt.patch` on checkout.
 
 ## License note (GPL-3.0 apps)
 
-`objectbox-sync-c` is licensed under Apache 2.0, which may affect Flathub review if
-the main app is GPL-3.0. However, `objectbox_sync_flutter_libs` links to
-`libobjectbox.so` dynamically at runtime, keeping the two works legally separate
-(GPLv3 §1). Shipping them together inside the isolated Flatpak `/app/lib/` qualifies
-as Mere Aggregation (GPLv3 §5), which is explicitly permitted.
+`objectbox-sync-c` is Apache 2.0 with no source code available. **GPL-3.0 apps
+cannot use this entry for Flathub submissions.**
 
-Reference: https://www.gnu.org/licenses/gpl-faq.html#MereAggregation
+The GPL FAQ is explicit: modules that run linked together in a shared address space
+"almost surely means combining them into one program", and containers (such as
+Flatpak) do not change this analysis. Dynamic linking of `libobjectbox.so` into a
+GPL-3.0 app therefore creates a combined work. Since `objectbox-sync-c` provides no
+source, the GPL's source-availability requirement for the combined work cannot be
+satisfied.
+
+Apps licensed under MIT, Apache 2.0, or other permissive licenses are unaffected.
