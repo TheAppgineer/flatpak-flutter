@@ -398,7 +398,7 @@ def main():
     logging.basicConfig(level=loglevel)
 
     cargo_lock_paths = str(args.cargo_lock_paths).split(',')
-    generated_sources = asyncio.run(generate_sources(cargo_lock_paths, 'config'))
+    generated_sources, _ = asyncio.run(generate_sources(cargo_lock_paths, 'config'))
 
     with open(outfile, 'w', encoding="utf-8") as out:
         json.dump(generated_sources, out, indent=4, sort_keys=False)

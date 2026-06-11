@@ -264,15 +264,6 @@ Or, using the requirements file:
 
     pip install -r requirements.txt
 
-## Python module details
-The Python modules, taking care of the different processing steps, are further
-described in the README file within the module subdirectory:
-
-* [flutter_sdk_generator](flutter_sdk_generator/README.md)
-* [pubspec_generator](pubspec_generator/README.md)
-
-> Note: The modules can be executed stand-alone from the command line, use `python3 <module>.py --help` for the specifics.
-
 ## Apps Published Using flatpak-flutter
 
 * [Al-Quran - Simple](https://flathub.org/en/apps/io.github.meypod.al-quran)
