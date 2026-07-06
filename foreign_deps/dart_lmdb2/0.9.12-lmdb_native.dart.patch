@@ -1,0 +1,55 @@
+--- a/lib/src/lmdb_native.dart	2026-07-06 15:20:59.118543060 +0300
++++ b/lib/src/lmdb_native.dart	2026-07-06 15:20:59.119518905 +0300
+@@ -1,6 +1,7 @@
+ import 'dart:ffi' show Abi, DynamicLibrary;
+ import 'dart:io';
+ import 'dart:isolate';
++import 'package:path/path.dart' as p;
+ import 'generated_bindings.dart';
+ 
+ /// Singleton for managing LMDB native library access
+@@ -84,13 +85,37 @@
+             ? 'liblmdb.dylib'
+             : 'liblmdb.so';
+ 
+-    final Uri packageUri =
+-        Uri.parse('package:dart_lmdb2/src/native/$platform/$libName');
+-    final Uri? fileUri = Isolate.resolvePackageUriSync(packageUri);
+-
+-    if (fileUri == null) {
+-      throw FileSystemException('Could not resolve native library path');
++    // `package:` URI resolution (Isolate.resolvePackageUriSync) only works
++    // in JIT mode (`dart run`/`flutter run`), backed by
++    // .dart_tool/package_config.json — a dev-time artifact not present in a
++    // compiled AOT release build. There it throws UnsupportedError outright
++    // rather than just failing to resolve. Try it first (keeps working
++    // exactly as before for dev-time use), then fall back to a path next to
++    // the running executable, matching where Flutter's own native-library
++    // bundling convention places plugin libraries
++    // (e.g. build/linux/x64/release/bundle/lib/*.so).
++    try {
++      final Uri? fileUri = Isolate.resolvePackageUriSync(
++          Uri.parse('package:dart_lmdb2/src/native/$platform/$libName'));
++      if (fileUri != null) {
++        final path = fileUri.toFilePath();
++        if (File(path).existsSync()) return path;
++      }
++    } on UnsupportedError {
++      // AOT/release build — expected here, fall through below.
+     }
+-    return fileUri.toFilePath();
++
++    final exeDir = File(Platform.resolvedExecutable).parent.path;
++    final candidates = [
++      p.join(exeDir, 'lib', libName),
++      p.join(exeDir, libName),
++    ];
++    for (final candidate in candidates) {
++      if (File(candidate).existsSync()) return candidate;
++    }
++
++    throw FileSystemException(
++        'Could not resolve native library path (tried package: URI and '
++        '${candidates.join(", ")})');
+   }
+ }

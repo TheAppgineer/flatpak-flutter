@@ -1,0 +1,163 @@
+diff --git a/linux/CMakeLists.txt b/linux/CMakeLists.txt
+new file mode 100644
+index 0000000..eacd4fb
+--- /dev/null
++++ b/linux/CMakeLists.txt
+@@ -0,0 +1,83 @@
++# The Flutter tooling requires that developers have CMake 3.10 or later
++# installed. You should not increase this version, as doing so will cause
++# the plugin to fail to compile for some customers of the plugin.
++cmake_minimum_required(VERSION 3.10)
++
++# Project-level configuration.
++set(PROJECT_NAME "flutter_lmdb2")
++project(${PROJECT_NAME} LANGUAGES C CXX)
++
++# This value is used when generating builds using this plugin, so it must
++# not be changed.
++set(PLUGIN_NAME "flutter_lmdb2_plugin")
++
++# Any new source files that you add to the plugin should be added here.
++list(APPEND PLUGIN_SOURCES
++  "flutter_lmdb2_plugin.cc"
++)
++
++# Define the plugin library target. Its name must not be changed (see comment
++# on PLUGIN_NAME above).
++add_library(${PLUGIN_NAME} SHARED
++  ${PLUGIN_SOURCES}
++)
++
++# Apply a standard set of build settings that are configured in the
++# application-level CMakeLists.txt. This can be removed for plugins that want
++# full control over build settings.
++apply_standard_settings(${PLUGIN_NAME})
++
++# Symbols are hidden by default to reduce the chance of accidental conflicts
++# between plugins. This should not be removed; any symbols that should be
++# exported should be explicitly exported with the FLUTTER_PLUGIN_EXPORT macro.
++set_target_properties(${PLUGIN_NAME} PROPERTIES
++  CXX_VISIBILITY_PRESET hidden)
++target_compile_definitions(${PLUGIN_NAME} PRIVATE FLUTTER_PLUGIN_IMPL)
++
++# Source include directories and library dependencies. Add any plugin-specific
++# dependencies here.
++target_include_directories(${PLUGIN_NAME} INTERFACE
++  "${CMAKE_CURRENT_SOURCE_DIR}/include")
++target_link_libraries(${PLUGIN_NAME} PRIVATE flutter)
++target_link_libraries(${PLUGIN_NAME} PRIVATE PkgConfig::GTK)
++
++# ----------------------------------------------------------------------
++# Build liblmdb from source — no FetchContent/network download here. LMDB's
++# own source (LMDB/lmdb.git, tag LMDB_0.9.31 — the same commit ob-dump's own
++# C++ core builds and has verified) is expected to already exist at
++# ./lmdb-src, populated offline before this CMake configure step runs (see
++# the "git" source in this plugin's foreign_deps.json entry). Deliberately
++# not a prebuilt binary download (c.f. objectbox_flutter_libs's own
++# linux/CMakeLists.txt, which does FetchContent a prebuilt objectbox-c
++# archive) — see docs/BACKLOG.md ToMany/Flex-style reasoning in the parent
++# ob-dump project for why this project avoids that pattern.
++
++set(LMDB_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lmdb-src/libraries/liblmdb")
++
++add_library(lmdb_native SHARED
++  "${LMDB_SRC_DIR}/mdb.c"
++  "${LMDB_SRC_DIR}/midl.c"
++)
++set_target_properties(lmdb_native PROPERTIES
++  OUTPUT_NAME "lmdb"
++)
++
++# mdb.c uses pthread_mutex/pthread_key (thread-specific data + mutexes) —
++# link explicitly rather than relying on it being pulled in transitively by
++# something else in the process (Threads::Threads is the portable way to
++# get -lpthread/-pthread regardless of platform threading model).
++find_package(Threads REQUIRED)
++target_link_libraries(lmdb_native PRIVATE Threads::Threads)
++
++# ----------------------------------------------------------------------
++
++# List of absolute paths to libraries that should be bundled with the
++# application build. Flutter's Linux build copies these into
++# build/linux/<arch>/release/bundle/lib/ — the executable-relative location
++# dart_lmdb2's own patched LMDBNative._resolveLibraryPath looks in once
++# Isolate.resolvePackageUriSync is unavailable (a compiled AOT release
++# build) — see the sibling dart_lmdb2 foreign_deps entry for that fix.
++set(flutter_lmdb2_bundled_libraries
++  "$<TARGET_FILE:lmdb_native>"
++  PARENT_SCOPE
++)
+diff --git a/linux/flutter_lmdb2_plugin.cc b/linux/flutter_lmdb2_plugin.cc
+new file mode 100644
+index 0000000..daaa40f
+--- /dev/null
++++ b/linux/flutter_lmdb2_plugin.cc
+@@ -0,0 +1,36 @@
++#include "include/flutter_lmdb2/flutter_lmdb2_plugin.h"
++
++#include <flutter_linux/flutter_linux.h>
++
++#define FLUTTER_LMDB2_PLUGIN(obj) \
++  (G_TYPE_CHECK_INSTANCE_CAST((obj), flutter_lmdb2_plugin_get_type(), \
++                              FlutterLmdb2Plugin))
++
++// This plugin has no platform-channel surface of its own — its only job is
++// to be present in the resolved dependency graph so Flutter's Linux
++// plugin-discovery/build tooling picks up this directory's CMakeLists.txt
++// (which builds liblmdb.so from source and bundles it into
++// build/linux/<arch>/release/bundle/lib/). Same shape as the Android/iOS/
++// macOS FlutterLmdb2Plugin classes, which are equally no-op — all real work
++// happens in dart_lmdb2's Dart FFI bindings, not through a method channel.
++struct _FlutterLmdb2Plugin {
++  GObject parent_instance;
++};
++
++G_DEFINE_TYPE(FlutterLmdb2Plugin, flutter_lmdb2_plugin, g_object_get_type())
++
++static void flutter_lmdb2_plugin_dispose(GObject* object) {
++  G_OBJECT_CLASS(flutter_lmdb2_plugin_parent_class)->dispose(object);
++}
++
++static void flutter_lmdb2_plugin_class_init(FlutterLmdb2PluginClass* klass) {
++  G_OBJECT_CLASS(klass)->dispose = flutter_lmdb2_plugin_dispose;
++}
++
++static void flutter_lmdb2_plugin_init(FlutterLmdb2Plugin* self) {}
++
++void flutter_lmdb2_plugin_register_with_registrar(FlPluginRegistrar* registrar) {
++  FlutterLmdb2Plugin* plugin = FLUTTER_LMDB2_PLUGIN(
++      g_object_new(flutter_lmdb2_plugin_get_type(), nullptr));
++  g_object_unref(plugin);
++}
+diff --git a/linux/include/flutter_lmdb2/flutter_lmdb2_plugin.h b/linux/include/flutter_lmdb2/flutter_lmdb2_plugin.h
+new file mode 100644
+index 0000000..43e98ee
+--- /dev/null
++++ b/linux/include/flutter_lmdb2/flutter_lmdb2_plugin.h
+@@ -0,0 +1,26 @@
++#ifndef FLUTTER_PLUGIN_FLUTTER_LMDB2_PLUGIN_H_
++#define FLUTTER_PLUGIN_FLUTTER_LMDB2_PLUGIN_H_
++
++#include <flutter_linux/flutter_linux.h>
++
++G_BEGIN_DECLS
++
++#ifdef FLUTTER_PLUGIN_IMPL
++#define FLUTTER_PLUGIN_EXPORT __attribute__((visibility("default")))
++#else
++#define FLUTTER_PLUGIN_EXPORT
++#endif
++
++typedef struct _FlutterLmdb2Plugin FlutterLmdb2Plugin;
++typedef struct {
++  GObjectClass parent_class;
++} FlutterLmdb2PluginClass;
++
++FLUTTER_PLUGIN_EXPORT GType flutter_lmdb2_plugin_get_type();
++
++FLUTTER_PLUGIN_EXPORT void flutter_lmdb2_plugin_register_with_registrar(
++    FlPluginRegistrar* registrar);
++
++G_END_DECLS
++
++#endif  // FLUTTER_PLUGIN_FLUTTER_LMDB2_PLUGIN_H_

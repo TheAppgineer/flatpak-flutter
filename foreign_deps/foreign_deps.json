@@ -13,6 +13,19 @@
             }
         }
     },
+    "dart_lmdb2": {
+        "0.9.12": {
+            "manifest": {
+                "sources": [
+                    {
+                        "type": "patch",
+                        "path": "dart_lmdb2/0.9.12-lmdb_native.dart.patch",
+                        "dest": "$PUB_DEV"
+                    }
+                ]
+            }
+        }
+    },
     "flutter_discord_rpc": {
         "1.0.0": {
             "cargo_locks": [
@@ -27,6 +40,31 @@
                         "type": "patch",
                         "path": "cargokit/run_build_tool.sh.patch",
                         "dest": "$PUB_DEV/cargokit"
+                    }
+                ]
+            }
+        }
+    },
+    "flutter_lmdb2": {
+        "0.9.5": {
+            "manifest": {
+                "sources": [
+                    {
+                        "type": "git",
+                        "url": "https://github.com/LMDB/lmdb.git",
+                        "tag": "LMDB_0.9.31",
+                        "commit": "ce201088de95d26fc0da36ba805bf2ddc2ba74ff",
+                        "dest": "$PUB_DEV/linux/lmdb-src"
+                    },
+                    {
+                        "type": "patch",
+                        "path": "flutter_lmdb2/0.9.5-linux-plugin-files.patch",
+                        "dest": "$PUB_DEV"
+                    },
+                    {
+                        "type": "patch",
+                        "path": "flutter_lmdb2/0.9.5-pubspec.yaml.patch",
+                        "dest": "$PUB_DEV"
                     }
                 ]
             }

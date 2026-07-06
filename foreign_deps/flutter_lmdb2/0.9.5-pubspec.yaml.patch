@@ -1,0 +1,12 @@
+--- a/pubspec.yaml	2026-07-06 15:31:52.798970106 +0300
++++ b/pubspec.yaml	2026-07-06 15:31:52.800242857 +0300
+@@ -36,7 +36,7 @@
+         mainClass: FlutterLmdb2Plugin
+       macos:
+         pluginClass: FlutterLmdb2Plugin
+-#      linux:
+-#        pluginClass: FlutterLmdb2Plugin
++      linux:
++        pluginClass: FlutterLmdb2Plugin
+ #      windows:
+ #        pluginClass: FlutterLmdb2Plugin
