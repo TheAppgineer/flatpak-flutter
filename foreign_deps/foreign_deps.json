@@ -307,6 +307,32 @@
                     }
                 ]
             }
+        },
+        "2.3.3": {
+            "manifest": {
+                "sources": [
+                    {
+                        "type": "file",
+                        "only-arches": [
+                            "x86_64"
+                        ],
+                        "url": "https://github.com/powersync-ja/powersync-sqlite-core/releases/download/v0.5.1/libpowersync_x64.linux.so",
+                        "sha256": "3b999bf954525d24ec44d5cb716092af2e74df7a9ffcfad87c3a78dcc66ee9fd",
+                        "dest": "$APP/.dart_tool/hooks_runner/shared/powersync/build/download-3b999bf9",
+                        "dest-filename": "libpowersync_core.so"
+                    },
+                    {
+                        "type": "file",
+                        "only-arches": [
+                            "aarch64"
+                        ],
+                        "url": "https://github.com/powersync-ja/powersync-sqlite-core/releases/download/v0.5.1/libpowersync_aarch64.linux.so",
+                        "sha256": "f0d6c10090d41c9f4c6b09f3b424dacd07bd5b95bd383e6c7f3789dc9e0cf6ed",
+                        "dest": "$APP/.dart_tool/hooks_runner/shared/powersync/build/download-f0d6c100",
+                        "dest-filename": "libpowersync_core.so"
+                    }
+                ]
+            }
         }
     },
     "printing": {
