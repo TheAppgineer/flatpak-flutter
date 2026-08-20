@@ -77,8 +77,8 @@
             }
         }
     },
-    "flutter_webrtc" : {
-        "1.3.0" : {
+    "flutter_webrtc": {
+        "1.3.0": {
             "manifest": {
                 "sources": [
                     {
@@ -100,6 +100,30 @@
                         "url": "https://github.com/wang-bin/mdk-sdk/releases/download/v0.35.0/mdk-sdk-linux.tar.xz",
                         "sha256": "3ca102c26b3f246258b1822f51653450148bc25b188a4630dc81a57965e56ed8",
                         "dest": "$PUB_DEV/linux/mdk-sdk"
+                    }
+                ]
+            }
+        }
+    },
+    "hooks_runner": {
+        "1.1.1": {
+            "manifest": {
+                "sources": [
+                    {
+                        "type": "patch",
+                        "path": "hooks_runner/1.1.1-build_runner.dart.patch",
+                        "dest": "$PUB_DEV"
+                    }
+                ]
+            }
+        },
+        "1.5.0": {
+            "manifest": {
+                "sources": [
+                    {
+                        "type": "patch",
+                        "path": "hooks_runner/1.5.0-build_runner.dart.patch",
+                        "dest": "$PUB_DEV"
                     }
                 ]
             }
@@ -147,6 +171,19 @@
                         "type": "patch",
                         "path": "cargokit/run_build_tool.sh.patch",
                         "dest": "$PUB_DEV/cargokit"
+                    }
+                ]
+            }
+        }
+    },
+    "native_toolchain_rust": {
+        "1.0.4": {
+            "manifest": {
+                "sources": [
+                    {
+                        "type": "patch",
+                        "path": "native_toolchain_rust/build_runner.dart.patch",
+                        "dest": "$PUB_DEV"
                     }
                 ]
             }
@@ -683,6 +720,11 @@
                     }
                 ]
             }
+        },
+        "0.10.0-dev.1": {
+            "cargo_locks": [
+                "$PUB_DEV/rust"
+            ]
         }
     }
 }

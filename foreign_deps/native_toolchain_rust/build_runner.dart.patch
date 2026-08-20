@@ -1,0 +1,12 @@
+diff --git a/lib/src/build_runner.dart b/lib/src/build_runner.dart
+index ea548d4..d87efcc 100644
+--- a/lib/src/build_runner.dart
++++ b/lib/src/build_runner.dart
+@@ -79,7 +79,4 @@ interface class RustBuildRunner {
+     );
+ 
+-    logger.info('Ensuring $toolchainChannel is installed');
+-    await ensureToolchainDownloaded(crateDirectory.path);
+-
+     logger.info('Running cargo build');
+     await processRunner.invokeRustup(

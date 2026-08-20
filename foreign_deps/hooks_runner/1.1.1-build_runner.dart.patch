@@ -1,0 +1,15 @@
+diff --git a/lib/src/build_runner/build_runner.dart b/lib/src/build_runner/build_runner.dart
+index 1370869d..ca282444 100644
+--- a/lib/src/build_runner/build_runner.dart
++++ b/lib/src/build_runner/build_runner.dart
+@@ -614,8 +614,10 @@ class NativeAssetsBuildRunner {
+       ..._httpProxyEnvironmentVariables,
+     };
+     const variablePrefixesFilter = {
++      'CARGO_', // Needed for the Rust package manager.
+       'CCACHE_', // Needed for Ccache.
+       'NIX_', // Needed for Nix-installed toolchains.
++      'RUSTUP_', // Needed for the Rust toolchain installer.
+     };
+ 
+     return staticVariablesFilter.contains(environmentVariableName) ||

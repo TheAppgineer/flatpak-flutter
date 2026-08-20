@@ -187,8 +187,12 @@ def _create_pub_cache(build_path_app: str, sdk_path: str, pubspec_path: str):
         exit(1)
 
 
-def _handle_foreign_dependencies(app: str, build_path_app: str, foreign_deps_path: str, manifest_root: str):
-    abs_path = f'{os.getcwd()}/{build_path_app}'
+def _handle_foreign_dependencies(build_path_app: str, app_pubspec: str, sdk_path: str, foreign_deps_path: str, manifest_root: str):
+    flutter_tools = f'{sdk_path}/packages/flutter_tools'
+    pubspec_paths = [
+        f'{build_path_app}/{app_pubspec}/pubspec.lock',
+        f'{build_path_app}/{flutter_tools}/pubspec.lock',
+    ]
     extra_pubspecs = []
     cargo_locks = []
     sources = []
@@ -218,7 +222,7 @@ def _handle_foreign_dependencies(app: str, build_path_app: str, foreign_deps_pat
 
                 if 'dest' in source:
                     dest = str(source['dest']).replace('$PUB_DEV', pub_dev)
-                    dest = dest.replace('$APP', app)
+                    dest = dest.replace('$APP', app_pubspec)
                     source['dest'] = dest
 
                 sources.append(source)
@@ -231,15 +235,18 @@ def _handle_foreign_dependencies(app: str, build_path_app: str, foreign_deps_pat
             for dependency in foreign.values():
                 append_dependency(dependency)
 
-    with open(f'{foreign_deps_path}/foreign_deps.json', 'r') as foreign_deps, open(f'{abs_path}/pubspec.lock') as deps:
-        foreign_deps = json.load(foreign_deps)
-        deps = yaml.full_load(deps)
+    deps = {}
+    for pubspec_path in pubspec_paths:
+        with open(pubspec_path) as pubspec_lock:
+            deps.update(yaml.full_load(pubspec_lock)['packages'])
 
+    with open(f'{foreign_deps_path}/foreign_deps.json') as foreign_deps:
+        foreign_deps = json.load(foreign_deps)
         for name in foreign_deps.keys():
-            if name not in local_deps and name in deps['packages']:
+            if name not in local_deps and name in deps:
                 foreign_dep = foreign_deps[name]
                 foreign_dep_versions = list(foreign_dep.keys())
-                dep = deps['packages'][name]
+                dep = deps[name]
                 dep_version = dep['version']
 
                 for foreign_dep_version in reversed(foreign_dep_versions):
@@ -437,10 +444,10 @@ def main():
 
         print(f'SDK path: {sdk_path}, tag: {tag}')
     
-        full_pubspec_path = f'{build_path_app}/{app_pubspec}'
         extra_pubspecs, cargo_locks, foreign = _handle_foreign_dependencies(
+            build_path_app,
             app_pubspec,
-            full_pubspec_path,
+            sdk_path,
             foreign_deps_path,
             manifest_root,
         )
